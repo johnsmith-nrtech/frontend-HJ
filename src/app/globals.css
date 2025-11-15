@@ -1,0 +1,308 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-open-sans: "Open Sans", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Sonno Color Scheme - Light Mode */
+:root {
+  --radius: 0.625rem;
+
+  /* Base colors */
+  --background: #faf9f6;
+  --foreground: #222222;
+
+  /* Card colors */
+  --card: #ffffff;
+  --card-foreground: #1b6db4;
+
+  /* Popover colors */
+  --popover: #ffffff;
+  --popover-foreground: #222222;
+
+  /* Primary colors (Navy) */
+  --primary: #1b6db4;
+  --primary-foreground: #ffffff;
+
+  /* Secondary colors (Light Blue) */
+  --secondary: #e6f2fc;
+  --secondary-foreground: #1b6db4;
+
+  /* Muted colors */
+  --muted: #f5f7fa;
+  --muted-foreground: #707070;
+
+  /* Accent colors (Orange) */
+  --accent: #dde9f4;
+  --accent-foreground: #222222;
+
+  /* Destructive colors (Red) */
+  --destructive: #ff0033;
+
+  /* UI borders and ring */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #1e3554;
+
+  /* Chart colors */
+  --chart-1: #1b6db4;
+  --chart-2: #4e89b9;
+  --chart-3: #dde9f4;
+  --chart-4: #e6f2fc;
+  --chart-5: #ff0033;
+
+  /* Sidebar styles */
+  --sidebar: #1e3554;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #dde9f4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4e89b9;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1b6db4;
+  --sidebar-ring: #4e89b9;
+
+  --blue: #1b6db4;
+  --light-blue: #dde9f4;
+  --dark-gray: #222222;
+  --gray: #999999;
+}
+
+/* Sonno Color Scheme - Dark Mode */
+.dark {
+  /* Base colors */
+  --background: #1b6db4;
+  --foreground: #ffffff;
+
+  /* Card colors */
+  --card: #2a4a75;
+  --card-foreground: #ffffff;
+
+  /* Popover colors */
+  --popover: #2a4a75;
+  --popover-foreground: #ffffff;
+
+  /* Primary colors (Navy -> White) */
+  --primary: #ffffff;
+  --primary-foreground: #1e3554;
+
+  /* Secondary colors */
+  --secondary: #4e89b9;
+  --secondary-foreground: #ffffff;
+
+  /* Muted colors */
+  --muted: #3a5f8e;
+  --muted-foreground: #b0c4de;
+
+  /* Accent colors (Orange) */
+  --accent: #ff9415;
+  --accent-foreground: #ffffff;
+
+  /* Destructive colors (Red) */
+  --destructive: #ff0033;
+
+  /* UI borders and ring */
+  --border: rgba(255, 255, 255, 0.15);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #4e89b9;
+
+  /* Chart colors */
+  --chart-1: #ff9415;
+  --chart-2: #4e89b9;
+  --chart-3: #ffffff;
+  --chart-4: #e6f2fc;
+  --chart-5: #ff0033;
+
+  /* Sidebar styles */
+  --sidebar: #1b6db4;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff9415;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4e89b9;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.15);
+  --sidebar-ring: #4e89b9;
+}
+
+@layer utilities {
+  .text-navy {
+    color: var(--blue);
+  }
+  .bg-navy {
+    background-color: var(--blue);
+  }
+  .border-navy {
+    border-color: var(--blue);
+  }
+
+  .text-light-blue {
+    color: var(--light-blue);
+  }
+
+  .bg-light-blue {
+    background-color: var(--light-blue);
+  }
+  .border-light-blue {
+    border-color: var(--light-blue);
+  }
+
+  .text-dark-gray {
+    color: var(--dark-gray);
+  }
+  .bg-dark-gray {
+    background-color: var(--dark-gray);
+  }
+  .border-dark-gray {
+    border-color: var(--dark-gray);
+  }
+
+  .text-gray {
+    color: var(--gray);
+  }
+  .bg-gray {
+    background-color: var(--gray);
+  }
+  .border-gray {
+    border-color: var(--gray);
+  }
+
+  .text-blue {
+    color: var(--blue);
+  }
+  .bg-blue {
+    background-color: var(--blue);
+  }
+  .border-blue {
+    border-color: var(--blue);
+  }
+
+  /* Container utility for 1440px max width */
+  .container-1440 {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  /* Font utilities */
+  .font-bebas {
+    font-family: var(--font-bebas);
+  }
+
+  .font-open-sans {
+    font-family: var(--font-open-sans);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Typography styles based on Figma design */
+  h1 {
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 400;
+    font-size: 85px;
+    line-height: 98%;
+    letter-spacing: 0%;
+    color: var(--dark-gray);
+  }
+
+  h3 {
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 40px;
+    letter-spacing: 0%;
+    color: var(--dark-gray);
+  }
+
+  p {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 26px;
+    letter-spacing: 0px;
+    color: var(--gray);
+  }
+
+  /* Responsive typography */
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 48px;
+      line-height: 52px;
+    }
+
+    h3 {
+      font-size: 24px;
+      line-height: 28px;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 22px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 36px;
+      line-height: 40px;
+    }
+
+    h3 {
+      font-size: 20px;
+      line-height: 24px;
+    }
+  }
+
+  .no-style {
+    max-width: 3rem;
+    width: 3rem;
+    height: 3rem;
+  }
+}
