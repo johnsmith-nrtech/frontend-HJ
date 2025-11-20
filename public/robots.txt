@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sofa-deal.vercel.app/sitemap.xml
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /api/
+
+# Allow important pages
+Allow: /
+Allow: /products
+Allow: /about-us
+Allow: /contact-us
+Allow: /cart
+Allow: /wishlist
