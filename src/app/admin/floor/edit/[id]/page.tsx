@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useFloor, useUpdateFloor } from "@/hooks/use-floors";
+import { useAuth } from "@/hooks/useAuth";
 
 // ✅ Validation schema
 const formSchema = z.object({
@@ -27,6 +28,9 @@ const formSchema = z.object({
 });
 
 export default function EditFloorPage() {
+  // ✅ Authentication check
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const router = useRouter();
   const params = useParams();
   const floorId = params.id as string;
@@ -75,8 +79,7 @@ export default function EditFloorPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4">
         <p className="text-red-500">
-          Error loading floor:{" "}
-          {error instanceof Error ? error.message : "Unknown error"}
+          Error loading floor: {error instanceof Error ? error.message : "Unknown error"}
         </p>
         <Button onClick={() => router.push("/admin/floor")}>
           Return to Floors

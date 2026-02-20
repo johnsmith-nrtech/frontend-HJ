@@ -85,19 +85,12 @@ export function useDeleteZone() {
 export function useDeliveryChargesByZipCode() {
   const zones = useZones();
 
-  if (!zones.data) return {};
-
-  return zones.data.reduce<Record<string, number>>((acc, zone) => {
-    if (
-      zone.zip_codes &&
-      Array.isArray(zone.zip_codes) &&
-      zone.zip_codes.length > 0 &&
-      zone.delivery_charges !== undefined
-    ) {
+  return (
+    zones.data?.reduce<Record<string, number>>((acc, zone) => {
       zone.zip_codes.forEach((zip) => {
         acc[zip] = zone.delivery_charges;
       });
-    }
-    return acc;
-  }, {});
+      return acc;
+    }, {}) || {}
+  );
 }

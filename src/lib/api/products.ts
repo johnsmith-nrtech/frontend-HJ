@@ -63,6 +63,7 @@ export interface Product {
   description: string;
   category_id: string;
   base_price: number;
+  discount_offer?: number;
   is_visible?: boolean;
   delivery_info?: {
     min_days?: number;
@@ -145,6 +146,7 @@ export interface ProductCreateInput {
   description?: string;
   category_id?: string;
   base_price: number;
+  discount_offer?: number;
   is_visible?: boolean;
 
   // Delivery Information
@@ -206,6 +208,7 @@ export interface ProductUpdateInput {
   description?: string;
   category_id?: string;
   base_price?: number;
+  discount_offer?: number;
 }
 
 // Featured Product interfaces for the optimized API response
@@ -221,6 +224,7 @@ export interface FeaturedProductVariant {
   color: string;
   size: string;
   stock: number;
+  discount_offer?: number;
   featured: boolean;
   assemble_charges?: number;
   delivery_time_days?: string;
@@ -237,6 +241,7 @@ export interface FeaturedProduct {
   name: string;
   category_id: string;
   base_price: number;
+  discount_offer?: number;
   main_image: FeaturedProductImage;
   default_variant: FeaturedProductVariant;
   category?: FeaturedProductCategory;
@@ -274,6 +279,7 @@ export interface TopSellingProduct {
   name: string;
   category_id: string;
   base_price: number;
+  discount_offer?: number;
   main_image: TopSellingProductImage;
   default_variant: TopSellingProductVariant;
   sales_data: TopSellingProductSalesData;

@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useCreateFloor } from "@/hooks/use-floors";
+import { useAuth } from "@/hooks/useAuth";
+import { useCreateFloor } from "@/hooks/use-floors"; 
 
 // ✅ Validation Schema
 const formSchema = z.object({
@@ -27,6 +28,9 @@ const formSchema = z.object({
 });
 
 export default function AddFloorPage() {
+  // ✅ Auth check
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const router = useRouter();
   const createFloorMutation = useCreateFloor();
 
@@ -79,8 +83,7 @@ export default function AddFloorPage() {
                       <Input placeholder="e.g. Ground Floor" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Enter a name for this floor (e.g. Ground Floor, 1st
-                      Floor).
+                      Enter a name for this floor (e.g. Ground Floor, 1st Floor).
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -117,7 +120,10 @@ export default function AddFloorPage() {
                     Cancel
                   </Button>
                 </Link>
-                <Button type="submit" disabled={createFloorMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={createFloorMutation.isPending}
+                >
                   {createFloorMutation.isPending
                     ? "Creating..."
                     : "Create Floor"}

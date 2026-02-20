@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { GoogleMap, Marker, LoadScript } from "@react-google-maps/api";
 import { useOrder } from "@/lib/api/orders";
-import { cn } from "@/lib/utils";
 
 export default function OrderTrackingPage({ orderId }: { orderId: string }) {
   const { data: order, isLoading, error } = useOrder(orderId);
@@ -46,19 +45,15 @@ export default function OrderTrackingPage({ orderId }: { orderId: string }) {
 
   if (!order) return <div className="p-10 text-center">No orders found.</div>;
 
-  const STATUS_STEP_MAP: { [key: string]: number } = {
-    pending: 0,
-    paid: 1,
-    shipped: 2,
-    delivered: 3,
-  };
-
-  const steps = [
-    { label: "Order Placed", status: "pending" },
-    { label: "Package Confirmed", status: "paid" },
-    { label: "Delivery in Progress", status: "shipped" },
-    { label: "Delivered", status: "delivered" },
-  ];
+  const steps = ["Package Confirmed", "Delivery in Progress", "Delivered"];
+  const currentStep =
+    order.status === "pending"
+      ? 0
+      : order.status === "paid"
+        ? 1
+        : order.status === "shipped"
+          ? 2
+          : 0;
 
   const shippingAddress = order.shipping_address;
   const mapContainerStyle = {
@@ -88,27 +83,20 @@ export default function OrderTrackingPage({ orderId }: { orderId: string }) {
         )}
 
         <div className="mt-6">
-          <h2 className="mb-4 text-3xl font-bold">
-            Order Status
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              (Order ID: {order.id})
-            </span>
-          </h2>
-          {steps.map((step, index) => (
+          <h2 className="mb-4 text-3xl font-bold">Order Status</h2>
+          {steps.map((label, index) => (
             <div key={index} className="relative flex items-start gap-3 pb-6">
               {index < steps.length - 1 && (
                 <div className="absolute top-3 left-1.5 z-0 h-12 w-0.5 bg-gray-300"></div>
               )}
-
               <div
-                className={cn("z-10 mt-1 h-4 w-4 rounded-full", {
-                  "bg-blue-600": STATUS_STEP_MAP[order.status] >= index,
-                  "bg-gray-400": STATUS_STEP_MAP[order.status] < index,
-                })}
-              />
+                className={`z-10 mt-1 h-4 w-4 rounded-full ${
+                  index <= currentStep ? "bg-blue-600" : "bg-gray-400"
+                }`}
+              ></div>
               <div className="flex-1">
                 <div className="text-[14px] font-semibold text-gray-800">
-                  {step.label}
+                  {label}
                 </div>
                 {index === 2 && (
                   <div className="mt-1 text-[13px] text-gray-600">

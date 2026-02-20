@@ -66,11 +66,10 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
             <Checkbox
               checked={item.assembly_required}
               onCheckedChange={(v) =>
+                // handleAssembleChange(item.id, v as boolean)
                 updateAssemblyRequired(item.id, v as boolean)
               }
               id={`assemble-${item.id}`}
-              disabled={currentItemLoading}
-              className="disabled:cursor-not-allowed"
             />
             <label
               htmlFor={`assemble-${item.id}`}
@@ -83,8 +82,8 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
 
         <button
           onClick={() => removeItem(item.id)}
-          disabled={currentItemLoading}
-          className="mt-2 flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isItemLoading(item.id)}
+          className="mt-2 flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 disabled:opacity-50"
         >
           <XIcon className="h-5 w-5" /> Remove
         </button>
@@ -95,8 +94,7 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
         <div className="flex items-center overflow-hidden rounded-full border border-gray-300">
           <button
             onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-            className="flex h-8 w-8 items-center justify-center hover:bg-gray-50 disabled:cursor-not-allowed"
-            disabled={currentItemLoading}
+            className="flex h-8 w-8 items-center justify-center hover:bg-gray-50"
           >
             <MinusIcon className="h-4 w-4 text-gray-600" />
           </button>
@@ -107,8 +105,7 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
 
           <button
             onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-            className="flex h-8 w-8 items-center justify-center hover:bg-gray-50 disabled:cursor-not-allowed"
-            disabled={currentItemLoading}
+            className="flex h-8 w-8 items-center justify-center hover:bg-gray-50"
           >
             <PlusIcon className="h-4 w-4 text-gray-600" />
           </button>
@@ -214,8 +211,6 @@ export function OrderItem2({ item }: { item: LocalCartItem }) {
                 onCheckedChange={(v) =>
                   updateAssemblyRequired(item.id, v as boolean)
                 }
-                disabled={currentItemLoading}
-                className="disabled:cursor-not-allowed"
               />
               Assembly (£{item.assemble_charges.toFixed(2)})
             </label>
@@ -227,8 +222,7 @@ export function OrderItem2({ item }: { item: LocalCartItem }) {
             <div className="flex items-center rounded-full border">
               <button
                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                disabled={currentItemLoading}
-                className="flex h-7 w-7 items-center justify-center disabled:cursor-not-allowed"
+                className="flex h-7 w-7 items-center justify-center"
               >
                 <MinusIcon className="h-4 w-4 text-gray-700" />
               </button>
@@ -237,8 +231,7 @@ export function OrderItem2({ item }: { item: LocalCartItem }) {
 
               <button
                 onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                disabled={currentItemLoading}
-                className="flex h-7 w-7 items-center justify-center disabled:cursor-not-allowed"
+                className="flex h-7 w-7 items-center justify-center"
               >
                 <PlusIcon className="h-4 w-4 text-gray-700" />
               </button>

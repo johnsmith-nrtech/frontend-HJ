@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useCategories, useCreateCategory } from "@/hooks/use-categories";
+import { useAuth } from "@/hooks/useAuth";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,6 +38,9 @@ const formSchema = z.object({
 });
 
 export default function AddCategoryPage() {
+  // Ensure authentication
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const router = useRouter();
 
   // Use React Query hooks

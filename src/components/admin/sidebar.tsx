@@ -47,11 +47,11 @@ export const adminNavItems = [
     title: "Orders",
     href: "/admin/orders",
     icon: <ShoppingCart className="mr-3 h-5 w-5" />,
-  },
+  }, 
   {
     title: "Zones",
     href: "/admin/zones",
-    icon: <Truck className="mr-3 h-5 w-5" />,
+    icon: <Truck  className="mr-3 h-5 w-5" />,
   },
   {
     title: "Customers",
@@ -93,7 +93,7 @@ export default function AdminSidebar() {
     <div
       className={cn(
         "relative z-10 flex h-screen flex-col border-r bg-white transition-all duration-300",
-        isCollapsed ? "w-20" : "w-60"
+        isCollapsed ? "w-[80px]" : "w-[240px]"
       )}
     >
       <div className="border-border flex items-center border-b p-4">
@@ -158,7 +158,7 @@ export default function AdminSidebar() {
                       {item.href === "/admin/customers" &&
                         unreadMessagesCount > 0 &&
                         isCollapsed && (
-                          <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[10px] leading-none font-medium text-white">
+                          <span className="absolute -top-2 -right-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] leading-none font-medium text-white">
                             {unreadMessagesCount > 99
                               ? "99+"
                               : unreadMessagesCount}
@@ -168,7 +168,7 @@ export default function AdminSidebar() {
                       {item.href === "/admin/orders" &&
                         newOrdersCount > 0 &&
                         isCollapsed && (
-                          <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] leading-none font-medium text-white">
+                          <span className="absolute -top-2 -right-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-blue-500 text-[10px] leading-none font-medium text-white">
                             {newOrdersCount > 99 ? "99+" : newOrdersCount}
                           </span>
                         )}

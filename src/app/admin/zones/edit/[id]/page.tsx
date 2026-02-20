@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 import { useZone, useUpdateZone } from "@/hooks/use-zones";
 
 // ✅ Validation Schema
@@ -37,6 +38,9 @@ const formSchema = z.object({
 });
 
 export default function EditZonePage() {
+  // ✅ Auth check
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const router = useRouter();
   const params = useParams();
   const zoneId = params.id as string;

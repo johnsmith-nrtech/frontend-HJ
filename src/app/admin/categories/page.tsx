@@ -13,8 +13,12 @@ import { Plus, ChevronRight, ChevronDown, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCategories, useDeleteCategory } from "@/hooks/use-categories";
 import { Category } from "@/lib/api/categories";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CategoriesPage() {
+  // Ensure authentication
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );

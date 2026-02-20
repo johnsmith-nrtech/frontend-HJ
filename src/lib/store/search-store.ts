@@ -34,6 +34,7 @@ export interface SearchResult {
   name: string;
   description: string;
   base_price: number;
+  discount_offer?: number;
   category?: {
     id: string;
     name: string;

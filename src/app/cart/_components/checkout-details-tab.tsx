@@ -212,30 +212,11 @@ export const CheckoutDetailsTab = ({
                   />
 
                   <FormInputWithLabel
-                    label="ZIP CODE(Format: AAA-001)"
-                    placeholder="___-___"
+                    label="ZIP CODE"
                     value={formData.zipCode}
-                    onChange={(e) => {
-                      let input = e.target.value.toUpperCase(); // convert letters to uppercase
-
-                      // Remove any character that is not A-Z or 0-9
-                      input = input.replace(/[^A-Z0-9]/g, "");
-
-                      // Use regex to split letters and digits
-                      const match = input.match(/^([0-9,A-Z]{0,3})([A-Z,0-9]{0,3})$/);
-                      const letters = match?.[1] || "";
-                      const digits = match?.[2] || "";
-
-                      // Build formatted value with underscores
-                      let formatted = letters.padEnd(3, "_") + "-" + digits.padEnd(3, "_");
-
-                      // Adjust dash for partial input so backspace works naturally
-                      if (letters.length + digits.length < 6) {
-                        formatted = letters + (letters.length < 3 ? "" : "-") + digits;
-                      }
-
-                      handleInputChange("zipCode", formatted);
-                    }}
+                    onChange={(e) =>
+                      handleInputChange("zipCode", e.target.value)
+                    }
                   />
                 </div>
                 <div className="flex items-center space-x-2">

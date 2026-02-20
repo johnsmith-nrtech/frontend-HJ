@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { ArrowLeft, Save, Eye, Disc } from "lucide-react";
 import Link from "next/link";
 import { useCategories } from "@/hooks/use-categories";
 import { useProduct, useUpdateProduct } from "@/hooks/use-products";
@@ -45,6 +45,7 @@ const basicInfoSchema = z.object({
   description: z.string().optional(),
   category_id: z.string().optional(),
   base_price: z.coerce.number().min(0.01, "Price must be greater than 0"),
+  discount_offer: z.coerce.number().min(0, "Discount cannot be negative").optional(),
   is_visible: z.boolean().optional(),
   warranty_info: z.string().optional(),
   care_instructions: z.string().optional(),
@@ -144,6 +145,7 @@ export default function EditProductPage() {
       description: "",
       category_id: "",
       base_price: 0,
+      discount_offer: 0,
       is_visible: true,
       warranty_info: "",
       care_instructions: "",
@@ -167,6 +169,7 @@ export default function EditProductPage() {
         description: product.description || "",
         category_id: product.category_id || "",
         base_price: product.base_price,
+        discount_offer: product.discount_offer || 0,
         is_visible: product.is_visible ?? true,
         warranty_info: product.warranty_info || "",
         care_instructions: product.care_instructions || "",
@@ -191,6 +194,7 @@ export default function EditProductPage() {
         description: values.description || undefined,
         category_id: values.category_id || undefined,
         base_price: values.base_price,
+        discount_offer: values.discount_offer || 0,
         is_visible: values.is_visible,
         warranty_info: values.warranty_info || undefined,
         care_instructions: values.care_instructions || undefined,
@@ -329,7 +333,28 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
-
+                      <FormField
+                      control={form.control}
+                      name="discount_offer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount Offer (%) *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              step="0.01"
+                              min="0"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            The discount offer percentage for the product.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="is_visible"

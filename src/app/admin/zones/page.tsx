@@ -12,9 +12,13 @@ import {
 import { Plus, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useZones, useDeleteZone } from "@/hooks/use-zones"; // Make sure your hook returns delivery_charges too
+import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
 export default function ZonesPage() {
+  // ✅ Authentication check
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   // ✅ Data fetching via React Query
   const { data: zones = [], isLoading, isError, error } = useZones();
 

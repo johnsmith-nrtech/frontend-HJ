@@ -43,6 +43,7 @@ interface PageProduct {
   isNew?: boolean;
   isSale?: boolean;
   discount?: number;
+  discount_offer?: number;
   image?: string;
   variantId?: string;
   size?: string;
@@ -97,6 +98,7 @@ function ProductsContent() {
           isNew: false,
           isSale: true,
           discount: 15,
+          discount_offer: result.discount_offer,
           image: imageUrl,
           variantId: selectedVariant?.id,
           size: selectedVariant?.size,
@@ -261,8 +263,10 @@ function ProductsContent() {
             inStock: selectedVariant ? selectedVariant.stock > 0 : true,
             isFeatured: selectedVariant?.featured,
             isNew: false,
+            
             isSale: true,
             discount: 15,
+            discount_offer: product.discount_offer,
             image: imageUrl,
             variantId: selectedVariant?.id,
             size: selectedVariant?.size,
@@ -462,41 +466,52 @@ function ProductsContent() {
                 "grid-cols-1": viewMode === "list-detailed",
               })}
             >
-              {displayProducts.map((product, index) => {
-                const originalPrice = Math.round(product.price * 1.25);
-                const discountPercentage = Math.round(
-                  ((originalPrice - product.price) / originalPrice) * 100
-                );
+            {displayProducts.map((product, index) => {
+              const discount = Number(product.discount_offer) || 0;
 
-                return (
-                  <ProductCard
-                    key={product.id}
-                    variant={index % 2 === 0 ? "layout1" : "layout2"}
-                    id={product.id}
-                    name={product.name}
-                    price={product.price}
-                    originalPrice={originalPrice}
-                    imageSrc={product.image}
-                    rating={product.rating || 4.9}
-                    discount={`${discountPercentage}% off`}
-                    deliveryInfo={product.deliveryInfo}
-                    paymentOption={{
-                      service: "Klarna",
-                      installments: 3,
-                      amount: Math.round((product.price / 3) * 100) / 100,
-                    }}
-                    isSale={product.isSale}
-                    className={
-                      viewMode === "list-detailed" ? "list-detailed-view" : ""
-                    }
-                    variantId={product.variantId}
-                    size={product.size}
-                    color={product.color}
-                    stock={product.stock}
-                    assemble_charges={product.assemble_charges || 0}
-                  />
-                );
-              })}
+              const originalPrice = product.price;
+
+              const discountedPrice =
+                discount > 0
+                  ? Math.round(originalPrice - (originalPrice * discount) / 100)
+                  : originalPrice;
+
+              return (
+                <ProductCard
+                  key={product.id}
+                  variant={index % 2 === 0 ? "layout1" : "layout2"}
+                  id={product.id}
+                  name={product.name}
+
+                  price={discountedPrice}                 // ✅ final price (479)
+                  originalPrice={discount > 0 ? originalPrice : undefined} // ✅ crossed price (599)
+
+                  discount={discount > 0 ? `${discount}% off` : undefined}
+
+                  imageSrc={product.image}
+                  rating={product.rating || 4.9}
+                  deliveryInfo={product.deliveryInfo}
+                  paymentOption={{
+                    service: "Klarna",
+                    installments: 3,
+                    amount: Math.round((discountedPrice / 3) * 100) / 100,
+                  }}
+                  isSale={discount > 0}
+                  className={
+                    viewMode === "list-detailed" ? "list-detailed-view" : ""
+                  }
+                  variantId={product.variantId}
+                  size={product.size}
+                  color={product.color}
+                  stock={product.stock}
+                  assemble_charges={product.assemble_charges || 0}
+                />
+              );
+            })}
+
+
+
+
             </div>
           ) : (
             <div className="rounded-lg border bg-white py-12 text-center">

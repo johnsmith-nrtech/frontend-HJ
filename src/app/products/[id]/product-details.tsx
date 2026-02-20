@@ -429,38 +429,43 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const { addToCart } = useCartAnimationStore();
 
   const handleAddToCart = () => {
-    addToCart({ item: "item added" });
+  addToCart({ item: "item added" });
 
-    if (product && currentVariant && currentStock > 0) {
-      const productImage =
-        displayImages.length > 0 ? displayImages[0].url : undefined;
+  if (product && currentVariant && currentStock > 0) {
+    const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
 
-      // Build variant description
-      const variantParts = [];
-      if (selectedColor) variantParts.push(selectedColor);
-      if (selectedSize) variantParts.push(selectedSize);
-      if (selectedMaterial) variantParts.push(selectedMaterial);
-      const variantDescription =
-        variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
+    // Build variant description
+    const variantParts = [];
+    if (selectedColor) variantParts.push(selectedColor);
+    if (selectedSize) variantParts.push(selectedSize);
+    if (selectedMaterial) variantParts.push(selectedMaterial);
+    const variantDescription =
+      variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
 
-      addItem({
-        id: currentVariant.id,
-        name: `${product.name}${variantDescription}`,
-        price: currentPrice,
-        image: productImage,
-        variant_id: currentVariant.id,
+    // Calculate final price after discount
+    const finalPrice = product.discount_offer && product.discount_offer > 0
+      ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
+      : currentPrice;
+
+    addItem({
+      id: currentVariant.id,
+      name: `${product.name}${variantDescription}`,
+      price: finalPrice, // ✅ discounted price
+      image: productImage,
+      variant_id: currentVariant.id,
+      color: selectedColor || currentVariant.color,
+      assembly_required: false,
+      assemble_charges: currentVariant.assemble_charges || 0,
+      variant: {
         color: selectedColor || currentVariant.color,
-        assembly_required: false,
-        assemble_charges: currentVariant.assemble_charges || 0,
-        variant: {
-          color: selectedColor || currentVariant.color,
-          size: selectedSize || currentVariant.size,
-          material: selectedMaterial || currentVariant.material,
-          sku: currentVariant.sku,
-        },
-      });
-    }
-  };
+        size: selectedSize || currentVariant.size,
+        material: selectedMaterial || currentVariant.material,
+        sku: currentVariant.sku,
+      },
+    });
+  }
+};
+
 
   const handleWishlistToggle = async () => {
     if (currentVariantId && product && currentVariant) {
@@ -941,35 +946,50 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           {/* Product Info */}
           <div className="space-y-4">
             <div className="space-y-3">
-              {/* Desktop: Product Title */}
-              {!isMobile && (
+            {/* Desktop: Product Title */}
+            {!isMobile && (
+              <div>
+                <h1 className="text-dark-gray text-[32px] leading-tight uppercase md:text-[48px] lg:text-[56px]">
+                  {product.name}
+                </h1>
                 <div>
-                  <h1 className="text-dark-gray text-[32px] leading-tight uppercase md:text-[48px] lg:text-[56px]">
-                    {product.name}
-                  </h1>
-                  <div>
-                    <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
-                      {getDeliveryDetails()}
-                    </Badge>
-                  </div>
+                  <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
+                    {getDeliveryDetails()}
+                  </Badge>
                 </div>
-              )}
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center justify-between gap-8">
                   <div className="font-bebas flex items-baseline gap-2 md:gap-3">
-                    <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
-                      £{currentPrice.toFixed(2)}
-                    </span>
-                    <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
-                      £{(currentPrice * 1.2).toFixed(2)}
-                    </span>
+                    {product.discount_offer && product.discount_offer > 0 ? (
+                      <>
+                        {/* Discounted price */}
+                        <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
+                          £{(currentPrice * (1 - product.discount_offer / 100)).toFixed(2)}
+                        </span>
+
+                        {/* Original price struck-through */}
+                        <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
+                          £{currentPrice.toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
+                        £{currentPrice.toFixed(2)}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Klarna badge */}
                   <span className="w-fit rounded-full bg-[#FFA8CD] px-4 py-1 text-sm font-bold text-[#000] md:px-6 md:py-2">
                     Klarna
                   </span>
                 </div>
               </div>
             </div>
+
 
             {/* Color Selection - Rounded Color Swatches */}
             {uniqueColors.length > 0 && (
@@ -1968,105 +1988,79 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </div>
 
               {relatedProducts && relatedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:hidden md:gap-8 lg:grid-cols-3">
-                  {relatedProducts
-                    .filter((p) => p.variants && p.variants.length > 0)
-                    .slice(0, 4)
-                    .map((relatedProduct, index) => {
-                      // Get the variant price or use base price as fallback
-                      const firstVariant = relatedProduct.variants?.[0];
-                      const currentPrice =
-                        firstVariant?.price || relatedProduct.base_price;
-                      const hasDiscount =
-                        currentPrice < relatedProduct.base_price;
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:hidden md:gap-8 lg:grid-cols-3">
+                {relatedProducts
+                  .filter((p) => p.variants && p.variants.length > 0)
+                  .slice(0, 4)
+                  .map((relatedProduct, index) => {
+                    const firstVariant = relatedProduct.variants?.[0];
+                    const basePrice = relatedProduct.base_price;
+                    const discountOffer = Number(relatedProduct.discount_offer) || 0; // ✅ get discount offer from DB
 
-                      const assembleCharges =
-                        firstVariant?.assemble_charges || 0;
-                      const deliverInfo =
-                        firstVariant?.delivery_time_days ||
-                        "3 To 4 Days Delivery";
+                    // Calculate final price after discount
+                    const currentPrice = firstVariant?.price || basePrice;
+                    const finalPrice =
+                      discountOffer > 0
+                        ? Math.round(currentPrice * (1 - discountOffer / 100) * 100) / 100
+                        : currentPrice;
 
-                      // Get main image URL with validation
-                      const getValidImageUrl = (imageUrl?: string) => {
-                        try {
-                          if (imageUrl && typeof imageUrl === "string") {
-                            // Check if it's a valid URL or relative path
-                            if (
-                              imageUrl.startsWith("http") ||
-                              imageUrl.startsWith("/")
-                            ) {
-                              return imageUrl;
-                            }
-                          }
-                          return "/hero-img.png"; // Fallback to hero image
-                        } catch (error) {
-                          console.warn(
-                            "Error processing product image:",
-                            error
-                          );
-                          return "/hero-img.png";
-                        }
-                      };
+                    // Determine if product has discount
+                    const hasDiscount = discountOffer > 0;
 
-                      const productImage = getValidImageUrl(
-                        relatedProduct.images?.[0]?.url
-                      );
+                    // Discount badge
+                    const discountPercentage = hasDiscount ? `${discountOffer}% off` : undefined;
 
-                      // Calculate discount percentage if there's a discount
-                      let discountPercentage = "";
-                      if (hasDiscount) {
-                        const percentage = Math.round(
-                          ((relatedProduct.base_price - currentPrice) /
-                            relatedProduct.base_price) *
-                            100
-                        );
-                        discountPercentage = `${percentage}% off`;
+                    const assembleCharges = firstVariant?.assemble_charges || 0;
+                    const deliverInfo = firstVariant?.delivery_time_days || "3 To 4 Days Delivery";
+
+                    // Get main image URL with fallback
+                    const productImage = (() => {
+                      try {
+                        const imageUrl = relatedProduct.images?.[0]?.url;
+                        if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/"))) return imageUrl;
+                        return "/hero-img.png";
+                      } catch {
+                        return "/hero-img.png";
                       }
+                    })();
 
-                      return (
-                        <ProductCard
-                          variant={index % 2 === 0 ? "layout1" : "layout2"} // Alternating layouts
-                          key={relatedProduct.id}
-                          id={relatedProduct.id}
-                          name={relatedProduct.name || "SUNSET TURKISH SOFA"} // Fallback name
-                          price={currentPrice}
-                          originalPrice={
-                            hasDiscount
-                              ? relatedProduct.base_price
-                              : Math.round(currentPrice * 1.25)
-                          } // Always provide original price
-                          imageSrc={productImage}
-                          rating={4.9} // Static rating since API might not have it
-                          discount={discountPercentage || "15% off"} // Use calculated or static discount
-                          paymentOption={
-                            hasPaymentOptions(selectedVariantData)
-                              ? {
-                                  service:
-                                    selectedVariantData.payment_options[0]
-                                      .provider || "Klarna",
-                                  installments:
-                                    selectedVariantData.payment_options[0]
-                                      .installments || 3,
-                                  amount:
-                                    selectedVariantData.payment_options[0]
-                                      .amount ||
-                                    Math.round((currentPrice / 3) * 100) / 100,
-                                }
-                              : {
-                                  service: "Klarna",
-                                  installments: 3,
-                                  amount:
-                                    Math.round((currentPrice / 3) * 100) / 100,
-                                }
-                          }
-                          isSale={hasDiscount}
-                          deliveryInfo={deliverInfo}
-                          assemble_charges={assembleCharges}
-                          variantId={firstVariant?.id}
-                        />
-                      );
-                    })}
-                </div>
+                    return (
+                      <ProductCard
+                        key={relatedProduct.id}
+                        variant={index % 2 === 0 ? "layout1" : "layout2"}
+                        id={relatedProduct.id}
+                        name={relatedProduct.name || "SUNSET TURKISH SOFA"}
+
+                        // Price handling
+                        price={finalPrice} // ✅ discounted price
+                        originalPrice={hasDiscount ? basePrice : undefined} // ✅ show MRP only if discount exists
+                        discount={discountPercentage} // ✅ discount badge if exists
+
+                        imageSrc={productImage}
+                        rating={4.9}
+                        paymentOption={
+                          hasPaymentOptions(selectedVariantData)
+                            ? {
+                                service: selectedVariantData.payment_options[0].provider || "Klarna",
+                                installments: selectedVariantData.payment_options[0].installments || 3,
+                                amount:
+                                  selectedVariantData.payment_options[0].amount ||
+                                  Math.round((finalPrice / 3) * 100) / 100,
+                              }
+                            : {
+                                service: "Klarna",
+                                installments: 3,
+                                amount: Math.round((finalPrice / 3) * 100) / 100,
+                              }
+                        }
+                        isSale={hasDiscount}
+                        deliveryInfo={deliverInfo}
+                        assemble_charges={assembleCharges}
+                        variantId={firstVariant?.id}
+                      />
+                    );
+                  })}
+              </div>
               ) : (
                 <div className="py-8 text-center">
                   <p className="font-open-sans text-gray-600">
@@ -2123,9 +2117,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                       let discountPercentage = "";
                       if (hasDiscount) {
                         const percentage = Math.round(
-                          ((relatedProduct.base_price - currentPrice) /
-                            relatedProduct.base_price) *
-                            100
+                          ((relatedProduct.base_price - currentPrice) / relatedProduct.base_price) * 100
                         );
                         discountPercentage = `${percentage}% off`;
                       }
@@ -2140,30 +2132,26 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                           originalPrice={
                             hasDiscount
                               ? relatedProduct.base_price
-                              : Math.round(currentPrice * 1.25)
-                          } // Always provide original price
+                              : undefined // Only show original price if there's a discount
+                          }
                           imageSrc={productImage}
-                          rating={4.9} // Static rating since API might not have it
-                          discount={discountPercentage || "15% off"} // Use calculated or static discount
+                          rating={4.9} // Static rating
+                          discount={discountPercentage || undefined} // ✅ Use only calculated discount
                           paymentOption={
                             hasPaymentOptions(selectedVariantData)
                               ? {
                                   service:
-                                    selectedVariantData.payment_options[0]
-                                      .provider || "Klarna",
+                                    selectedVariantData.payment_options[0].provider || "Klarna",
                                   installments:
-                                    selectedVariantData.payment_options[0]
-                                      .installments || 3,
+                                    selectedVariantData.payment_options[0].installments || 3,
                                   amount:
-                                    selectedVariantData.payment_options[0]
-                                      .amount ||
+                                    selectedVariantData.payment_options[0].amount ||
                                     Math.round((currentPrice / 3) * 100) / 100,
                                 }
                               : {
                                   service: "Klarna",
                                   installments: 3,
-                                  amount:
-                                    Math.round((currentPrice / 3) * 100) / 100,
+                                  amount: Math.round((currentPrice / 3) * 100) / 100,
                                 }
                           }
                           isSale={hasDiscount}
@@ -2172,6 +2160,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                           variantId={firstVariant?.id}
                         />
                       );
+
                     })}
                 </div>
               ) : (

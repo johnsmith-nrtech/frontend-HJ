@@ -12,6 +12,7 @@ import {
 import { Plus, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useFloors, useDeleteFloor } from "@/hooks/use-floors"; // 🔹 You'll create this hook
+import { useAuth } from "@/hooks/useAuth";
 
 // interface Floor {
 //   id: string;
@@ -20,8 +21,16 @@ import { useFloors, useDeleteFloor } from "@/hooks/use-floors"; // 🔹 You'll c
 // }
 
 export default function FloorsPage() {
+  // ✅ Authentication check
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   // ✅ Data fetching via React Query
-  const { data: floors = [], isLoading, isError, error } = useFloors();
+  const {
+    data: floors = [],
+    isLoading,
+    isError,
+    error,
+  } = useFloors();
 
   const deleteMutation = useDeleteFloor();
 
@@ -82,10 +91,10 @@ export default function FloorsPage() {
               {floors.map((floor) => (
                 <div
                   key={floor.id}
-                  className="flex items-center justify-between rounded-md px-2 py-3 transition hover:bg-gray-50"
+                  className="flex items-center justify-between py-3 px-2 rounded-md hover:bg-gray-50 transition"
                 >
                   <div className="flex flex-col">
-                    <span className="text-lg font-medium">{floor.name}</span>
+                    <span className="font-medium text-lg">{floor.name}</span>
                     <span className="text-sm text-gray-500">
                       Charges: £{floor.charges}
                     </span>

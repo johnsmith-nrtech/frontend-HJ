@@ -32,6 +32,7 @@ import {
   useCategories,
   useUpdateCategory,
 } from "@/hooks/use-categories";
+import { useAuth } from "@/hooks/useAuth";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -42,6 +43,9 @@ const formSchema = z.object({
 });
 
 export default function EditCategoryPage() {
+  // Ensure authentication
+  useAuth({ redirectTo: "/login", requireAuth: true });
+
   const router = useRouter();
   const params = useParams();
   const categoryId = params.id as string;

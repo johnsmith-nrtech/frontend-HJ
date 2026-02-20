@@ -32,6 +32,7 @@ import { useCategories } from "@/hooks/use-categories";
 import { useCreateProduct, useUploadProductImages } from "@/hooks/use-products";
 import { createProductVariant } from "@/lib/api/products";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   EnhancedImageUpload,
@@ -50,6 +51,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   category_id: z.string().optional(),
   base_price: z.coerce.number().min(0.01, "Price must be greater than 0"),
+  discount_offer: z.coerce.number().min(0, "Discount cannot be negative").optional(),
   is_visible: z.boolean().optional(),
 
   // Delivery Information
@@ -124,6 +126,15 @@ export default function AddProductPage() {
     ProductVariant[]
   >([]);
 
+  const {
+    isAuthenticated,
+    loading: authLoading,
+    getToken,
+  } = useAuth({
+    redirectTo: "/login",
+    requireAuth: true,
+  });
+
   const { data: categories = [], isLoading: isLoadingCategories } =
     useCategories(false);
   const createProductMutation = useCreateProduct();
@@ -136,6 +147,7 @@ export default function AddProductPage() {
       description: "",
       category_id: "",
       base_price: 0,
+      discount_offer: 0,
       is_visible: true,
       delivery_min_days: 3,
       delivery_max_days: 7,
@@ -179,6 +191,18 @@ export default function AddProductPage() {
 
   const onSubmit = async (values: FormData) => {
     try {
+      if (!isAuthenticated) {
+        toast.error("Please log in to create a product");
+        router.push("/login");
+        return;
+      }
+
+      const token = await getToken();
+      if (!token) {
+        toast.error("Authentication token not available");
+        return;
+      }
+
       // Prepare dimensions object
       const dimensions = {
         width: values.width_cm
@@ -251,6 +275,7 @@ export default function AddProductPage() {
         description: values.description || undefined,
         category_id: values.category_id || undefined,
         base_price: Number(values.base_price),
+        discount_offer: Number(values.discount_offer) || 0,
         is_visible: values.is_visible ?? true,
 
         // Delivery information
@@ -405,6 +430,14 @@ export default function AddProductPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-6 pt-6">
       <div className="flex items-center gap-4">
@@ -477,6 +510,28 @@ export default function AddProductPage() {
                           </FormControl>
                           <FormDescription>
                             The base price of the product in GBP.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="discount_offer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount Offer (%) *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              step="0.01"
+                              min="0"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            The discount offer percentage for the product.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -909,50 +964,51 @@ export default function AddProductPage() {
                       )}
                     />
                     {/* Assemble Charges ($) */}
-                    <FormField
-                      control={form.control}
-                      name="assemble_charges"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Assemble Charges ($)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0.0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Assembly charges in dollars.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="assemble_charges"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Assemble Charges ($)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0.0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Assembly charges in dollars.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    {/* Delivery Time */}
-                    <FormField
-                      control={form.control}
-                      name="delivery_time_days"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Delivery Time</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="e.g. 3–5 days"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Estimated delivery time for this variant.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      {/* Delivery Time */}
+                      <FormField
+                        control={form.control}
+                        name="delivery_time_days"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Delivery Time</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                placeholder="e.g. 3–5 days"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Estimated delivery time for this variant.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
 
                     <FormField
                       control={form.control}
