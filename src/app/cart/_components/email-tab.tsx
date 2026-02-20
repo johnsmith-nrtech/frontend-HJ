@@ -1,35 +1,42 @@
 import { useCart } from "@/lib/store/cart-store";
-import React from "react";
+import React, { useEffect } from "react";
 import { FormData } from "../cart-page.types";
 import { toast } from "sonner";
 import { GuestCheckoutOptions } from "./guest-checkout-options";
 import { FormInputWithLabel } from "./checkout-form-inputs";
 import { Button } from "@/components/button-custom";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, X } from "lucide-react";
 import { OrderItemsList } from "./order-items";
 import Image from "next/image";
 import { useAuth } from "@/lib/providers/auth-provider";
 import { SummaryLineItem, SummaryTotalLineItem } from "./cart-summary";
 
+interface EmailTabProps {
+  onNext: () => void;
+  formData: FormData;
+  setFormData: (data: FormData) => void;
+  couponProps: {
+    couponCode: string;
+    setCouponCode: (code: string) => void;
+    appliedCoupon: any;
+    discountAmount: number;
+    isApplyingCoupon: boolean;
+    couponError: string;
+    applyCoupon: () => Promise<void>;
+    removeCoupon: () => void;
+  };
+}
+
 export const EmailTab = ({
   onNext,
   formData,
   setFormData,
-}: {
-  onNext: () => void;
-  formData: FormData;
-  setFormData: (data: FormData) => void;
-}) => {
+  couponProps,
+}: EmailTabProps) => {
   const { user } = useAuth();
   const {
     subtotal,
     assemblyTotal,
-    discount,
-    couponCode,
-
-    setCouponCode,
-    setDiscount,
-
     getCartTotal,
   } = useCart();
 
@@ -37,7 +44,33 @@ export const EmailTab = ({
     !user && !formData.isGuest
   );
 
-  const [localCouponCode, setLocalCouponCode] = React.useState(couponCode);
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    discountAmount,
+    isApplyingCoupon,
+    couponError,
+    applyCoupon,
+    removeCoupon,
+  } = couponProps;
+
+  // Calculate totals
+  const cartTotal = getCartTotal();
+  const finalTotal = Math.max(0, cartTotal - discountAmount);
+
+  // Local state for input
+  const [localCouponCode, setLocalCouponCode] = React.useState("");
+
+  // Update local state when prop changes
+  useEffect(() => {
+    if (appliedCoupon) {
+      setLocalCouponCode(appliedCoupon.code);
+    } else {
+      setLocalCouponCode("");
+    }
+  }, [appliedCoupon]);
+
   const handleInputChange = (
     field: keyof FormData,
     value: string | boolean
@@ -57,19 +90,19 @@ export const EmailTab = ({
     )}`;
   };
 
-  const applyDiscount = () => {
-    const code = localCouponCode.toLowerCase();
-    if (code === "save10") {
-      setDiscount((subtotal + assemblyTotal) * 0.1);
-      setCouponCode(localCouponCode);
-      toast.success("Coupon applied successfully!");
-    } else if (code === "jenkatemw") {
-      setDiscount(25);
-      setCouponCode(localCouponCode);
-      toast.success("Coupon applied successfully!");
-    } else {
-      toast.error("Invalid coupon code");
+  const handleApplyCoupon = async () => {
+    if (!localCouponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
     }
+    
+    setCouponCode(localCouponCode);
+    await applyCoupon();
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setLocalCouponCode("");
   };
 
   const handleNext = () => {
@@ -162,7 +195,7 @@ export const EmailTab = ({
 
               <OrderItemsList />
 
-              {/* Coupon Section */}
+              {/* Coupon Input Section */}
               <div className="mb-4">
                 <div className="flex items-center overflow-hidden rounded-full border border-[#999999]">
                   <div className="flex items-center justify-center px-3 py-2">
@@ -170,39 +203,57 @@ export const EmailTab = ({
                   </div>
                   <input
                     type="text"
-                    placeholder="Coupon Code"
+                    placeholder="Enter coupon code"
                     value={localCouponCode}
                     onChange={(e) => setLocalCouponCode(e.target.value)}
-                    className="flex-1 px-0 py-3 focus:outline-none"
+                    disabled={isApplyingCoupon || !!appliedCoupon}
+                    className="flex-1 px-0 py-3 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
-                  <button
-                    onClick={applyDiscount}
-                    className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
-                  >
-                    <Image
-                      src="/arrow-right1.png"
-                      alt="Apply"
-                      width={20}
-                      height={20}
-                    />
-                  </button>
+                  {!appliedCoupon ? (
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={!localCouponCode.trim() || isApplyingCoupon}
+                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isApplyingCoupon ? (
+                        <span className="text-xs">...</span>
+                      ) : (
+                        <Image
+                          src="/arrow-right1.png"
+                          alt="Apply"
+                          width={20}
+                          height={20}
+                        />
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="bg-red-500 hover:bg-red-600 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
-                {discount > 0 && (
-                  <div className="mt-2 flex items-center justify-between py-3">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src="/t-2.png"
-                        alt="Coupon"
-                        width={20}
-                        height={20}
-                      />
-                      <span className="text-sm font-medium text-[#222]">
-                        {couponCode}
+
+                {/* Error Message */}
+                {couponError && (
+                  <p className="mt-2 text-sm text-red-500">{couponError}</p>
+                )}
+
+                {/* Applied Coupon Display */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="mt-3 rounded-lg bg-green-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-green-700">
+                          {appliedCoupon.code}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-green-600">
+                        -£{discountAmount.toFixed(2)}
                       </span>
                     </div>
-                    <span className="text-sm text-[#999]">
-                      -£{discount.toFixed(2)} [Remove]
-                    </span>
                   </div>
                 )}
               </div>
@@ -211,21 +262,23 @@ export const EmailTab = ({
               <div className="mt-4 space-y-2">
                 <SummaryLineItem label="Products Total" value={subtotal} />
 
-                {assemblyTotal > 0 ? (
+                {assemblyTotal > 0 && (
                   <SummaryLineItem
                     value={assemblyTotal}
                     label="Assembly Charges"
                   />
-                ) : null}
+                )}
 
-                {discount > 0 ? (
+                {/* Discount Line */}
+                {appliedCoupon && discountAmount > 0 && (
                   <SummaryLineItem
-                    label={`Discount (${couponCode})`}
-                    value={-discount}
+                    label={`Discount (${appliedCoupon.code})`}
+                    value={-discountAmount}
                   />
-                ) : null}
+                )}
 
-                <SummaryTotalLineItem label="Total" value={getCartTotal()} />
+                {/* Total Line - UPDATED with finalTotal */}
+                <SummaryTotalLineItem label="Total" value={finalTotal} />
               </div>
             </div>
           </div>
