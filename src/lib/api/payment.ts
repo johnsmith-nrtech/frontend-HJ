@@ -35,6 +35,10 @@ export interface CreatePaymentRequest {
 
   // Optional Fields
   order_notes?: string;
+
+  // ✅ ADD THESE TWO FIELDS
+  coupon_code?: string;
+  discount_amount?: number;
 }
 
 // Payment response interfaces

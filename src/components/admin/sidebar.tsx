@@ -15,6 +15,7 @@ import {
   FolderTree,
   Building,
   Truck,
+  Percent,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/providers/auth-provider";
@@ -57,6 +58,11 @@ export const adminNavItems = [
     title: "Customers",
     href: "/admin/customers",
     icon: <Users className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Coupons",
+    href: "/admin/coupons",
+    icon: <Percent className="mr-3 h-5 w-5" />,
   },
   {
     title: "Settings",

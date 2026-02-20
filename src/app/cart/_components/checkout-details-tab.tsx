@@ -5,7 +5,6 @@ import { useFloors } from "@/hooks/use-floors";
 import { toast } from "sonner";
 import { GuestCheckoutOptions } from "./guest-checkout-options";
 import { Label } from "@/components/ui/label";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/button-custom";
 import Image from "next/image";
@@ -14,40 +13,69 @@ import {
   FormInputWithLabel,
   FormSelectWithLabel,
 } from "./checkout-form-inputs";
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/lib/providers/auth-provider";
 import { useDeliveryChargesByZipCode } from "@/hooks/use-zones";
+import { X } from "lucide-react";
+
+interface CheckoutDetailsTabProps {
+  onNext: () => void;
+  formData: FormData;
+  setFormData: (data: FormData) => void;
+  isProcessing?: boolean;
+  couponProps: {
+    couponCode: string;
+    setCouponCode: (code: string) => void;
+    appliedCoupon: any;
+    discountAmount: number;
+    isApplyingCoupon: boolean;
+    couponError: string;
+    applyCoupon: () => Promise<void>;
+    removeCoupon: () => void;
+  };
+}
 
 export const CheckoutDetailsTab = ({
   onNext,
   formData,
   setFormData,
   isProcessing = false,
-}: {
-  onNext: () => void;
-  formData: FormData;
-  setFormData: (data: FormData) => void;
-  isProcessing?: boolean;
-}) => {
+  couponProps,
+}: CheckoutDetailsTabProps) => {
   const { user } = useAuth();
   const {
     assemblyTotal,
     subtotal,
-    discount,
-    couponCode,
-    setCouponCode,
-    setDiscount,
     getCartTotal,
   } = useCart();
+
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    discountAmount,
+    isApplyingCoupon,
+    couponError,
+    applyCoupon,
+    removeCoupon,
+  } = couponProps;
 
   const [showGuestOptions, setShowGuestOptions] = React.useState(
     !user && !formData.isGuest
   );
 
-  const [localCouponCode, setLocalCouponCode] = React.useState(couponCode);
+  const [localCouponCode, setLocalCouponCode] = React.useState("");
   const floorsQuery = useFloors();
-
   const deliveryChargesByZipCode = useDeliveryChargesByZipCode();
+
+  // Update local state when coupon changes
+  useEffect(() => {
+    if (appliedCoupon) {
+      setLocalCouponCode(appliedCoupon.code);
+    } else {
+      setLocalCouponCode("");
+    }
+  }, [appliedCoupon]);
 
   const handleInputChange = (
     field: keyof FormData,
@@ -66,19 +94,19 @@ export const CheckoutDetailsTab = ({
     window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
   };
 
-  const applyDiscount = () => {
-    const code = localCouponCode.toLowerCase();
-    if (code === "save10") {
-      setDiscount(getCartTotal() * 0.1);
-      setCouponCode(localCouponCode);
-      toast.success("Coupon applied successfully!");
-    } else if (code === "jenkatemw") {
-      setDiscount(25);
-      setCouponCode(localCouponCode);
-      toast.success("Coupon applied successfully!");
-    } else {
-      toast.error("Invalid coupon code");
+  const handleApplyCoupon = async () => {
+    if (!localCouponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
     }
+    
+    setCouponCode(localCouponCode);
+    await applyCoupon();
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setLocalCouponCode("");
   };
 
   const selectedFloor = floorsQuery.data?.find(
@@ -86,11 +114,12 @@ export const CheckoutDetailsTab = ({
   );
 
   const floorCharge = selectedFloor ? selectedFloor.charges : 0;
-
   const zonalCharges = deliveryChargesByZipCode[formData.zipCode] || 0;
-
-  const subtotalWithFloorCharges = getCartTotal() + floorCharge + zonalCharges;
-  const grandTotal = subtotalWithFloorCharges - discount;
+  
+  // Calculate totals with discount
+  const cartTotal = getCartTotal();
+  const subtotalWithFloorCharges = cartTotal + floorCharge + zonalCharges;
+  const grandTotal = Math.max(0, subtotalWithFloorCharges - discountAmount);
 
   return (
     <div className="px-0.5 md:px-8">
@@ -214,10 +243,26 @@ export const CheckoutDetailsTab = ({
                   <FormInputWithLabel
                     label="ZIP CODE"
                     value={formData.zipCode}
+<<<<<<< HEAD
                     onChange={(e) =>
                       handleInputChange("zipCode", e.target.value)
                     }
+=======
+                    onChange={(e) => {
+                      let input = e.target.value.toUpperCase();
+                      input = input.replace(/[^A-Z0-9]/g, "");
+                      const match = input.match(/^([0-9,A-Z]{0,3})([A-Z,0-9]{0,3})$/);
+                      const letters = match?.[1] || "";
+                      const digits = match?.[2] || "";
+                      let formatted = letters.padEnd(3, "_") + "-" + digits.padEnd(3, "_");
+                      if (letters.length + digits.length < 6) {
+                        formatted = letters + (letters.length < 3 ? "" : "-") + digits;
+                      }
+                      handleInputChange("zipCode", formatted);
+                    }}
+>>>>>>> super
                   />
+                  
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -241,9 +286,9 @@ export const CheckoutDetailsTab = ({
                 variant="primary"
                 size="xl"
                 rounded="full"
-                className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-start px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isProcessing ? "Processing Payment..." : "Place Order"}
+                {isProcessing ? "Processing Payment..." : `Place Order`}
               </Button>
             </div>
           </div>
@@ -265,52 +310,69 @@ export const CheckoutDetailsTab = ({
                   </div>
                   <input
                     type="text"
-                    placeholder="Coupon Code"
+                    placeholder="Enter coupon code"
                     value={localCouponCode}
                     onChange={(e) => setLocalCouponCode(e.target.value)}
-                    className="flex-1 px-0 py-3 focus:outline-none"
+                    disabled={isApplyingCoupon || !!appliedCoupon}
+                    className="flex-1 px-0 py-3 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
-                  <button
-                    onClick={applyDiscount}
-                    className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
-                  >
-                    <Image
-                      src="/arrow-right1.png"
-                      alt="Apply"
-                      width={20}
-                      height={20}
-                    />
-                  </button>
+                  {!appliedCoupon ? (
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={!localCouponCode.trim() || isApplyingCoupon}
+                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isApplyingCoupon ? (
+                        <span className="text-xs">...</span>
+                      ) : (
+                        <Image
+                          src="/arrow-right1.png"
+                          alt="Apply"
+                          width={20}
+                          height={20}
+                        />
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="bg-red-500 hover:bg-red-600 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
-                {discount > 0 && (
-                  <div className="mt-2 flex items-center justify-between py-3">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src="/t-2.png"
-                        alt="Coupon"
-                        width={20}
-                        height={20}
-                      />
-                      <span className="text-sm font-medium text-[#222]">
-                        {couponCode}
+
+                {/* Error Message */}
+                {couponError && (
+                  <p className="mt-2 text-sm text-red-500">{couponError}</p>
+                )}
+
+                {/* Applied Coupon Display */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="mt-3 rounded-lg bg-green-50 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-green-700">
+                          {appliedCoupon.code}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-green-600">
+                        -£{discountAmount.toFixed(2)}
                       </span>
                     </div>
-                    <span className="text-sm text-[#999]">
-                      -£{discount.toFixed(2)} [Remove]
-                    </span>
                   </div>
                 )}
               </div>
 
               {/* Shipping & Price Summary */}
-
               <div className="mt-4 space-y-2">
                 <SummaryLineItem label="Products Total" value={subtotal} />
                 <SummaryLineItem
                   label="Assembly Charges"
                   value={assemblyTotal}
                 />
-                <SummaryLineItem label="Subtotal" value={getCartTotal()} />
+                <SummaryLineItem label="Subtotal" value={cartTotal} />
 
                 <hr className="my-2 border-t border-gray-300" />
 
@@ -320,14 +382,22 @@ export const CheckoutDetailsTab = ({
                 />
                 <SummaryLineItem label="Shipping" value={zonalCharges} />
 
-                {discount > 0 && (
+                {/* Discount Line */}
+                {appliedCoupon && discountAmount > 0 && (
                   <SummaryLineItem
-                    label={`Discount (${couponCode})`}
-                    value={-discount}
+                    label={`Discount (${appliedCoupon.code})`}
+                    value={-discountAmount}
                   />
                 )}
 
                 <SummaryTotalLineItem label="Grand Total" value={grandTotal} />
+
+                {/* Savings message */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <p className="text-right text-xs text-green-600">
+                    You save: £{discountAmount.toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
           </div>

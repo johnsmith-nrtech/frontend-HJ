@@ -2,7 +2,7 @@
 
 import { useCart } from "@/lib/store/cart-store";
 import { useAuth } from "@/lib/providers/auth-provider";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 import { OrderCompleteTab } from "./_components/order-complete-tab";
 import { CheckoutDetailsTab } from "./_components/checkout-details-tab";
@@ -18,6 +18,7 @@ import { EmailTab } from "./_components/email-tab";
 import { ShoppingCartTab } from "./_components/shopping-cart-tab";
 
 export default function CartPage() {
+  const [isClient, setIsClient] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const { totalItems, error: cartError } = useCart();
 
@@ -32,10 +33,25 @@ export default function CartPage() {
     setFormData,
     handlePlaceOrder,
     isProcessingPayment,
+    // Coupon related
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    discountAmount,
+    setDiscountAmount,
+    isApplyingCoupon,
+    couponError,
+    applyCoupon,
+    removeCoupon,
   } = useCheckoutForm();
 
+  // Fix hydration error by waiting for client-side mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Show loading state while authentication is being determined
-  if (authLoading) {
+  if (authLoading || !isClient) {
     return <AuthLoading />;
   }
 
@@ -68,13 +84,38 @@ export default function CartPage() {
         />
       )}
 
-      {currentStep === 1 && <ShoppingCartTab onNext={handleNext} />}
+      {currentStep === 1 && (
+        <ShoppingCartTab
+          onNext={handleNext}
+          couponProps={{
+            couponCode,
+            setCouponCode,
+            appliedCoupon,
+            discountAmount,
+            setDiscountAmount,
+            isApplyingCoupon,
+            couponError,
+            applyCoupon,
+            removeCoupon,
+          }}
+        />
+      )}
 
       {currentStep === 2 && (
         <EmailTab
           formData={formData}
           onNext={handleNext}
           setFormData={setFormData}
+          couponProps={{  // 👈 ADD THIS
+      couponCode,
+      setCouponCode,
+      appliedCoupon,
+      discountAmount,
+      isApplyingCoupon,
+      couponError,
+      applyCoupon,
+      removeCoupon,
+    }}
         />
       )}
 
@@ -84,6 +125,16 @@ export default function CartPage() {
           formData={formData}
           setFormData={setFormData}
           isProcessing={isProcessingPayment}
+          couponProps={{
+      couponCode,
+      setCouponCode,
+      appliedCoupon,
+      discountAmount,
+      isApplyingCoupon,
+      couponError,
+      applyCoupon,
+      removeCoupon,
+    }}
         />
       )}
 
