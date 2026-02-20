@@ -42,7 +42,7 @@ import { Plus, Pencil, Trash2, Search, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 interface Coupon {
   id: string;
@@ -78,13 +78,16 @@ const initialFormData: CouponFormData = {
   is_active: true,
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminCouponsPage() {
   const { session } = useAuth();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [filteredCoupons, setFilteredCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -110,7 +113,15 @@ export default function AdminCouponsPage() {
       );
       setFilteredCoupons(filtered);
     }
+    setCurrentPage(1);
   }, [searchQuery, coupons]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+  const paginatedCoupons = filteredCoupons.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const fetchCoupons = async () => {
     setLoading(true);
@@ -121,9 +132,9 @@ export default function AdminCouponsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (!response.ok) throw new Error("Failed to fetch coupons");
-      
+
       const data = await response.json();
       setCoupons(data);
       setFilteredCoupons(data);
@@ -137,8 +148,8 @@ export default function AdminCouponsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    
-    if (name === 'max_uses') {
+
+    if (name === "max_uses") {
       setFormData((prev) => ({
         ...prev,
         [name]: parseInt(value) || 1,
@@ -186,7 +197,7 @@ export default function AdminCouponsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast.error("Coupon name is required");
       return;
@@ -226,7 +237,7 @@ export default function AdminCouponsPage() {
       const url = selectedCoupon
         ? `${process.env.NEXT_PUBLIC_API_URL}/coupons/${selectedCoupon.id}`
         : `${process.env.NEXT_PUBLIC_API_URL}/coupons`;
-      
+
       const method = selectedCoupon ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -243,7 +254,9 @@ export default function AdminCouponsPage() {
         throw new Error(error.message || "Failed to save coupon");
       }
 
-      toast.success(selectedCoupon ? "Coupon updated successfully" : "Coupon created successfully");
+      toast.success(
+        selectedCoupon ? "Coupon updated successfully" : "Coupon created successfully"
+      );
       setIsFormModalOpen(false);
       fetchCoupons();
     } catch (error: any) {
@@ -283,10 +296,15 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const getStatusBadge = (isActive: boolean, expiresAt: string, usedCount: number, maxUses: number) => {
+  const getStatusBadge = (
+    isActive: boolean,
+    expiresAt: string,
+    usedCount: number,
+    maxUses: number
+  ) => {
     const now = new Date();
     const expiry = new Date(expiresAt);
-    
+
     if (!isActive) {
       return <Badge variant="destructive">Inactive</Badge>;
     }
@@ -296,21 +314,16 @@ export default function AdminCouponsPage() {
     if (usedCount >= maxUses) {
       return <Badge variant="secondary">Max Uses</Badge>;
     }
-    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
-  };
-
-  if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-6 pt-6">
-        <div className="flex h-64 items-center justify-center">
-          <div className="text-lg">Loading coupons...</div>
-        </div>
-      </div>
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+        Active
+      </Badge>
     );
-  }
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-4 sm:p-6 sm:pt-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Coupons
@@ -321,6 +334,7 @@ export default function AdminCouponsPage() {
         </Button>
       </div>
 
+      {/* Search and Refresh */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
@@ -341,9 +355,16 @@ export default function AdminCouponsPage() {
         </Button>
       </div>
 
+      {/* Table Card */}
       <Card>
         <CardContent className="pt-6">
-          {filteredCoupons.length === 0 ? (
+          {loading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="text-lg font-medium text-blue-500">
+                Loading Coupons...
+              </div>
+            </div>
+          ) : filteredCoupons.length === 0 ? (
             <div className="flex h-64 items-center justify-center">
               <div className="text-center">
                 <h3 className="mt-2 text-sm font-semibold text-gray-900">
@@ -379,7 +400,7 @@ export default function AdminCouponsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCoupons.map((coupon) => (
+                  {paginatedCoupons.map((coupon) => (
                     <TableRow key={coupon.id}>
                       <TableCell className="font-medium">
                         {coupon.name}
@@ -440,8 +461,41 @@ export default function AdminCouponsPage() {
             </div>
           )}
         </CardContent>
+
+        {/* Pagination */}
+        {!loading && filteredCoupons.length > 0 && (
+          <CardFooter className="flex flex-col items-center justify-between gap-4 border-t px-4 py-3 sm:flex-row sm:px-6">
+            <div className="text-muted-foreground text-center text-sm sm:text-left">
+              Showing{" "}
+              <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}</strong> to{" "}
+              <strong>
+                {Math.min(currentPage * ITEMS_PER_PAGE, filteredCoupons.length)}
+              </strong>{" "}
+              of <strong>{filteredCoupons.length}</strong> coupons
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </CardFooter>
+        )}
       </Card>
 
+      {/* Create/Edit Modal */}
       <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -457,7 +511,7 @@ export default function AdminCouponsPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+              <div className="col-span-2 space-y-2">
                 <Label htmlFor="name">Coupon Name *</Label>
                 <Input
                   id="name"
@@ -469,7 +523,7 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2 sm:col-span-1 space-y-2">
                 <Label htmlFor="code">Coupon Code *</Label>
                 <Input
                   id="code"
@@ -483,7 +537,7 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2 sm:col-span-1 space-y-2">
                 <Label htmlFor="discount_type">Discount Type *</Label>
                 <Select
                   value={formData.discount_type}
@@ -499,7 +553,7 @@ export default function AdminCouponsPage() {
                 </Select>
               </div>
 
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2 sm:col-span-1 space-y-2">
                 <Label htmlFor="discount_value">Discount Value *</Label>
                 <Input
                   id="discount_value"
@@ -509,7 +563,9 @@ export default function AdminCouponsPage() {
                   min="0"
                   value={formData.discount_value}
                   onChange={handleInputChange}
-                  placeholder={formData.discount_type === "percentage" ? "10" : "5.00"}
+                  placeholder={
+                    formData.discount_type === "percentage" ? "10" : "5.00"
+                  }
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -519,7 +575,7 @@ export default function AdminCouponsPage() {
                 </p>
               </div>
 
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2 sm:col-span-1 space-y-2">
                 <Label htmlFor="expires_at">Expiry Date *</Label>
                 <Input
                   id="expires_at"
@@ -532,7 +588,7 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2 sm:col-span-1 space-y-2">
                 <Label htmlFor="max_uses">Max Uses *</Label>
                 <Input
                   id="max_uses"
@@ -580,7 +636,11 @@ export default function AdminCouponsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Delete Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
