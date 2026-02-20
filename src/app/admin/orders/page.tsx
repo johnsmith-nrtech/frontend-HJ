@@ -785,105 +785,6 @@ const discountedTotal = order.discount_amount
                         </Card>
 
                         {/* Order Summary Card */}
-                        {/* <Card className="col-span-1 sm:col-span-2 lg:col-span-1">
-                          <CardContent className="p-3 sm:p-4">
-                            <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-                              <div className="rounded-lg bg-purple-100 p-1.5 sm:p-2">
-                                <DollarSign className="h-4 w-4 text-purple-600 sm:h-5 sm:w-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="text-sm font-semibold sm:text-base">
-                                  Order Total
-                                </h3>
-                                <p className="text-xs text-gray-500 sm:text-sm">
-                                  Pricing breakdown
-                                </p>
-                              </div>
-                            </div>
-                            <div className="space-y-1 sm:space-y-2">
-                              <div className="flex justify-between text-xs sm:text-sm">
-                                <span>Subtotal:</span>
-                                <span>
-                                  {formatCurrency(
-                                    selectedOrder.total_amount,
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-xs sm:text-sm">
-                                <span>
-                                  Floor Charges (
-                                  {selectedOrder.floor?.name || "N/A"}):
-                                </span>
-                                <span>
-                                  {formatCurrency(
-                                    selectedOrder.floor?.charges || 0,
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-
-
-                              <div className="flex justify-between text-xs sm:text-sm">
-                                <span>
-                                  Zone Charges (
-                                  {selectedOrder.zone?.zip_code || "N/A"}):
-                                </span>
-                                <span>
-                                  {formatCurrency(
-                                    selectedOrder.zone?.delivery_charges || 0,
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-                              {selectedOrder.discount_amount > 0 && (
-                                <div className="flex justify-between text-xs text-green-600 sm:text-sm">
-                                  <span>Discount:</span>
-                                  <span>
-                                    -
-                                    {formatCurrency(
-                                      selectedOrder.discount_amount,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              {selectedOrder.shipping_cost > 0 && (
-                                <div className="flex justify-between text-xs sm:text-sm">
-                                  <span>Shipping:</span>
-                                  <span>
-                                    {formatCurrency(
-                                      selectedOrder.shipping_cost,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              {selectedOrder.tax_amount > 0 && (
-                                <div className="flex justify-between text-xs sm:text-sm">
-                                  <span>Tax:</span>
-                                  <span>
-                                    {formatCurrency(
-                                      selectedOrder.tax_amount,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              <Separator />
-                              <div className="flex justify-between text-sm font-semibold sm:text-base">
-                                <span>Total:</span>
-                                <span className="text-green-600">
-                                  {formatCurrency(
-                                    calculateOrderGrandTotal(selectedOrder),
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card> */}
-                        {/* Order Summary Card */}
 <Card className="col-span-1 sm:col-span-2 lg:col-span-1">
   <CardContent className="p-3 sm:p-4">
     <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
@@ -931,14 +832,6 @@ const discountedTotal = order.discount_amount
           )}
         </span>
       </div>
-
-      {/* 🔴 ADD THIS - Checks if coupon was used and shows discount */}
-{/* {selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
-  <div className="flex justify-between text-xs text-green-600 sm:text-sm">
-    <span>Discount ({selectedOrder.coupon_code}):</span>
-    <span>-{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}</span>
-  </div>
-)} */}
       
       {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
       {selectedOrder.discount_amount > 0 && (
@@ -1524,109 +1417,6 @@ const discountedTotal = order.discount_amount
                     >
                       <div className="grid grid-cols-1 gap-3 sm:gap-6 lg:grid-cols-2">
                         {/* Payment Summary */}
-                        {/* <Card>
-                          <CardContent className="p-3 sm:p-6">
-                            <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-                              <div className="rounded-lg bg-green-100 p-1.5 sm:p-2">
-                                <DollarSign className="h-4 w-4 text-green-600 sm:h-5 sm:w-5" />
-                              </div>
-                              <h3 className="text-sm font-semibold sm:text-base">
-                                Payment Summary
-                              </h3>
-                            </div>
-                            <div className="space-y-2 sm:space-y-3">
-                              <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Subtotal:
-                                </span>
-                                <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    calculateOrderGrandTotal(selectedOrder),
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Floor Charges (
-                                  {selectedOrder.floor?.name || "N/A"}):
-                                </span>
-                                <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    selectedOrder.floor?.charges || 0,
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Zone Charges (
-                                  {selectedOrder.zone?.zip_code || "N/A"}):
-                                </span>
-                                <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    selectedOrder.zone?.delivery_charges || 0,
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-                              {selectedOrder.discount_amount > 0 && (
-                                <div className="flex justify-between text-green-600">
-                                  <span className="text-xs sm:text-sm">
-                                    Discount:
-                                  </span>
-                                  <span className="text-xs font-medium sm:text-sm">
-                                    -
-                                    {formatCurrency(
-                                      selectedOrder.discount_amount,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              {selectedOrder.shipping_cost > 0 && (
-                                <div className="flex justify-between">
-                                  <span className="text-xs sm:text-sm">
-                                    Shipping:
-                                  </span>
-                                  <span className="text-xs font-medium sm:text-sm">
-                                    {formatCurrency(
-                                      selectedOrder.shipping_cost,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              {selectedOrder.tax_amount > 0 && (
-                                <div className="flex justify-between">
-                                  <span className="text-xs sm:text-sm">
-                                    Tax:
-                                  </span>
-                                  <span className="text-xs font-medium sm:text-sm">
-                                    {formatCurrency(
-                                      selectedOrder.tax_amount,
-                                      selectedOrder.currency
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              <Separator />
-                              <div className="flex justify-between text-sm font-semibold sm:text-lg">
-                                <span>Total:</span>
-                                <span className="text-green-600">
-                                  {formatCurrency(
-                                    calculateOrderGrandTotal(selectedOrder),
-                                    selectedOrder.currency
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card> */}
-
-                        {/* Payment Summary */}
 <Card>
   <CardContent className="p-3 sm:p-6">
     <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
@@ -1673,18 +1463,6 @@ const discountedTotal = order.discount_amount
           )}
         </span>
       </div>
-
-      {/* 🔴 ADD THIS - Checks if coupon was used and shows discount */}
-{/* {selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
-  <div className="flex justify-between text-green-600">
-    <span className="text-xs sm:text-sm">
-      Discount ({selectedOrder.coupon_code}):
-    </span>
-    <span className="text-xs font-medium sm:text-sm">
-      -{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}
-    </span>
-  </div>
-)} */}
       
       {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
       {selectedOrder.discount_amount > 0 && (
