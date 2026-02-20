@@ -240,8 +240,8 @@ export function useCheckoutForm() {
       }
 
       const paymentData: CreatePaymentRequest & {
-        coupon_id?: string;
-        discount_amount?: number;
+        coupon_code?: string;      
+  discount_amount?: number;
       } = {
         contact_first_name: formData.firstName,
         contact_last_name: formData.lastName,
@@ -269,8 +269,8 @@ export function useCheckoutForm() {
             }
           : undefined,
         cart_items: convertCartItemsToPaymentFormat(items),
-        coupon_id: appliedCoupon?.id,
-        discount_amount: discountAmount,
+        coupon_code: appliedCoupon?.code, 
+        discount_amount: discountAmount > 0 ? discountAmount : 0,
       };
 
       const errors = PaymentApiService.validatePaymentData(paymentData);

@@ -64,7 +64,7 @@ interface CouponFormData {
   discount_type: "percentage" | "fixed";
   discount_value: string;
   expires_at: string;
-  max_uses: string;
+  max_uses: number;
   is_active: boolean;
 }
 
@@ -74,7 +74,7 @@ const initialFormData: CouponFormData = {
   discount_type: "percentage",
   discount_value: "",
   expires_at: "",
-  max_uses: "1",
+  max_uses: 1,
   is_active: true,
 };
 
@@ -99,7 +99,6 @@ export default function AdminCouponsPage() {
   }, [session]);
 
   useEffect(() => {
-    // Filter coupons based on search query
     if (searchQuery.trim() === "") {
       setFilteredCoupons(coupons);
     } else {
@@ -138,10 +137,18 @@ export default function AdminCouponsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    
+    if (name === 'max_uses') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: parseInt(value) || 1,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -165,8 +172,8 @@ export default function AdminCouponsPage() {
       code: coupon.code,
       discount_type: coupon.discount_type,
       discount_value: coupon.discount_value.toString(),
-      expires_at: coupon.expires_at.split("T")[0], // Format for date input
-      max_uses: coupon.max_uses.toString(),
+      expires_at: coupon.expires_at.split("T")[0],
+      max_uses: coupon.max_uses,
       is_active: coupon.is_active,
     });
     setIsFormModalOpen(true);
@@ -180,7 +187,6 @@ export default function AdminCouponsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.name.trim()) {
       toast.error("Coupon name is required");
       return;
@@ -197,7 +203,7 @@ export default function AdminCouponsPage() {
       toast.error("Expiry date is required");
       return;
     }
-    if (!formData.max_uses || parseInt(formData.max_uses) < 1) {
+    if (!formData.max_uses || formData.max_uses < 1) {
       toast.error("Max uses must be at least 1");
       return;
     }
@@ -213,7 +219,7 @@ export default function AdminCouponsPage() {
         discount_type: formData.discount_type,
         discount_value: parseFloat(formData.discount_value),
         expires_at: new Date(formData.expires_at).toISOString(),
-        max_uses: parseInt(formData.max_uses),
+        max_uses: formData.max_uses,
         is_active: formData.is_active,
       };
 
@@ -293,7 +299,6 @@ export default function AdminCouponsPage() {
     return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
   };
 
-  // Loading state matching orders/page.tsx
   if (loading) {
     return (
       <div className="flex-1 space-y-4 p-6 pt-6">
@@ -306,7 +311,6 @@ export default function AdminCouponsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-4 sm:p-6 sm:pt-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Coupons
@@ -317,7 +321,6 @@ export default function AdminCouponsPage() {
         </Button>
       </div>
 
-      {/* Search Bar */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
@@ -338,7 +341,6 @@ export default function AdminCouponsPage() {
         </Button>
       </div>
 
-      {/* Coupons Table */}
       <Card>
         <CardContent className="pt-6">
           {filteredCoupons.length === 0 ? (
@@ -440,7 +442,6 @@ export default function AdminCouponsPage() {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Modal */}
       <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -456,7 +457,6 @@ export default function AdminCouponsPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              {/* Name Field */}
               <div className="col-span-2">
                 <Label htmlFor="name">Coupon Name *</Label>
                 <Input
@@ -469,7 +469,6 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              {/* Code Field */}
               <div className="col-span-2 sm:col-span-1">
                 <Label htmlFor="code">Coupon Code *</Label>
                 <Input
@@ -484,7 +483,6 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              {/* Discount Type */}
               <div className="col-span-2 sm:col-span-1">
                 <Label htmlFor="discount_type">Discount Type *</Label>
                 <Select
@@ -501,7 +499,6 @@ export default function AdminCouponsPage() {
                 </Select>
               </div>
 
-              {/* Discount Value */}
               <div className="col-span-2 sm:col-span-1">
                 <Label htmlFor="discount_value">Discount Value *</Label>
                 <Input
@@ -522,7 +519,6 @@ export default function AdminCouponsPage() {
                 </p>
               </div>
 
-              {/* Expiry Date */}
               <div className="col-span-2 sm:col-span-1">
                 <Label htmlFor="expires_at">Expiry Date *</Label>
                 <Input
@@ -536,7 +532,6 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              {/* Max Uses */}
               <div className="col-span-2 sm:col-span-1">
                 <Label htmlFor="max_uses">Max Uses *</Label>
                 <Input
@@ -550,7 +545,6 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              {/* Active Status */}
               <div className="col-span-2 flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -586,7 +580,6 @@ export default function AdminCouponsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

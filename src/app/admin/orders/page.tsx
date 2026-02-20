@@ -933,12 +933,12 @@ const discountedTotal = order.discount_amount
       </div>
 
       {/* 🔴 ADD THIS - Checks if coupon was used and shows discount */}
-{selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
+{/* {selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
   <div className="flex justify-between text-xs text-green-600 sm:text-sm">
     <span>Discount ({selectedOrder.coupon_code}):</span>
     <span>-{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}</span>
   </div>
-)}
+)} */}
       
       {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
       {selectedOrder.discount_amount > 0 && (
@@ -1675,7 +1675,7 @@ const discountedTotal = order.discount_amount
       </div>
 
       {/* 🔴 ADD THIS - Checks if coupon was used and shows discount */}
-{selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
+{/* {selectedOrder.coupon_code && selectedOrder.discount_amount > 0 && (
   <div className="flex justify-between text-green-600">
     <span className="text-xs sm:text-sm">
       Discount ({selectedOrder.coupon_code}):
@@ -1684,7 +1684,7 @@ const discountedTotal = order.discount_amount
       -{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}
     </span>
   </div>
-)}
+)} */}
       
       {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
       {selectedOrder.discount_amount > 0 && (
@@ -1972,3 +1972,13 @@ const discountedTotal = order.discount_amount
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
