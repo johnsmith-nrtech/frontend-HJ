@@ -1,5 +1,5 @@
 import { useCart } from "@/lib/store/cart-store";
-import React from "react";
+import React, { useEffect } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Button } from "@/components/button-custom";
@@ -13,6 +13,7 @@ interface ShoppingCartTabProps {
     setCouponCode: (code: string) => void;
     appliedCoupon: any;
     discountAmount: number;
+    setDiscountAmount: (amount: number) => void;
     isApplyingCoupon: boolean;
     couponError: string;
     applyCoupon: () => Promise<void>;
@@ -35,6 +36,7 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
     setCouponCode,
     appliedCoupon,
     discountAmount,
+    setDiscountAmount,
     isApplyingCoupon,
     couponError,
     applyCoupon,
@@ -42,11 +44,39 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
   } = couponProps;
 
   const isAuthenticated = checkAuthStatus();
-  const totalBeforeDiscount = getCartTotal();
-  const finalTotal = Math.max(0, totalBeforeDiscount - discountAmount);
+  
+  // Get cart total
+  const cartTotal = getCartTotal();
+  
+  // Calculate final total with discount
+  const finalTotal = React.useMemo(() => {
+    const total = cartTotal - (discountAmount || 0);
+    return Math.max(0, total);
+  }, [cartTotal, discountAmount]);
 
-  const handleApplyCoupon = () => {
-    applyCoupon();
+  useEffect(() => {
+    if (appliedCoupon) {
+      console.log('Coupon applied:', appliedCoupon);
+    }
+  }, [appliedCoupon]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    
+    try {
+      await applyCoupon();
+    } catch (error) {
+      console.error('Coupon application failed:', error);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponCode("");
+    toast.success("Coupon removed");
   };
 
   const handleCouponChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,12 +101,14 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
             items.map((item) => <OrderItem1 key={item.id} item={item} />)
           )}
 
-          {/* Coupon */}
+          {/* Coupon Section */}
           <div className="mt-4 w-full md:w-[500px]">
             <h3 className="mb-2 text-3xl">Have a coupon?</h3>
             <p className="mb-4 text-base text-[#999999]">
               Add your code for an instant cart discount
             </p>
+            
+            {/* Coupon Input */}
             <div className="flex items-center overflow-hidden rounded-full border border-[#999999]">
               <div className="flex items-center justify-center px-3 py-2">
                 <Image src="/t-1.png" alt="Coupon" width={20} height={20} />
@@ -84,7 +116,7 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
 
               <input
                 type="text"
-                placeholder="Coupon Code"
+                placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={handleCouponChange}
                 disabled={isApplyingCoupon || !!appliedCoupon}
@@ -110,7 +142,7 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
                 </button>
               ) : (
                 <button
-                  onClick={removeCoupon}
+                  onClick={handleRemoveCoupon}
                   className="bg-red-500 hover:bg-red-600 mr-2 flex h-10 w-10 items-center justify-center rounded-full text-white"
                   title="Remove coupon"
                 >
@@ -118,12 +150,19 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
                 </button>
               )}
             </div>
+
+            {/* Error Message */}
             {couponError && (
               <p className="mt-2 text-sm text-red-500">{couponError}</p>
             )}
+
+            {/* Success Message */}
             {appliedCoupon && (
               <p className="mt-2 text-sm text-green-600">
-                Coupon {appliedCoupon.code} applied!
+                Coupon {appliedCoupon.code} applied! 
+                {appliedCoupon.discount_type === 'percentage' 
+                  ? ` ${appliedCoupon.discount_value}% off` 
+                  : ` £${appliedCoupon.discount_value} off`}
               </p>
             )}
           </div>
@@ -143,6 +182,7 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
                 <SummaryLineItem label="Assembly Charges" value={assemblyTotal} />
               )}
 
+              {/* Discount Line - Only show when coupon is applied */}
               {appliedCoupon && discountAmount > 0 && (
                 <SummaryLineItem
                   label={`Discount (${appliedCoupon.code})`}
@@ -150,7 +190,11 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
                 />
               )}
 
-              <SummaryTotalLineItem label="Total" value={finalTotal} />
+              {/* Total Line */}
+              <SummaryTotalLineItem 
+                label="Total" 
+                value={finalTotal}
+              />
             </div>
 
             <Button
@@ -158,6 +202,7 @@ export const ShoppingCartTab = ({ onNext, couponProps }: ShoppingCartTabProps) =
               variant="primary"
               size="xl"
               rounded="full"
+              disabled={items.length === 0}
               className="relative mt-8 h-12! w-full items-center text-left! shadow-lg sm:text-xl!"
               icon={
                 <Image
