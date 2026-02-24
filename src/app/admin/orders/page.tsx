@@ -1460,7 +1460,6 @@ const discountedTotal = order.discount_amount
                                 </span>
                               </div>
       
-                              {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
                               {selectedOrder.discount_amount > 0 && (
                                 <div className="flex justify-between text-green-600">
                                   <span className="text-xs sm:text-sm">
