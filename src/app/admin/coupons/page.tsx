@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/providers/auth-provider";
+import { ApiService } from "@/lib/api-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +38,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  RefreshCw,
+  UserPlus,
+  Mail,
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +64,8 @@ interface Coupon {
   is_active: boolean;
   created_at: string;
   created_by?: string;
+  assigned_to_email?: string;
+  assigned_to_user_id?: string;
 }
 
 interface CouponFormData {
@@ -81,7 +91,6 @@ const initialFormData: CouponFormData = {
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminCouponsPage() {
-  const { session } = useAuth();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [filteredCoupons, setFilteredCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,15 +100,18 @@ export default function AdminCouponsPage() {
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [formData, setFormData] = useState<CouponFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Assign state
+  const [assignEmail, setAssignEmail] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
+
   useEffect(() => {
-    if (session?.access_token) {
-      fetchCoupons();
-    }
-  }, [session]);
+    fetchCoupons();
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -116,25 +128,18 @@ export default function AdminCouponsPage() {
     setCurrentPage(1);
   }, [searchQuery, coupons]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
   const paginatedCoupons = filteredCoupons.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
+  // ─── Fetch all coupons ──────────────────────────────────────────────────
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      const token = session?.access_token;
-      if (!token) throw new Error("No authentication token");
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const response = await ApiService.fetchWithAuth("/coupons");
       if (!response.ok) throw new Error("Failed to fetch coupons");
-
       const data = await response.json();
       setCoupons(data);
       setFilteredCoupons(data);
@@ -146,14 +151,11 @@ export default function AdminCouponsPage() {
     }
   };
 
+  // ─── Form handlers ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-
     if (name === "max_uses") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: parseInt(value) || 1,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: parseInt(value) || 1 }));
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -171,6 +173,7 @@ export default function AdminCouponsPage() {
     setSelectedCoupon(null);
   };
 
+  // ─── Modal openers ──────────────────────────────────────────────────────
   const openCreateModal = () => {
     resetForm();
     setIsFormModalOpen(true);
@@ -195,35 +198,26 @@ export default function AdminCouponsPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  const openAssignModal = (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    setAssignEmail(coupon.assigned_to_email || "");
+    setIsAssignModalOpen(true);
+  };
+
+  // ─── Create / Update coupon ─────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name.trim()) {
-      toast.error("Coupon name is required");
-      return;
-    }
-    if (!formData.code.trim()) {
-      toast.error("Coupon code is required");
-      return;
-    }
-    if (!formData.discount_value || parseFloat(formData.discount_value) <= 0) {
-      toast.error("Discount value must be greater than 0");
-      return;
-    }
-    if (!formData.expires_at) {
-      toast.error("Expiry date is required");
-      return;
-    }
-    if (!formData.max_uses || formData.max_uses < 1) {
-      toast.error("Max uses must be at least 1");
-      return;
-    }
+    if (!formData.name.trim()) return toast.error("Coupon name is required");
+    if (!formData.code.trim()) return toast.error("Coupon code is required");
+    if (!formData.discount_value || parseFloat(formData.discount_value) <= 0)
+      return toast.error("Discount value must be greater than 0");
+    if (!formData.expires_at) return toast.error("Expiry date is required");
+    if (!formData.max_uses || formData.max_uses < 1)
+      return toast.error("Max uses must be at least 1");
 
     setIsSubmitting(true);
     try {
-      const token = session?.access_token;
-      if (!token) throw new Error("No authentication token");
-
       const payload = {
         name: formData.name.trim(),
         code: formData.code.trim(),
@@ -234,20 +228,13 @@ export default function AdminCouponsPage() {
         is_active: formData.is_active,
       };
 
-      const url = selectedCoupon
-        ? `${process.env.NEXT_PUBLIC_API_URL}/coupons/${selectedCoupon.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/coupons`;
-
-      const method = selectedCoupon ? "PATCH" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await ApiService.fetchWithAuth(
+        selectedCoupon ? `/coupons/${selectedCoupon.id}` : "/coupons",
+        {
+          method: selectedCoupon ? "PATCH" : "POST",
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -255,31 +242,27 @@ export default function AdminCouponsPage() {
       }
 
       toast.success(
-        selectedCoupon ? "Coupon updated successfully" : "Coupon created successfully"
+        selectedCoupon
+          ? "Coupon updated successfully"
+          : "Coupon created successfully"
       );
       setIsFormModalOpen(false);
       fetchCoupons();
     } catch (error: any) {
-      console.error("Error saving coupon", error);
       toast.error(error.message || "Failed to save coupon");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   const handleDelete = async () => {
     if (!selectedCoupon) return;
 
     try {
-      const token = session?.access_token;
-      if (!token) throw new Error("No authentication token");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/coupons/${selectedCoupon.id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await ApiService.fetchWithAuth(
+        `/coupons/${selectedCoupon.id}`,
+        { method: "DELETE" }
       );
 
       if (!response.ok) {
@@ -291,11 +274,47 @@ export default function AdminCouponsPage() {
       setIsDeleteDialogOpen(false);
       fetchCoupons();
     } catch (error: any) {
-      console.error("Error deleting coupon", error);
       toast.error(error.message || "Failed to delete coupon");
     }
   };
 
+  // ─── Assign coupon to user ──────────────────────────────────────────────
+  const handleAssign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCoupon) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!assignEmail.trim() || !emailRegex.test(assignEmail.trim())) {
+      return toast.error("Please enter a valid email address");
+    }
+
+    setIsAssigning(true);
+    try {
+      const response = await ApiService.fetchWithAuth(
+        `/coupons/${selectedCoupon.id}/assign`,
+        {
+          method: "POST",
+          body: JSON.stringify({ email: assignEmail.trim() }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to assign coupon");
+      }
+
+      toast.success(`Coupon assigned and email sent to ${assignEmail.trim()}`);
+      setIsAssignModalOpen(false);
+      setAssignEmail("");
+      fetchCoupons();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to assign coupon");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  // ─── Status badge ───────────────────────────────────────────────────────
   const getStatusBadge = (
     isActive: boolean,
     expiresAt: string,
@@ -304,16 +323,10 @@ export default function AdminCouponsPage() {
   ) => {
     const now = new Date();
     const expiry = new Date(expiresAt);
-
-    if (!isActive) {
-      return <Badge variant="destructive">Inactive</Badge>;
-    }
-    if (expiry < now) {
-      return <Badge variant="destructive">Expired</Badge>;
-    }
-    if (usedCount >= maxUses) {
+    if (!isActive) return <Badge variant="destructive">Inactive</Badge>;
+    if (expiry < now) return <Badge variant="destructive">Expired</Badge>;
+    if (usedCount >= maxUses)
       return <Badge variant="secondary">Max Uses</Badge>;
-    }
     return (
       <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
         Active
@@ -328,7 +341,7 @@ export default function AdminCouponsPage() {
         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Coupons
         </h2>
-        <Button onClick={openCreateModal} className="w-full sm:w-auto">
+        <Button onClick={openCreateModal} className="w-full sm:w-auto cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
           Create Coupon
         </Button>
@@ -348,7 +361,7 @@ export default function AdminCouponsPage() {
         <Button
           variant="outline"
           onClick={fetchCoupons}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto cursor-pointer"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
@@ -393,8 +406,9 @@ export default function AdminCouponsPage() {
                     <TableHead className="min-w-[100px]">Discount</TableHead>
                     <TableHead className="min-w-[120px]">Expires</TableHead>
                     <TableHead className="min-w-[100px]">Usage</TableHead>
+                    <TableHead className="min-w-[160px]">Assigned To</TableHead>
                     <TableHead className="min-w-[100px]">Status</TableHead>
-                    <TableHead className="min-w-[100px] text-right">
+                    <TableHead className="min-w-[120px] text-right">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -419,11 +433,26 @@ export default function AdminCouponsPage() {
                         {format(new Date(coupon.expires_at), "dd MMM yyyy")}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            {coupon.used_count} / {coupon.max_uses}
+                        <span className="text-sm">
+                          {coupon.used_count} / {coupon.max_uses}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {coupon.assigned_to_email ? (
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="h-3 w-3 text-blue-500 shrink-0" />
+                            <span
+                              className="text-xs text-blue-700 truncate max-w-[130px]"
+                              title={coupon.assigned_to_email}
+                            >
+                              {coupon.assigned_to_email}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">
+                            Unassigned
                           </span>
-                        </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(
@@ -434,10 +463,20 @@ export default function AdminCouponsPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => openAssignModal(coupon)}
+                            title="Assign to user"
+                            className="text-blue-600 hover:text-blue-700 cursor-pointer"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="cursor-pointer"
                             onClick={() => openEditModal(coupon)}
                             title="Edit coupon"
                           >
@@ -448,7 +487,7 @@ export default function AdminCouponsPage() {
                             size="icon"
                             onClick={() => openDeleteDialog(coupon)}
                             title="Delete coupon"
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 cursor-pointer"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -469,7 +508,10 @@ export default function AdminCouponsPage() {
               Showing{" "}
               <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}</strong> to{" "}
               <strong>
-                {Math.min(currentPage * ITEMS_PER_PAGE, filteredCoupons.length)}
+                {Math.min(
+                  currentPage * ITEMS_PER_PAGE,
+                  filteredCoupons.length
+                )}
               </strong>{" "}
               of <strong>{filteredCoupons.length}</strong> coupons
             </div>
@@ -495,7 +537,7 @@ export default function AdminCouponsPage() {
         )}
       </Card>
 
-      {/* Create/Edit Modal */}
+      {/* Create / Edit Modal */}
       <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -620,16 +662,90 @@ export default function AdminCouponsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="cursor-pointer"
                 onClick={() => setIsFormModalOpen(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
                 {isSubmitting
                   ? "Saving..."
                   : selectedCoupon
                   ? "Update Coupon"
                   : "Create Coupon"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign to User Modal */}
+      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Assign Coupon to User</DialogTitle>
+            <DialogDescription>
+              Enter the user's email address. They'll receive an email with the
+              coupon code{" "}
+              <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium">
+                {selectedCoupon?.code}
+              </code>
+              . When someone else uses it, this user earns a{" "}
+              <strong className="text-green-700">5% referral credit</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleAssign} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="assign_email">User Email *</Label>
+              <Input
+                id="assign_email"
+                type="email"
+                placeholder="user@example.com"
+                value={assignEmail}
+                onChange={(e) => setAssignEmail(e.target.value)}
+                required
+                autoFocus
+              />
+              {selectedCoupon?.assigned_to_email && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ Currently assigned to{" "}
+                  <strong>{selectedCoupon.assigned_to_email}</strong>. Saving
+                  will reassign and resend the email.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-md bg-blue-50 border border-blue-100 px-4 py-3">
+              <p className="text-xs text-blue-700 leading-relaxed">
+                <strong>How referral credits work:</strong> This coupon can be
+                used by anyone. When a different user uses it at checkout, the
+                assigned user automatically receives a 5% credit applied to
+                their next order.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                className="cursor-pointer"
+                onClick={() => {
+                  setIsAssignModalOpen(false);
+                  setAssignEmail("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isAssigning} className="cursor-pointer">
+                {isAssigning ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Assign & Send Email
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -653,10 +769,10 @@ export default function AdminCouponsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 cursor-pointer"
             >
               Delete
             </AlertDialogAction>
