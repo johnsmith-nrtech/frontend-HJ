@@ -997,7 +997,7 @@ export function VariantManager({
                   <div className="flex items-start justify-between">
                     <div className="flex gap-4">
                       {/* Variant Image Preview */}
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         {variant.images && variant.images.length > 0 ? (
                           <div className="relative h-16 w-16 overflow-hidden rounded-md border bg-white">
                             <Image

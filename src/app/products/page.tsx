@@ -214,26 +214,26 @@ function ProductsContent() {
           let selectedVariant = product.variants?.[0];
 
           if (product.variants && product.variants.length > 0) {
-            const featured = product.variants.find((v) => v.featured);
-            const inStock = product.variants.find((v) => v.stock > 0);
+            const featured = product.variants.find((v) => v.featured === true);
+
+            // Only use size/material match if user is actively filtering
             const sizeMatch = filters.size
               ? product.variants.find(
-                  (v) => v.size?.toLowerCase() === filters.size?.toLowerCase()
-                )
-              : null;
+                (v) => v.size?.toLowerCase() === filters.size?.toLowerCase()
+              )
+            : null;
             const materialMatch = filters.material
-              ? product.variants.find(
-                  (v) =>
-                    v.material?.toLowerCase() ===
-                    filters.material?.toLowerCase()
-                )
-              : null;
+            ? product.variants.find(
+              (v) =>
+                v.material?.toLowerCase() ===
+                filters.material?.toLowerCase()
+            )
+            : null;
 
             selectedVariant =
               sizeMatch ||
               materialMatch ||
               featured ||
-              inStock ||
               product.variants[0];
           }
 
