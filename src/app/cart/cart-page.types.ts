@@ -47,8 +47,8 @@ export interface FormData {
   paymentMethod: "card" | "cod";
   isGuest?: boolean;
   createAccount?: boolean;
-  coupon_code?: string;       // ← ADD THIS
-  discount_amount?: number;   // ← ADD THIS
+  coupon_code?: string;
+  discount_amount?: number;
 }
 
 export interface OrderData {

@@ -408,7 +408,7 @@ export default function AdminCouponsPage() {
                     <TableHead className="min-w-[100px]">Usage</TableHead>
                     <TableHead className="min-w-[160px]">Assigned To</TableHead>
                     <TableHead className="min-w-[100px]">Status</TableHead>
-                    <TableHead className="min-w-[120px] text-right">
+                    <TableHead className="min-w-[120px] text-center">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -462,7 +462,7 @@ export default function AdminCouponsPage() {
                           coupon.max_uses
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"

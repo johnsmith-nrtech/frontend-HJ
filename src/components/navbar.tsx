@@ -534,6 +534,14 @@ export function Navbar() {
                         Wishlist
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link 
+                        href="/referral"
+                        className="font-open-sans w-full cursor-pointer"
+                      >
+                        My Referral
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={(e) => {

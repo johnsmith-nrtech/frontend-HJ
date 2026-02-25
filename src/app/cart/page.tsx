@@ -33,7 +33,6 @@ export default function CartPage() {
     setFormData,
     handlePlaceOrder,
     isProcessingPayment,
-    // Coupon related
     couponCode,
     setCouponCode,
     appliedCoupon,
@@ -43,6 +42,8 @@ export default function CartPage() {
     couponError,
     applyCoupon,
     removeCoupon,
+    referralCredit,
+    referralDiscount,
   } = useCheckoutForm();
 
   // Fix hydration error by waiting for client-side mount
@@ -87,6 +88,8 @@ export default function CartPage() {
       {currentStep === 1 && (
         <ShoppingCartTab
           onNext={handleNext}
+          referralCredit={referralCredit}
+          referralDiscount={referralDiscount}
           couponProps={{
             couponCode,
             setCouponCode,
@@ -106,16 +109,16 @@ export default function CartPage() {
           formData={formData}
           onNext={handleNext}
           setFormData={setFormData}
-          couponProps={{  // 👈 ADD THIS
-      couponCode,
-      setCouponCode,
-      appliedCoupon,
-      discountAmount,
-      isApplyingCoupon,
-      couponError,
-      applyCoupon,
-      removeCoupon,
-    }}
+          couponProps={{
+            couponCode,
+            setCouponCode,
+            appliedCoupon,
+            discountAmount,
+            isApplyingCoupon,
+            couponError,
+            applyCoupon,
+            removeCoupon,
+          }}
         />
       )}
 
@@ -125,16 +128,18 @@ export default function CartPage() {
           formData={formData}
           setFormData={setFormData}
           isProcessing={isProcessingPayment}
+          referralCredit={referralCredit}
+          referralDiscount={referralDiscount}
           couponProps={{
-      couponCode,
-      setCouponCode,
-      appliedCoupon,
-      discountAmount,
-      isApplyingCoupon,
-      couponError,
-      applyCoupon,
-      removeCoupon,
-    }}
+            couponCode,
+            setCouponCode,
+            appliedCoupon,
+            discountAmount,
+            isApplyingCoupon,
+            couponError,
+            applyCoupon,
+            removeCoupon,
+          }}
         />
       )}
 
