@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +97,7 @@ export function VariantManager({
     tags: "",
     images: [],
   });
+
 
   const addVariant = async () => {
     // Check if productId exists (required for actual variant operations)
@@ -290,36 +291,38 @@ export function VariantManager({
             console.log("🎉 All image order updates completed");
 
             // Manually invalidate cache to ensure UI refreshes
-            console.log("🔄 Invalidating cache to refresh UI...");
-            await queryClient.invalidateQueries({ queryKey: ["products"] });
-            await queryClient.invalidateQueries({
-              queryKey: ["products", productId],
-            });
+            // console.log("🔄 Invalidating cache to refresh UI...");
+            // await queryClient.invalidateQueries({ queryKey: ["products"] });
+            // await queryClient.invalidateQueries({
+            //   queryKey: ["products", productId],
+            // });
 
-            // Force a small delay to ensure backend changes are reflected
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // // Force a small delay to ensure backend changes are reflected
+            // await new Promise((resolve) => setTimeout(resolve, 500));
 
-            // Invalidate again to be sure
-            await queryClient.invalidateQueries({
-              queryKey: ["products", productId],
-            });
+            // // Invalidate again to be sure
+            // await queryClient.invalidateQueries({
+            //   queryKey: ["products", productId],
+            // });
 
-            // Wait a bit more for the backend to fully process the changes
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // // Wait a bit more for the backend to fully process the changes
+            // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // Force another cache invalidation to ensure fresh data
-            await queryClient.invalidateQueries({
-              queryKey: ["products", productId],
-            });
+            // // Force another cache invalidation to ensure fresh data
+            // await queryClient.invalidateQueries({
+            //   queryKey: ["products", productId],
+            // });
 
-            console.log(
-              "🔄 Triggering component re-render to pick up fresh data..."
-            );
+            // console.log(
+            //   "🔄 Triggering component re-render to pick up fresh data..."
+            // );
+
+            await queryClient.invalidateQueries({ queryKey: ["products", productId] });
 
             // Notify parent component to refresh its data
             onVariantsChange();
 
-            console.log("✅ Cache invalidated and parent notified to refresh");
+            // console.log("✅ Cache invalidated and parent notified to refresh");
           }
         }
 
@@ -344,9 +347,11 @@ export function VariantManager({
 
         setEditingIndex(null);
       } else {
+        const sku = newVariant.sku.trim() || 
+  `${productId.slice(-6)}-${newVariant.color || 'VAR'}-${newVariant.size || 'STD'}-${Date.now()}`.toUpperCase();
         // Create new variant - only send required fields for creation
         const createData = {
-          sku: newVariant.sku,
+          sku: sku,
           price: newVariant.price,
           size: newVariant.size,
           color: newVariant.color,
@@ -539,6 +544,12 @@ export function VariantManager({
       images: [],
     });
   };
+
+  useEffect(() => {
+  cancelEdit();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [variants]);
+
 
   const calculateDiscount = (price: number, comparePrice: number) => {
     if (!comparePrice || comparePrice <= price) return 0;
@@ -993,7 +1004,7 @@ export function VariantManager({
           <CardContent>
             <div className="space-y-4">
               {variants.map((variant, index) => (
-                <div key={index} className="bg-muted/50 rounded-lg border p-4">
+                <div key={variant.id || variant.sku || index} className="bg-muted/50 rounded-lg border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex gap-4">
                       {/* Variant Image Preview */}

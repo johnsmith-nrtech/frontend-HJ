@@ -621,7 +621,8 @@ export default function EditProductPage() {
                   variants={(product.variants || []).map((variant) =>
                     convertApiVariantToManagerVariant(
                       variant,
-                      product.images || []
+                      // product.images || []
+                      (variant.images || []).map(img => ({...img, variant_id: variant.id}))
                     )
                   )}
                   onVariantsChange={() => {

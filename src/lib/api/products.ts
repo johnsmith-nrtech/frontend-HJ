@@ -424,6 +424,32 @@ export async function updateProduct(
   return ApiService.handleResponse(response, `Failed to update product: ${id}`);
 }
 
+export async function getProductByIdAdmin(
+  id: string,
+  params?: {
+    includeVariants?: boolean;
+    includeImages?: boolean;
+    includeCategory?: boolean;
+  }
+): Promise<Product & {
+  variants?: ProductVariant[];
+  images?: ProductImage[];
+  category?: Category & { parent?: Category };
+}> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const response = await ApiService.fetchWithAuth(
+    `/products/admin/products/${id}?${queryParams.toString()}`
+  );
+  return ApiService.handleResponse(response, `Failed to fetch product: ${id}`);
+}
+
 // Delete a product
 export async function deleteProduct(id: string): Promise<Product> {
   const response = await ApiService.fetchWithAuth(

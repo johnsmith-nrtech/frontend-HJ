@@ -1411,13 +1411,8 @@ export default function AddProductPage() {
                 </CardHeader>
                 <CardContent>
                   <VariantManager
-                    productId=""
                     variants={additionalVariants}
                     onVariantsChange={() => {
-                      // This callback is called when variants are updated
-                      // For the add page, we need to refresh the local state
-                      // Since VariantManager manages its own state internally,
-                      // we don't need to do anything here for the add page
                     }}
                   />
                 </CardContent>
