@@ -21,6 +21,10 @@ export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const { totalItems, error: cartError } = useCart();
+  const [useWallet, setUseWallet] = useState(false);
+  const walletBalance = 0;
+  const walletDiscount = 0;
+
 
   const {
     currentStep,
@@ -90,6 +94,10 @@ export default function CartPage() {
           onNext={handleNext}
           referralCredit={referralCredit}
           referralDiscount={referralDiscount}
+          walletBalance={walletBalance}
+          walletDiscount={walletDiscount}
+          useWallet={useWallet}
+          setUseWallet={setUseWallet}
           couponProps={{
             couponCode,
             setCouponCode,
@@ -101,6 +109,7 @@ export default function CartPage() {
             applyCoupon,
             removeCoupon,
           }}
+          
         />
       )}
 
@@ -130,6 +139,10 @@ export default function CartPage() {
           isProcessing={isProcessingPayment}
           referralCredit={referralCredit}
           referralDiscount={referralDiscount}
+          walletBalance={walletBalance}
+          walletDiscount={walletDiscount}
+          useWallet={useWallet}
+          setUseWallet={setUseWallet}
           couponProps={{
             couponCode,
             setCouponCode,
