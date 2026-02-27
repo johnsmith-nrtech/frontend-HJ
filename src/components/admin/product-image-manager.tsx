@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,12 +78,20 @@ export function ProductImageManager({
   const [images, setImages] = useState<ManagedImage[]>(existingImages);
   const [dragActive, setDragActive] = useState(false);
   const [replacingImageId, setReplacingImageId] = useState<string | null>(null);
+  const isReorderingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
 
   const deleteImageMutation = useDeleteProductImage();
   const uploadImagesMutation = useUploadProductImages();
   const updateImageDetailsMutation = useUpdateImageDetails();
+
+  useEffect(() => {
+    if (!isReorderingRef.current) {
+      setImages(existingImages);
+    }
+  }, [existingImages.length]);
+
 
   const generateId = () =>
     `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -95,17 +103,18 @@ export function ProductImageManager({
       type: "gallery" | "main" | "360" = defaultType
     ): NewImageFile => {
       const preview = URL.createObjectURL(file);
+      const isFirst = images.length === 0 && order === 0;
       return {
         file,
         id: generateId(),
         order,
-        type,
-        isThumbnail: order === 0,
+        type: isFirst ? "main" : type,
+        isThumbnail: isFirst,
         preview,
         isNew: true,
       };
     },
-    [defaultType]
+    [defaultType, images.length]
   );
 
   const updateImagesAndNotify = useCallback(
@@ -124,7 +133,7 @@ export function ProductImageManager({
             const updatePromises = existingImages.map((img) =>
               updateImageDetailsMutation.mutateAsync({
                 imageId: img.id,
-                data: { order: img.order },
+                data: { order: img.order, type: img.type },
               })
             );
 
@@ -406,57 +415,65 @@ export function ProductImageManager({
   );
 
   const moveImage = useCallback(
-    (id: string, direction: "up" | "down") => {
-      if (disabled) return;
+  (id: string, direction: "up" | "down") => {
+    if (disabled) return;
 
-      const currentIndex = images.findIndex((img) => img.id === id);
-      if (currentIndex === -1) return;
+    const currentIndex = images.findIndex((img) => img.id === id);
+    if (currentIndex === -1) return;
 
-      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (newIndex < 0 || newIndex >= images.length) return;
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= images.length) return;
 
-      const newImages = [...images];
-      [newImages[currentIndex], newImages[newIndex]] = [
-        newImages[newIndex],
-        newImages[currentIndex],
-      ];
+    const newImages = [...images];
+    [newImages[currentIndex], newImages[newIndex]] = [
+      newImages[newIndex],
+      newImages[currentIndex],
+    ];
 
-      // Update order and thumbnail status
-      const reorderedImages = newImages.map((img, index) => ({
-        ...img,
-        order: index,
-        isThumbnail: index === 0,
-      }));
+    const reorderedImages = newImages.map((img, index) => ({
+      ...img,
+      order: index,
+      isThumbnail: index === 0,
+      type: (index === 0 ? "main" : (img.type === "main" ? "gallery" : img.type)) as "gallery" | "main" | "360",
+    }));
 
-      updateImagesAndNotify(reorderedImages, true);
-      toast.success("Image position updated");
-    },
-    [images, disabled, updateImagesAndNotify]
-  );
+    isReorderingRef.current = true;
+    updateImagesAndNotify(reorderedImages, true);
+    setTimeout(() => {
+      isReorderingRef.current = false;
+    }, 500);
+    toast.success("Image position updated");
+  },
+  [images, disabled, updateImagesAndNotify]
+);
 
   const setAsThumbnail = useCallback(
-    (id: string) => {
-      if (disabled) return;
+  (id: string) => {
+    if (disabled) return;
 
-      const targetIndex = images.findIndex((img) => img.id === id);
-      if (targetIndex === -1 || targetIndex === 0) return;
+    const targetIndex = images.findIndex((img) => img.id === id);
+    if (targetIndex === -1 || targetIndex === 0) return;
 
-      const newImages = [...images];
-      const targetImage = newImages.splice(targetIndex, 1)[0];
-      newImages.unshift(targetImage);
+    const newImages = [...images];
+    const targetImage = newImages.splice(targetIndex, 1)[0];
+    newImages.unshift(targetImage);
 
-      // Update order and thumbnail status
-      const reorderedImages = newImages.map((img, index) => ({
-        ...img,
-        order: index,
-        isThumbnail: index === 0,
-      }));
+    const reorderedImages = newImages.map((img, index) => ({
+      ...img,
+      order: index,
+      isThumbnail: index === 0,
+      type: (index === 0 ? "main" : (img.type === "main" ? "gallery" : img.type)) as "gallery" | "main" | "360",
+    }));
 
-      updateImagesAndNotify(reorderedImages, true);
-      toast.success("Thumbnail updated");
-    },
-    [images, disabled, updateImagesAndNotify]
-  );
+    isReorderingRef.current = true;
+    updateImagesAndNotify(reorderedImages, true);
+    setTimeout(() => {
+      isReorderingRef.current = false;
+    }, 500);
+    toast.success("Thumbnail updated");
+  },
+  [images, disabled, updateImagesAndNotify]
+);
 
   const startReplaceImage = useCallback((id: string) => {
     setReplacingImageId(id);

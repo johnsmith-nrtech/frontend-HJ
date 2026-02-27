@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import {
   useUploadVariantImages,
   useUpdateImageDetails,
 } from "@/hooks/use-products";
+// const isEditingRef = useRef(false);
 import Image from "next/image";
 
 export interface ProductVariant {
@@ -62,6 +63,7 @@ export function VariantManager({
 }: VariantManagerProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditingRef = useRef(false);
 
   // Query client for manual cache invalidation
   const queryClient = useQueryClient();
@@ -100,14 +102,9 @@ export function VariantManager({
 
 
   const addVariant = async () => {
-    // Check if productId exists (required for actual variant operations)
+
     if (!productId) {
       toast.error("Product must be created first before adding variants");
-      return;
-    }
-
-    if (!newVariant.sku.trim()) {
-      toast.error("SKU is required");
       return;
     }
 
@@ -290,39 +287,11 @@ export function VariantManager({
             await Promise.all(updatePromises);
             console.log("🎉 All image order updates completed");
 
-            // Manually invalidate cache to ensure UI refreshes
-            // console.log("🔄 Invalidating cache to refresh UI...");
-            // await queryClient.invalidateQueries({ queryKey: ["products"] });
-            // await queryClient.invalidateQueries({
-            //   queryKey: ["products", productId],
-            // });
-
-            // // Force a small delay to ensure backend changes are reflected
-            // await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // // Invalidate again to be sure
-            // await queryClient.invalidateQueries({
-            //   queryKey: ["products", productId],
-            // });
-
-            // // Wait a bit more for the backend to fully process the changes
-            // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            // // Force another cache invalidation to ensure fresh data
-            // await queryClient.invalidateQueries({
-            //   queryKey: ["products", productId],
-            // });
-
-            // console.log(
-            //   "🔄 Triggering component re-render to pick up fresh data..."
-            // );
 
             await queryClient.invalidateQueries({ queryKey: ["products", productId] });
 
             // Notify parent component to refresh its data
             onVariantsChange();
-
-            // console.log("✅ Cache invalidated and parent notified to refresh");
           }
         }
 
@@ -465,11 +434,13 @@ export function VariantManager({
       console.error("Error saving variant:", error);
       toast.error("Failed to save variant");
     } finally {
+      isEditingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const editVariant = (index: number) => {
+    isEditingRef.current = true;
     const variant = variants[index];
     setNewVariant({
       ...variant,
@@ -517,6 +488,7 @@ export function VariantManager({
   };
 
   const cancelEdit = () => {
+    isEditingRef.current = false;
     setEditingIndex(null);
     setNewVariant({
       sku: "",
@@ -545,9 +517,10 @@ export function VariantManager({
     });
   };
 
-  useEffect(() => {
-  cancelEdit();
-// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  if (!isEditingRef.current) {
+    cancelEdit();
+  }
 }, [variants]);
 
 

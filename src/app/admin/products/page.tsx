@@ -351,7 +351,16 @@ export default function ProductsPage() {
                           <div className="relative h-10 w-10 overflow-hidden rounded-md bg-white">
                             <Image
                               fill
-                              src={product.images[0].url}
+                              // src={product.images.find((img) => img.type === "main")?.url || 
+                              //   product.images[0].url}
+                              src={
+                                [...(product.images || [])]
+                                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                                .find((img) => img.type === "main")?.url ||
+                                [...(product.images || [])]
+                                .sort((a, b) => (a.order || 0) - (b.order || 0))[0]?.url ||
+                                "/placeholder.svg"
+                              }
                               alt={product.name}
                               className="h-full w-full object-contain"
                             />
