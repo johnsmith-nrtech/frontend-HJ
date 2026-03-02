@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   FolderTree,
   Building,
+  Gift,
   Truck,
   Percent,
 } from "lucide-react";
@@ -63,6 +64,11 @@ export const adminNavItems = [
     title: "Coupons",
     href: "/admin/coupons",
     icon: <Percent className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Referrals",
+    href: "/admin/referrals",
+    icon: <Gift className="mr-3 h-5 w-5" />,
   },
   {
     title: "Settings",

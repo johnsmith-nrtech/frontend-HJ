@@ -208,7 +208,7 @@ export const CheckoutDetailsTab = ({
 
               {/* Coupon Input */}
               <div className="mb-4">
-                <div className="flex items-center overflow-hidden rounded-full border border-[#999999]">
+                <div className="flex items-center overflow-hidden rounded-full border border-[#999999] bg-transparent">
                   <div className="flex items-center justify-center px-3 py-2">
                     <Image src="/t-1.png" alt="Coupon" width={20} height={20} />
                   </div>
@@ -216,18 +216,18 @@ export const CheckoutDetailsTab = ({
                     value={localCouponCode}
                     onChange={(e) => setLocalCouponCode(e.target.value)}
                     disabled={isApplyingCoupon || !!appliedCoupon}
-                    className="flex-1 px-0 py-3 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed" />
+                    className="flex-1 px-0 py-3 focus:outline-none bg-transparent disabled:cursor-not-allowed" />
                   {!appliedCoupon ? (
                     <button onClick={handleApplyCoupon}
                       disabled={!localCouponCode.trim() || isApplyingCoupon}
-                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed">
                       {isApplyingCoupon
                         ? <span className="text-xs">...</span>
                         : <Image src="/arrow-right1.png" alt="Apply" width={20} height={20} />}
                     </button>
                   ) : (
                     <button onClick={handleRemoveCoupon}
-                      className="bg-red-500 hover:bg-red-600 mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white">
+                      className="bg-red-500 hover:bg-red-600 mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                       <X size={16} />
                     </button>
                   )}

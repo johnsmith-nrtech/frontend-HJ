@@ -207,13 +207,13 @@ export const EmailTab = ({
                     value={localCouponCode}
                     onChange={(e) => setLocalCouponCode(e.target.value)}
                     disabled={isApplyingCoupon || !!appliedCoupon}
-                    className="flex-1 px-0 py-3 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="flex-1 px-0 py-3 focus:outline-none disabled:cursor-not-allowed"
                   />
                   {!appliedCoupon ? (
                     <button
                       onClick={handleApplyCoupon}
                       disabled={!localCouponCode.trim() || isApplyingCoupon}
-                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-blue hover:bg-blue/80 mr-2 flex h-10 w-10 font-bold shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed"
                     >
                       {isApplyingCoupon ? (
                         <span className="text-xs">...</span>

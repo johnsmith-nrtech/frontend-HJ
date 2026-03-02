@@ -6,7 +6,7 @@ export interface AddressDto {
   address_line_2?: string;
   city: string;
   state?: string;
-  postal_code: string;
+  postal_code?: string;
   country: string; // ISO 2-letter code (e.g., "GB", "US")
   country_name: string; // Full name (e.g., "United Kingdom")
   floor_id: string; // Optional floor identifier for delivery
@@ -261,9 +261,9 @@ export class PaymentApiService {
     if (!data.shipping_address?.city?.trim()) {
       errors.push("City is required");
     }
-    if (!data.shipping_address?.postal_code?.trim()) {
-      errors.push("Postal code is required");
-    }
+    // if (!data.shipping_address?.postal_code?.trim()) {
+    //   errors.push("Postal code is required");
+    // }
     if (!data.shipping_address?.country?.trim()) {
       errors.push("Country is required");
     }
