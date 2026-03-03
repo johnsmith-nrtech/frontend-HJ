@@ -21,10 +21,6 @@ export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const { totalItems, error: cartError } = useCart();
-  const [useWallet, setUseWallet] = useState(false);
-  const walletBalance = 0;
-  const walletDiscount = 0;
-
 
   const {
     currentStep,
@@ -48,19 +44,20 @@ export default function CartPage() {
     removeCoupon,
     referralCredit,
     referralDiscount,
+    walletBalance,
+    walletDiscount,
+    useWallet,
+    setUseWallet,
   } = useCheckoutForm();
 
-  // Fix hydration error by waiting for client-side mount
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Show loading state while authentication is being determined
   if (authLoading || !isClient) {
     return <AuthLoading />;
   }
 
-  // Show error state if there's a cart error
   if (cartError) {
     return <CartError cartError={cartError} />;
   }
@@ -109,7 +106,6 @@ export default function CartPage() {
             applyCoupon,
             removeCoupon,
           }}
-          
         />
       )}
 
@@ -118,6 +114,10 @@ export default function CartPage() {
           formData={formData}
           onNext={handleNext}
           setFormData={setFormData}
+          walletBalance={walletBalance}
+          walletDiscount={walletDiscount}
+          useWallet={useWallet}
+          setUseWallet={setUseWallet}
           couponProps={{
             couponCode,
             setCouponCode,

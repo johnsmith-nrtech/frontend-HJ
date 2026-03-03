@@ -5,16 +5,22 @@ import { toast } from "sonner";
 import { GuestCheckoutOptions } from "./guest-checkout-options";
 import { FormInputWithLabel } from "./checkout-form-inputs";
 import { Button } from "@/components/button-custom";
-import { ArrowRightIcon, X } from "lucide-react";
+import { ArrowRightIcon, X, Wallet } from "lucide-react";
 import { OrderItemsList } from "./order-items";
 import Image from "next/image";
 import { useAuth } from "@/lib/providers/auth-provider";
 import { SummaryLineItem, SummaryTotalLineItem } from "./cart-summary";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface EmailTabProps {
   onNext: () => void;
   formData: FormData;
   setFormData: (data: FormData) => void;
+  walletBalance: number;
+  walletDiscount: number;
+  useWallet: boolean;
+  setUseWallet: (val: boolean) => void;
   couponProps: {
     couponCode: string;
     setCouponCode: (code: string) => void;
@@ -31,14 +37,14 @@ export const EmailTab = ({
   onNext,
   formData,
   setFormData,
+  walletBalance,
+  walletDiscount,
+  useWallet,
+  setUseWallet,
   couponProps,
 }: EmailTabProps) => {
   const { user } = useAuth();
-  const {
-    subtotal,
-    assemblyTotal,
-    getCartTotal,
-  } = useCart();
+  const { subtotal, assemblyTotal, getCartTotal } = useCart();
 
   const [showGuestOptions, setShowGuestOptions] = React.useState(
     !user && !formData.isGuest
@@ -55,14 +61,13 @@ export const EmailTab = ({
     removeCoupon,
   } = couponProps;
 
-  // Calculate totals
   const cartTotal = getCartTotal();
-  const finalTotal = Math.max(0, cartTotal - discountAmount);
 
-  // Local state for input
+  // ✅ finalTotal now includes wallet deduction
+  const finalTotal = Math.max(0, cartTotal - discountAmount - walletDiscount);
+
   const [localCouponCode, setLocalCouponCode] = React.useState("");
 
-  // Update local state when prop changes
   useEffect(() => {
     if (appliedCoupon) {
       setLocalCouponCode(appliedCoupon.code);
@@ -71,10 +76,7 @@ export const EmailTab = ({
     }
   }, [appliedCoupon]);
 
-  const handleInputChange = (
-    field: keyof FormData,
-    value: string | boolean
-  ) => {
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
   };
 
@@ -85,9 +87,7 @@ export const EmailTab = ({
 
   const handleLoginRedirect = () => {
     const currentPath = window.location.pathname;
-    window.location.href = `/auth/login?redirect=${encodeURIComponent(
-      currentPath
-    )}`;
+    window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
   };
 
   const handleApplyCoupon = async () => {
@@ -95,7 +95,6 @@ export const EmailTab = ({
       toast.error("Please enter a coupon code");
       return;
     }
-    
     setCouponCode(localCouponCode);
     await applyCoupon();
   };
@@ -155,14 +154,14 @@ export const EmailTab = ({
             </div>
           </div>
 
+          {/* Left: Email input */}
           <div className="space-y-8 px-5 md:px-8 lg:col-span-2">
             <div className="rounded-xl bg-[#ffffff] p-6">
               <h1 className="mb-6 text-3xl text-[#222222] sm:text-[45px]">
                 CONTACT INFORMATION
               </h1>
               <p className="mb-4 text-sm text-[#666]">
-                Enter your email address to receive order updates and
-                confirmation.
+                Enter your email address to receive order updates and confirmation.
               </p>
               <FormInputWithLabel
                 label="EMAIL ADDRESS"
@@ -187,6 +186,7 @@ export const EmailTab = ({
             </div>
           </div>
 
+          {/* Right: Order Summary */}
           <div className="lg:w-[413px]">
             <div className="bg-light-blue rounded-lg p-4">
               <h1 className="text-dark-gray mb-6 text-center text-3xl uppercase sm:text-start sm:text-[45px]">
@@ -195,7 +195,7 @@ export const EmailTab = ({
 
               <OrderItemsList />
 
-              {/* Coupon Input Section */}
+              {/* Coupon Input */}
               <div className="mb-4">
                 <div className="flex items-center overflow-hidden rounded-full border border-[#999999]">
                   <div className="flex items-center justify-center px-3 py-2">
@@ -218,12 +218,7 @@ export const EmailTab = ({
                       {isApplyingCoupon ? (
                         <span className="text-xs">...</span>
                       ) : (
-                        <Image
-                          src="/arrow-right1.png"
-                          alt="Apply"
-                          width={20}
-                          height={20}
-                        />
+                        <Image src="/arrow-right1.png" alt="Apply" width={20} height={20} />
                       )}
                     </button>
                   ) : (
@@ -236,20 +231,16 @@ export const EmailTab = ({
                   )}
                 </div>
 
-                {/* Error Message */}
                 {couponError && (
                   <p className="mt-2 text-sm text-red-500">{couponError}</p>
                 )}
 
-                {/* Applied Coupon Display */}
                 {appliedCoupon && discountAmount > 0 && (
                   <div className="mt-3 rounded-lg bg-green-50 p-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-green-700">
-                          {appliedCoupon.code}
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium text-green-700">
+                        {appliedCoupon.code}
+                      </span>
                       <span className="text-sm font-medium text-green-600">
                         -£{discountAmount.toFixed(2)}
                       </span>
@@ -258,18 +249,46 @@ export const EmailTab = ({
                 )}
               </div>
 
+              {/* ✅ Wallet Checkbox — inside Order Summary box */}
+              {walletBalance > 0 && (
+                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="use-wallet-email"
+                      checked={useWallet}
+                      onCheckedChange={(checked) => setUseWallet(checked as boolean)}
+                    />
+                    <Label
+                      htmlFor="use-wallet-email"
+                      className="flex flex-1 cursor-pointer items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Wallet size={15} className="text-green-600" />
+                        <span className="text-sm font-semibold text-green-800">
+                          Use Wallet Credit
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-green-700">
+                        £{walletBalance.toFixed(2)}
+                      </span>
+                    </Label>
+                  </div>
+                  {useWallet && walletDiscount > 0 && (
+                    <p className="mt-2 pl-7 text-xs text-green-600">
+                      £{walletDiscount.toFixed(2)} will be deducted from your order
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Price Summary */}
               <div className="mt-4 space-y-2">
                 <SummaryLineItem label="Products Total" value={subtotal} />
 
                 {assemblyTotal > 0 && (
-                  <SummaryLineItem
-                    value={assemblyTotal}
-                    label="Assembly Charges"
-                  />
+                  <SummaryLineItem value={assemblyTotal} label="Assembly Charges" />
                 )}
 
-                {/* Discount Line */}
                 {appliedCoupon && discountAmount > 0 && (
                   <SummaryLineItem
                     label={`Discount (${appliedCoupon.code})`}
@@ -277,7 +296,10 @@ export const EmailTab = ({
                   />
                 )}
 
-                {/* Total Line - UPDATED with finalTotal */}
+                {useWallet && walletDiscount > 0 && (
+                  <SummaryLineItem label="Wallet Credit" value={-walletDiscount} />
+                )}
+
                 <SummaryTotalLineItem label="Total" value={finalTotal} />
               </div>
             </div>

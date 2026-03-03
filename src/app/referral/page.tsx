@@ -38,7 +38,6 @@ export default function ReferralPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Fetch both in parallel for better performance
         const [codeRes, historyRes] = await Promise.all([
           ApiService.fetchWithAuth("/coupons/user/referral-code"),
           ApiService.fetchWithAuth("/coupons/user/referral-history")
@@ -46,9 +45,7 @@ export default function ReferralPage() {
         
         const codeData = await codeRes.json();
         const historyData = await historyRes.json();
-        
-        // Merge the data - assuming history endpoint returns most data
-        // and code endpoint returns the referral code
+
         setData({
           ...historyData,
           referral_code: codeData.referral_code || historyData.referral_code
@@ -99,7 +96,7 @@ export default function ReferralPage() {
           Refer &amp; Earn Wallet Credit
         </h1>
         <p className="text-base text-[#999999]">
-          Invite friends — they get 10% off, you earn £500 wallet credit
+          Invite friends — they will get discount and you will earn wallet credit
         </p>
       </div>
 

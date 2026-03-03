@@ -245,34 +245,35 @@ export const CheckoutDetailsTab = ({
                 )}
               </div>
 
-              {/* Wallet Balance Toggle */}
+              {/* ✅ Wallet Checkbox */}
               {walletBalance > 0 && (
                 <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wallet size={18} className="text-green-600" />
-                      <div>
-                        <p className="text-sm font-semibold text-green-800">
-                          Wallet: £{walletBalance.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-green-600">
-                          {useWallet
-                            ? `£${walletDiscount.toFixed(2)} will be deducted`
-                            : "Click Apply to use wallet credit"}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setUseWallet(!useWallet)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                        useWallet
-                          ? "bg-red-100 text-red-600 hover:bg-red-200"
-                          : "bg-green-600 text-white hover:bg-green-700"
-                      }`}
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="use-wallet-checkout"
+                      checked={useWallet}
+                      onCheckedChange={(checked) => setUseWallet(checked as boolean)}
+                    />
+                    <Label
+                      htmlFor="use-wallet-checkout"
+                      className="flex flex-1 cursor-pointer items-center justify-between"
                     >
-                      {useWallet ? "Remove" : "Apply"}
-                    </button>
+                      <div className="flex items-center gap-2">
+                        <Wallet size={16} className="text-green-600" />
+                        <span className="text-sm font-semibold text-green-800">
+                          Use Wallet Credit
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-green-700">
+                        £{walletBalance.toFixed(2)} available
+                      </span>
+                    </Label>
                   </div>
+                  {useWallet && walletDiscount > 0 && (
+                    <p className="mt-2 pl-7 text-xs text-green-600">
+                      £{walletDiscount.toFixed(2)} will be deducted from your order
+                    </p>
+                  )}
                 </div>
               )}
 

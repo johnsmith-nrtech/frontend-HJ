@@ -1,13 +1,15 @@
 "use client";
 
 import { useCart } from "@/lib/store/cart-store";
-import React, { useEffect } from "react";
+import React from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Button } from "@/components/button-custom";
 import { SummaryLineItem, SummaryTotalLineItem } from "./cart-summary";
 import { OrderItem1 } from "./order-items";
 import { Wallet } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ShoppingCartTabProps {
   onNext: () => void;
@@ -24,7 +26,6 @@ interface ShoppingCartTabProps {
   };
   referralCredit: number;
   referralDiscount: number;
-  // Wallet props
   walletBalance: number;
   walletDiscount: number;
   useWallet: boolean;
@@ -161,44 +162,9 @@ export const ShoppingCartTab = ({
               </p>
             )}
           </div>
-
-          {/* Wallet Balance Toggle */}
-          {walletBalance > 0 && (
-            <div className="mt-6 w-full md:w-[500px]">
-              <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                      <Wallet size={20} className="text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-green-800">
-                        Wallet Balance: £{walletBalance.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-green-600">
-                        {useWallet
-                          ? `£${walletDiscount.toFixed(2)} will be deducted from your order`
-                          : "Apply your wallet credit to this order"}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setUseWallet(!useWallet)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      useWallet
-                        ? "bg-red-100 text-red-600 hover:bg-red-200"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                  >
-                    {useWallet ? "Remove" : "Apply"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* RIGHT: Summary */}
+        {/* RIGHT: Cart Summary */}
         <div className="lg:col-span-1">
           <div className="bg-light-blue rounded-lg px-2 py-6 shadow-lg sm:p-6">
             <h3 className="mb-6 text-center text-3xl text-gray-800 uppercase sm:text-start sm:text-[34px]">
@@ -212,7 +178,6 @@ export const ShoppingCartTab = ({
                 <SummaryLineItem label="Assembly Charges" value={assemblyTotal} />
               )}
 
-              {/* Coupon/Referral discount */}
               {appliedCoupon && discountAmount > 0 && (
                 <SummaryLineItem
                   label={`${appliedCoupon.is_referral ? "Referral" : "Coupon"} (${appliedCoupon.code})`}
@@ -220,7 +185,6 @@ export const ShoppingCartTab = ({
                 />
               )}
 
-              {/* Old referral credit */}
               {referralCredit > 0 && referralDiscount > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="font-medium text-green-700">
@@ -232,27 +196,43 @@ export const ShoppingCartTab = ({
                 </div>
               )}
 
-              {/* Wallet discount */}
               {useWallet && walletDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-green-700">
-                    Wallet Credit
-                  </span>
-                  <span className="font-medium text-green-700">
-                    -£{walletDiscount.toFixed(2)}
-                  </span>
-                </div>
+                <SummaryLineItem label="Wallet Credit" value={-walletDiscount} />
               )}
 
               <SummaryTotalLineItem label="Total" value={finalTotal} />
             </div>
 
-            {/* Wallet balance badge */}
-            {walletBalance > 0 && !useWallet && (
-              <div className="mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                <p className="text-xs text-green-700">
-                  You have £{walletBalance.toFixed(2)} wallet credit. Apply it above!
-                </p>
+            {/* ✅ Wallet Checkbox — inside Cart Summary box */}
+            {walletBalance > 0 && (
+              <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3">
+                <div className="flex items-center cursor-pointer gap-3">
+                  <Checkbox
+                    id="use-wallet-cart"
+                    checked={useWallet}
+                    className="cursor-pointer"
+                    onCheckedChange={(checked) => setUseWallet(checked as boolean)}
+                  />
+                  <Label
+                    htmlFor="use-wallet-cart"
+                    className="flex flex-1 items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Wallet size={15} className="text-green-600" />
+                      <span className="text-sm font-semibold text-green-800">
+                        Use Wallet Credit
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-green-700">
+                      £{walletBalance.toFixed(2)}
+                    </span>
+                  </Label>
+                </div>
+                {useWallet && walletDiscount > 0 && (
+                  <p className="mt-2 pl-7 text-xs text-green-600">
+                    £{walletDiscount.toFixed(2)} will be deducted from your order
+                  </p>
+                )}
               </div>
             )}
 
