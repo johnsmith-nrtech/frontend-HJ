@@ -98,7 +98,6 @@ export default function AdminReferralsPage() {
         setSettings(response.settings);
         toast.success("Referral settings updated successfully");
         setIsSettingsOpen(false);
-        // Refresh data to show updated stats
         fetchData();
       } else {
         throw new Error('Failed to update settings');
