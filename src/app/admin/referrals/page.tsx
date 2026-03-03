@@ -32,7 +32,7 @@ export default function AdminReferralsPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const res = await ApiService.fetchWithAuth("/coupons/admin/referral-history");
+        const res = await ApiService.fetchWithAuth("/coupons/user/referral-history");
         const json = await res.json();
         setData(json);
       } catch (err) {
