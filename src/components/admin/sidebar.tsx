@@ -73,7 +73,7 @@ export const adminNavItems = [
     icon: <Gift className="mr-3 h-5 w-5" />,
   },
   {
-    title: "Dimensions",
+    title: "Banner",
     href: "/admin/dimensions",
     icon: <Ruler className="mr-3 h-5 w-5" />,
   },
