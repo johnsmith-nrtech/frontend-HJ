@@ -15,8 +15,10 @@ import {
   FolderTree,
   Building,
   Gift,
+  Ruler,
   Truck,
   Percent,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/providers/auth-provider";
@@ -69,6 +71,16 @@ export const adminNavItems = [
     title: "Referrals",
     href: "/admin/referrals",
     icon: <Gift className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Dimensions",
+    href: "/admin/dimensions",
+    icon: <Ruler className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Content",
+    href: "/admin/content",
+    icon: <FileText className="mr-3 h-5 w-5" />,
   },
   {
     title: "Settings",

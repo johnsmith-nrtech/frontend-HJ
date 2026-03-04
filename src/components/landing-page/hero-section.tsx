@@ -1,11 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { MarqueeStrip } from "../marquee-strip";
 import { Button } from "../button-custom";
 
 const HeroSection = () => {
+  const [heroSettings, setHeroSettings] = useState<{ image_url: string | null; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/dimensions`)
+      .then((r) => r.json())
+      .then(setHeroSettings)
+      .catch(() => {});
+  }, []);
+
+  const imageSrc = heroSettings?.image_url || "/hero-img1.png";
+
   // Marquee items data
   const marqueeItems = [
     { text: "10-Years Guarantee", icon: "/sofa-icon.png" },
@@ -41,14 +52,25 @@ const HeroSection = () => {
 
         <div className="relative min-h-[400px] overflow-hidden sm:min-h-[500px] md:min-h-[650px] lg:mb-[-4rem] 2xl:min-h-[1000px]">
           {/* Hero Image - Background for entire section */}
-          <div className="absolute inset-0 ml-0 h-full max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px]">
-            <Image
-              src="/hero-img1.png"
-              alt="Sofa Deals Hero"
-              fill
-              className="h-[90vh] object-contain object-center"
-              priority
-            />
+          <div className="absolute inset-0 ml-0 h-full max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px] flex items-center justify-center">
+            {heroSettings?.width && heroSettings?.height ? (
+              <Image
+                src={imageSrc}
+                alt="Sofa Deals Hero"
+                width={heroSettings.width}
+                height={heroSettings.height}
+                className="mx-auto object-contain"
+                priority
+              />
+            ) : (
+              <Image
+                src={imageSrc}
+                alt="Sofa Deals Hero"
+                fill
+                className="h-[90vh] object-contain object-center"
+                priority
+              />
+            )}
           </div>
 
           {/* Content Overlay with responsive padding */}
@@ -60,8 +82,8 @@ const HeroSection = () => {
                 <div className="max-w-full p-4 sm:max-w-sm lg:max-w-[430px]">
                   <p className="font-open-sans text-gray mt-10 text-sm leading-[26px] md:text-base lg:mt-0 lg:text-base">
                     Do you need a perfect sofa set? Do you want a cosy sofa that
-                    feels like it was made just for you? That’s exactly the vibe
-                    Sofa Deal brings, offering sofa deals you can’t resist.
+                    feels like it was made just for you? That's exactly the vibe
+                    Sofa Deal brings, offering sofa deals you can't resist.
                   </p>
                 </div>
 
@@ -124,7 +146,7 @@ const HeroSection = () => {
         items={marqueeItems}
         backgroundColor="bg-blue"
         textColor="text-white"
-        className="py-3 sm:py-4"
+        className="relative z-10 py-3 sm:py-4"
       />
     </div>
   );
