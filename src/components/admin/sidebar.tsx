@@ -82,11 +82,11 @@ export const adminNavItems = [
     href: "/admin/content",
     icon: <FileText className="mr-3 h-5 w-5" />,
   },
-  {
-    title: "Settings",
-    href: "/admin/settings",
-    icon: <Settings className="mr-3 h-5 w-5" />,
-  },
+  // {
+  //   title: "Settings",
+  //   href: "/admin/settings",
+  //   icon: <Settings className="mr-3 h-5 w-5" />,
+  // },
 ];
 
 export default function AdminSidebar() {

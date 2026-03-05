@@ -6,9 +6,10 @@ import { ContentApi, PageContent } from "@/lib/api/content";
 interface PageContentViewProps {
   slug: string;
   lastUpdated?: string;
+  showTitle?: boolean;
 }
 
-export default function PageContentView({ slug, lastUpdated }: PageContentViewProps) {
+export default function PageContentView({ slug, lastUpdated, showTitle }: PageContentViewProps) {
   const [content, setContent] = useState<PageContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,13 +35,17 @@ export default function PageContentView({ slug, lastUpdated }: PageContentViewPr
   }
 
   if (!content || content.sections.length === 0) {
-    return (
-      <p className="text-gray-500 text-sm">No content available yet.</p>
-    );
+    return <p className="text-gray-500 text-sm">No content available yet.</p>;
   }
 
   return (
     <div>
+      {showTitle && (
+        <h1 className="mb-4 text-4xl font-bold text-gray-900">{content.title}</h1>
+      )}
+      {lastUpdated && (
+        <p className="mb-10 text-sm text-gray-600">Last updated: {lastUpdated}</p>
+      )}
       <div className="space-y-8 text-[17px] leading-relaxed text-gray-800">
         {content.sections.map((section, index) => (
           <section key={index}>

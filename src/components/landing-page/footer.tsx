@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Facebook, Twitter, Linkedin, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ContentApi, PageContent } from "@/lib/api/content";
+
 
 const Footer = () => {
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [pages, setPages] = useState<PageContent[]>([]);
+
+  useEffect(() => {
+   ContentApi.getPages().then(setPages).catch(() => {});
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,50 +164,26 @@ const Footer = () => {
                 </div>
               </div>
 
-              {/* Resources Column */}
+              {/* Resources Column from DB */}
               <div>
                 <h3 className="font-open-sans mb-4 text-lg font-semibold tracking-wider text-white uppercase md:mb-6 md:text-xl">
                   RESOURCES
                 </h3>
                 <div className="space-y-3">
-                  <Link
-                    href="/terms"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    Terms & Conditions
-                  </Link>
-                  <Link
-                    href="/privacy"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    Privacy Policy
-                  </Link>
-                  <Link
-                    href="/returns"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    Return & Refund Policy
-                  </Link>
-                  <Link
-                    href="/cookies"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    Cookies Policy
-                  </Link>
-                  <Link
-                    href="/legal-advisory"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    Legal Advisory
-                  </Link>
-                  <Link
-                    href="/user-data-protection"
-                    className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
-                  >
-                    User Data Protection
-                  </Link>
+                  {pages.map((page) => (
+                    <Link
+                      key={page.page_slug}
+                      href={`/${page.page_slug}`}
+                      className="font-open-sans block text-sm text-white/80 transition-colors hover:text-white"
+                    >
+                      {page.title}
+                    </Link>
+                  ))}
                 </div>
               </div>
+
+
+
             </div>
 
             {/* Get In Touch Column */}
@@ -261,3 +244,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
