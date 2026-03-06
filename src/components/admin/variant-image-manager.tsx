@@ -42,7 +42,7 @@ interface VariantImageManagerProps {
 export function VariantImageManager({
   existingImages = [],
   onImagesChange,
-  maxFiles = 5,
+  maxFiles = 20,
   disabled = false,
 }: VariantImageManagerProps) {
   const [images, setImages] = useState<VariantImage[]>(existingImages);
@@ -68,27 +68,18 @@ export function VariantImageManager({
   });
 
   // Sync existingImages prop with local state
-  useEffect(() => {
-    // Sort images by order first to ensure correct positioning
-    const sortedImages = [...existingImages].sort(
-      (a, b) => (a.order || 0) - (b.order || 0)
-    );
+useEffect(() => {
+  const sortedImages = [...existingImages].sort(
+    (a, b) => (a.order || 0) - (b.order || 0)
+  );
 
-    const imagesWithThumbnailStatus = sortedImages.map((img) => ({
-      ...img,
-      isThumbnail: img.type === "main", // Thumbnail is the image with type "main"
-    }));
-    console.log(
-      "Syncing existing images:",
-      imagesWithThumbnailStatus.map((img) => ({
-        id: img.id?.slice(-8),
-        order: img.order,
-        type: img.type,
-        isThumbnail: img.isThumbnail,
-      }))
-    );
-    setImages(imagesWithThumbnailStatus);
-  }, [existingImages]);
+  const imagesWithThumbnailStatus = sortedImages.map((img, index) => ({
+    ...img,
+    isThumbnail: index === 0,
+    type: index === 0 ? "main" : "gallery",
+  }));
+  setImages(imagesWithThumbnailStatus);
+}, [existingImages]);
 
   const generateId = () =>
     `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

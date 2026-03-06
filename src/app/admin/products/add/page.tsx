@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -121,6 +121,7 @@ export default function AddProductPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("basic");
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
+  const isSubmittingRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [additionalVariants, setAdditionalVariants] = useState<
     ProductVariant[]
@@ -190,6 +191,9 @@ export default function AddProductPage() {
   };
 
   const onSubmit = async (values: FormData) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     try {
       if (!isAuthenticated) {
         toast.error("Please log in to create a product");
@@ -378,6 +382,8 @@ export default function AddProductPage() {
                 throw new Error(
                   `Failed to upload ${type} images: ${error instanceof Error ? error.message : "Unknown error"}`
                 );
+              } finally {
+                isSubmittingRef.current = false;
               }
             }
           );
@@ -1392,7 +1398,7 @@ export default function AddProductPage() {
                   <EnhancedImageUpload
                     onFilesChange={setImageFiles}
                     maxFiles={20}
-                    existingImages={imageFiles}
+                    // existingImages={imageFiles}
                     disabled={createProductMutation.isPending}
                     title="Product Images"
                     allowedTypes={["gallery", "main", "360"]}

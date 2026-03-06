@@ -190,59 +190,59 @@ export function EnhancedImageUpload({
   );
 
   const moveImage = useCallback(
-    (id: string, direction: "up" | "down") => {
-      if (disabled) return;
+  (id: string, direction: "up" | "down") => {
+    if (disabled) return;
 
-      const currentIndex = files.findIndex((img) => img.id === id);
-      if (currentIndex === -1) return;
+    // Work on sorted array, not raw files array
+    const sortedFiles = [...files].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedFiles.findIndex((img) => img.id === id);
+    if (currentIndex === -1) return;
 
-      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (newIndex < 0 || newIndex >= files.length) return;
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= sortedFiles.length) return;
 
-      const newFiles = [...files];
-      [newFiles[currentIndex], newFiles[newIndex]] = [
-        newFiles[newIndex],
-        newFiles[currentIndex],
-      ];
+    [sortedFiles[currentIndex], sortedFiles[newIndex]] = [
+      sortedFiles[newIndex],
+      sortedFiles[currentIndex],
+    ];
 
-      // Update order and thumbnail status
-      const reorderedFiles = newFiles.map((img, index) => ({
-        ...img,
-        order: index,
-        isThumbnail: index === 0,
-      }));
+    // Reassign orders based on new positions
+    const reorderedFiles = sortedFiles.map((img, index) => ({
+      ...img,
+      order: index,
+      isThumbnail: index === 0,
+    }));
 
-      setFiles(reorderedFiles);
-      onFilesChange(reorderedFiles);
-      toast.success("Image position updated");
-    },
-    [files, disabled, onFilesChange]
-  );
+    setFiles(reorderedFiles);
+    onFilesChange(reorderedFiles);
+    toast.success("Image position updated");
+  },
+  [files, disabled, onFilesChange]
+);
 
-  const setAsThumbnail = useCallback(
-    (id: string) => {
-      if (disabled) return;
+const setAsThumbnail = useCallback(
+  (id: string) => {
+    if (disabled) return;
 
-      const targetIndex = files.findIndex((img) => img.id === id);
-      if (targetIndex === -1 || targetIndex === 0) return;
+    const sortedFiles = [...files].sort((a, b) => a.order - b.order);
+    const targetIndex = sortedFiles.findIndex((img) => img.id === id);
+    if (targetIndex === -1 || targetIndex === 0) return;
 
-      const newFiles = [...files];
-      const targetImage = newFiles.splice(targetIndex, 1)[0];
-      newFiles.unshift(targetImage);
+    const targetImage = sortedFiles.splice(targetIndex, 1)[0];
+    sortedFiles.unshift(targetImage);
 
-      // Update order and thumbnail status
-      const reorderedFiles = newFiles.map((img, index) => ({
-        ...img,
-        order: index,
-        isThumbnail: index === 0,
-      }));
+    const reorderedFiles = sortedFiles.map((img, index) => ({
+      ...img,
+      order: index,
+      isThumbnail: index === 0,
+    }));
 
-      setFiles(reorderedFiles);
-      onFilesChange(reorderedFiles);
-      toast.success("Thumbnail updated");
-    },
-    [files, disabled, onFilesChange]
-  );
+    setFiles(reorderedFiles);
+    onFilesChange(reorderedFiles);
+    toast.success("Thumbnail updated");
+  },
+  [files, disabled, onFilesChange]
+);
 
   const changeImageType = useCallback(
     (id: string, newType: "gallery" | "main" | "360") => {
@@ -391,6 +391,7 @@ export function EnhancedImageUpload({
                         <div className="absolute inset-0 flex items-center justify-center rounded bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                           <div className="flex gap-1">
                             <Button
+                              type="button"
                               variant="secondary"
                               size="sm"
                               className="h-8 w-8 p-0"
@@ -403,6 +404,7 @@ export function EnhancedImageUpload({
                             </Button>
                             {!imageFile.isThumbnail && (
                               <Button
+                                type="button"
                                 variant="secondary"
                                 size="sm"
                                 className="h-8 w-8 p-0"
@@ -414,6 +416,7 @@ export function EnhancedImageUpload({
                               </Button>
                             )}
                             <Button
+                              type="button"
                               variant="destructive"
                               size="sm"
                               className="h-8 w-8 p-0"
@@ -450,6 +453,7 @@ export function EnhancedImageUpload({
                         {/* Position Controls */}
                         <div className="absolute right-2 bottom-2 flex gap-1">
                           <Button
+                            type="button"
                             variant="secondary"
                             size="sm"
                             className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
@@ -460,6 +464,7 @@ export function EnhancedImageUpload({
                             <MoveUp className="h-3 w-3" />
                           </Button>
                           <Button
+                            type="button"
                             variant="secondary"
                             size="sm"
                             className="h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"

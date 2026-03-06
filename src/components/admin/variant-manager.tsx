@@ -935,7 +935,7 @@ useEffect(() => {
                   );
                   setNewVariant((prev) => ({ ...prev, images }));
                 }}
-                maxFiles={5}
+                maxFiles={20}
                 disabled={disabled}
               />
             </TabsContent>
