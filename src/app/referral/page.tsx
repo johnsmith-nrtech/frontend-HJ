@@ -123,7 +123,7 @@ export default function ReferralPage() {
               </div>
               <button
                 onClick={handleCopy}
-                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="flex items-center cursor-pointer justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 {copied ? <><Check size={18} /> Copied</> : <><Copy size={18} /> Copy</>}
               </button>
@@ -216,8 +216,11 @@ export default function ReferralPage() {
                     <td className="px-6 py-4 font-mono text-xs text-[#666666]">
                       #{item.orderId?.slice(-8).toUpperCase()}
                     </td>
-                    <td className="px-6 py-4 text-red-500">
+                    {/* <td className="px-6 py-4 text-red-500">
                       -£{Number(item.discountGiven || 0).toFixed(2)}
+                    </td> */}
+                    <td className="px-6 py-4 text-red-500">
+                      -{item.discountGiven % 1 === 0 && item.discountGiven <= 100 ? `${item.discountGiven}%` : `£${Number(item.discountGiven).toFixed(2)}`}
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">

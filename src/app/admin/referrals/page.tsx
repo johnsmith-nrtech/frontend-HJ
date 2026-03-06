@@ -27,6 +27,7 @@ interface ReferralStats {
 interface ReferralSettings {
   referrerReward: number;
   receiverDiscount: number;
+  receiverDiscountType: 'percentage' | 'fixed';
   minOrderAmount: number;
   maxDiscountAmount: number | null;
 }
@@ -37,6 +38,7 @@ export default function AdminReferralsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +69,7 @@ export default function AdminReferralsPage() {
       const res = await ApiService.fetchWithAuth("/coupons/admin/settings");
       const json = await res.json();
       setSettings(json);
+      setDiscountType(json.receiverDiscountType || 'percentage');
     } catch (err) {
       console.error("Failed to fetch settings:", err);
     }
@@ -80,6 +83,7 @@ export default function AdminReferralsPage() {
     const updatedSettings = {
       referrerReward: Number(formData.get('referrerReward')),
       receiverDiscount: Number(formData.get('receiverDiscount')),
+      receiverDiscountType: discountType,
       minOrderAmount: Number(formData.get('minOrderAmount')) || 0,
       maxDiscountAmount: formData.get('maxDiscountAmount') ? Number(formData.get('maxDiscountAmount')) : null,
     };
@@ -141,7 +145,7 @@ export default function AdminReferralsPage() {
               <h2 className="text-lg font-semibold text-gray-900">Configure Referral Program</h2>
               <button 
                 onClick={() => setIsSettingsOpen(false)} 
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="rounded-lg cursor-pointer p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               >
                 <X size={20} />
               </button>
@@ -173,7 +177,7 @@ export default function AdminReferralsPage() {
                 </div>
 
                 {/* Receiver Discount - Percentage */}
-                <div>
+                {/* <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Receiver Discount <span className="text-xs text-gray-500">(%)</span>
                   </label>
@@ -192,6 +196,43 @@ export default function AdminReferralsPage() {
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
                     Percentage discount for new customer
+                  </p>
+                </div> */}
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Receiver Discount
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={discountType}
+                      onChange={(e) => setDiscountType(e.target.value as 'percentage' | 'fixed')}
+                      className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="percentage">%</option>
+                      <option value="fixed">£</option>
+                    </select>
+                    <div className="relative flex-1">
+                      {discountType === 'fixed' && (
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">£</span>
+                      )}
+                      <input
+                        type="number"
+                        name="receiverDiscount"
+                        defaultValue={settings?.receiverDiscount || 10}
+                        step="0.01"
+                        min="0"
+                        max={discountType === 'percentage' ? 100 : 10000}
+                        className={`w-full rounded-lg border border-gray-300 py-2 focus:border-blue-500 focus:outline-none ${discountType === 'fixed' ? 'pl-8 pr-3' : 'px-3 pr-8'}`}
+                        required
+                      />
+                      {discountType === 'percentage' && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {discountType === 'percentage' ? 'Percentage discount for new customer' : 'Fixed £ discount for new customer'}
                   </p>
                 </div>
 
@@ -315,9 +356,10 @@ export default function AdminReferralsPage() {
             £{(data?.totalDiscountGiven ?? 0).toFixed(2)}
           </p>
           <p className="mt-1 text-xs text-gray-400">
-            Receiver gets: {settings?.receiverDiscount || 10}% off
+            Receiver gets: {settings?.receiverDiscount}{settings?.receiverDiscountType === 'fixed' ? '£' : '%'} off
           </p>
         </div>
+
         
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-3">
