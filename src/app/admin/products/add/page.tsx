@@ -382,7 +382,11 @@ export default function AddProductPage() {
             }
           );
 
-          await Promise.all(uploadPromises);
+          const results = await Promise.allSettled(uploadPromises);
+          const failed = results.filter(r => r.status === 'rejected');
+          if (failed.length > 0) {
+            toast.warning(`${failed.length} image group(s) failed to upload, but product was created`);
+          }
           console.log("All images uploaded successfully");
         } catch (imageError) {
           console.error("Error uploading images:", imageError);
