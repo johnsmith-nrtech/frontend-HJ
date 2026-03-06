@@ -175,29 +175,7 @@ export default function AdminReferralsPage() {
                     Amount referrer gets in wallet (in pounds)
                   </p>
                 </div>
-
-                {/* Receiver Discount - Percentage */}
-                {/* <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Receiver Discount <span className="text-xs text-gray-500">(%)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="receiverDiscount"
-                      defaultValue={settings?.receiverDiscount || 10}
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      className="w-full rounded-lg border border-gray-300 py-2 px-3 pr-8 focus:border-blue-500 focus:outline-none"
-                      required
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Percentage discount for new customer
-                  </p>
-                </div> */}
+                
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
