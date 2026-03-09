@@ -111,6 +111,7 @@ const convertApiVariantToManagerVariant = (
     featured: apiVariant.featured,
     tags: apiVariant.tags,
     images: convertedImages,
+    material_info: apiVariant.material_info ?? undefined,
   };
 };
 

@@ -1142,22 +1142,22 @@ export default function AddProductPage() {
                     )}
                   />
                   {/* Material Composition & Construction */}
-<div className="space-y-3 border-t pt-4">
-  <h4 className="text-sm font-medium">Material Composition & Construction</h4>
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <FormField
-      control={form.control}
-      name="default_care_instructions"
-      render={({ field }) => (
-        <FormItem className="col-span-2">
-          <FormLabel>Care Instructions</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Upholstered In Fabric With A Soft, Textured Touch..." {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                  <div className="space-y-3 border-t pt-4">
+                    <h4 className="text-sm font-medium">Material Composition & Construction</h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="default_care_instructions"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2">
+                            <FormLabel>Care Instructions</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Upholstered In Fabric With A Soft, Textured Touch..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
     <FormField
       control={form.control}

@@ -251,25 +251,6 @@ function ProductsContent() {
             selectedVariant = sizeMatch || materialMatch || defaultVariant;
           }
 
-          // ─── IMAGE SELECTION ─────────────────────────────────
-          // const mainImage = product.images?.find((img) => img.type === "main");
-          // const firstImage = product.images?.[0];
-          // const variantImage = product.images
-          //   ?.filter((img) => img.variant_id === selectedVariant?.id)
-          //   .sort((a, b) => a.order - b.order)[0];
-
-          // // ← also check default variant images as fallback
-          // const defaultVariantImage = product.images
-          //   ?.filter((img) => img.variant_id === defaultVariant?.id)
-          //   .sort((a, b) => a.order - b.order)[0];
-
-          // const imageUrl =
-          //   variantImage?.url ||
-          //   defaultVariantImage?.url ||
-          //   mainImage?.url ||
-          //   firstImage?.url ||
-          //   "/placeholder.svg";
-
           const mainImage = product.images?.find((img) => img.type === "main" && !img.variant_id);
           const firstProductImage = product.images?.find((img) => !img.variant_id);
 

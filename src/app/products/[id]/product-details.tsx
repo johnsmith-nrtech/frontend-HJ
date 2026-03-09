@@ -85,6 +85,17 @@ interface ExtendedProductVariant {
     amount?: number;
     description?: string;
   }>;
+  material_info?: {
+    care_instructions?: string;
+    scatter_cushion_cover?: string;
+    scatter_cushion_filling?: string;
+    frame_info?: string;
+    seat_base_info?: string;
+    seat_cushion_info?: string;
+    back_support_info?: string;
+    back_cushion_info?: string;
+    feet_info?: string;
+  };
 }
 
 interface ProductDetailsProps {
@@ -239,7 +250,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           size: "Standard",
           material: "Premium Fabric",
           stock: 10,
-          featured: false, // ← fallback variants are never default
+          featured: false,
           images: images.sort((a, b) => a.order - b.order),
           created_at: firstImage.created_at,
           updated_at: firstImage.updated_at,
@@ -275,7 +286,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           material: "Premium Fabric",
           delivery_time_days: "3 To 4 Days Delivery",
           stock: 10,
-          featured: false, // ← fallback variant
+          featured: false,
           images: product.images?.filter((img) => !img.variant_id) || [],
           assemble_charges: 0,
         },
@@ -285,24 +296,21 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     return [];
   }, [product, createVariantsFromImages]);
 
+  React.useEffect(() => {
+    if (allVariants && allVariants.length > 0 && !selectedVariant) {
+      const sorted = [...allVariants].sort((a, b) => {
+        const dateA = new Date((a as ExtendedProductVariant).created_at || 0).getTime();
+        const dateB = new Date((b as ExtendedProductVariant).created_at || 0).getTime();
+        return dateA - dateB;
+      });
 
+      const firstAvailableVariant = sorted[0];
 
-
-React.useEffect(() => {
-  if (allVariants && allVariants.length > 0 && !selectedVariant) {
-    const sorted = [...allVariants].sort((a, b) => {
-      const dateA = new Date((a as ExtendedProductVariant).created_at || 0).getTime();
-      const dateB = new Date((b as ExtendedProductVariant).created_at || 0).getTime();
-      return dateA - dateB;
-    });
-
-    const firstAvailableVariant = sorted[0];
-
-    if (firstAvailableVariant) {
-      setSelectedVariant(firstAvailableVariant.id);
+      if (firstAvailableVariant) {
+        setSelectedVariant(firstAvailableVariant.id);
+      }
     }
-  }
-}, [allVariants, selectedVariant]);
+  }, [allVariants, selectedVariant]);
 
   // Get all unique options from variants
   const uniqueColors = [
@@ -431,59 +439,58 @@ React.useEffect(() => {
   const isWishlisted = isInWishlist(currentVariantId || "");
   const { addToCart } = useCartAnimationStore();
 
+  const handleAddToCart = () => {
+    // Check if color needs to be selected
+    if (uniqueColors.length > 0 && !selectedColor) {
+      setShowVariantError(true);
+      document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    // Check if size needs to be selected
+    if (uniqueSizes.length > 0 && !selectedSize) {
+      setShowVariantError(true);
+      document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (currentStock === 0) {
+      return;
+    }
 
-const handleAddToCart = () => {
-  // Check if color needs to be selected
-  if (uniqueColors.length > 0 && !selectedColor) {
-    setShowVariantError(true);
-    document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
-    return;
-  }
-  // Check if size needs to be selected
-  if (uniqueSizes.length > 0 && !selectedSize) {
-    setShowVariantError(true);
-    document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
-    return;
-  }
-  if (currentStock === 0) {
-    return;
-  }
+    setShowVariantError(false);
+    addToCart({ item: "item added" });
 
-  setShowVariantError(false);
-  addToCart({ item: "item added" });
+    if (product && currentVariant && currentStock > 0) {
+      const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
 
-  if (product && currentVariant && currentStock > 0) {
-    const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
+      const variantParts = [];
+      if (selectedColor) variantParts.push(selectedColor);
+      if (selectedSize) variantParts.push(selectedSize);
+      if (selectedMaterial) variantParts.push(selectedMaterial);
+      const variantDescription =
+        variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
 
-    const variantParts = [];
-    if (selectedColor) variantParts.push(selectedColor);
-    if (selectedSize) variantParts.push(selectedSize);
-    if (selectedMaterial) variantParts.push(selectedMaterial);
-    const variantDescription =
-      variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
+      const finalPrice = product.discount_offer && product.discount_offer > 0
+        ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
+        : currentPrice;
 
-    const finalPrice = product.discount_offer && product.discount_offer > 0
-      ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
-      : currentPrice;
-
-    addItem({
-      id: currentVariant.id,
-      name: `${product.name}${variantDescription}`,
-      price: finalPrice,
-      image: productImage,
-      variant_id: currentVariant.id,
-      color: selectedColor || currentVariant.color,
-      assembly_required: false,
-      assemble_charges: currentVariant.assemble_charges || 0,
-      variant: {
+      addItem({
+        id: currentVariant.id,
+        name: `${product.name}${variantDescription}`,
+        price: finalPrice,
+        image: productImage,
+        variant_id: currentVariant.id,
         color: selectedColor || currentVariant.color,
-        size: selectedSize || currentVariant.size,
-        material: selectedMaterial || currentVariant.material,
-        sku: currentVariant.sku,
-      },
-    });
-  }
-};
+        assembly_required: false,
+        assemble_charges: currentVariant.assemble_charges || 0,
+        variant: {
+          color: selectedColor || currentVariant.color,
+          size: selectedSize || currentVariant.size,
+          material: selectedMaterial || currentVariant.material,
+          sku: currentVariant.sku,
+        },
+      });
+    }
+  };
 
   const handleWishlistToggle = async () => {
     if (currentVariantId && product && currentVariant) {
@@ -509,31 +516,31 @@ const handleAddToCart = () => {
   };
 
   const getColorHex = (colorName: string): string => {
-  const colorMap: Record<string, string> = {
-    black: "#000000",
-    white: "#FFFFFF",
-    gray: "#808080",
-    grey: "#808080",
-    brown: "#8B4513",
-    beige: "#F5F5DC",
-    navy: "#000080",
-    blue: "#0000FF",
-    green: "#008000",
-    red: "#FF0000",
-    pink: "#FFC0CB",
-    purple: "#800080",
-    orange: "#FFA500",
-    yellow: "#FFFF00",
-    cream: "#F5F0E1",
-    charcoal: "#36454F",
-    emerald: "#50C878",
-    burgundy: "#800020",
-    teal: "#008080",
-    olive: "#808000",
-    maroon: "#800000",
+    const colorMap: Record<string, string> = {
+      black: "#000000",
+      white: "#FFFFFF",
+      gray: "#808080",
+      grey: "#808080",
+      brown: "#8B4513",
+      beige: "#F5F5DC",
+      navy: "#000080",
+      blue: "#0000FF",
+      green: "#008000",
+      red: "#FF0000",
+      pink: "#FFC0CB",
+      purple: "#800080",
+      orange: "#FFA500",
+      yellow: "#FFFF00",
+      cream: "#F5F0E1",
+      charcoal: "#36454F",
+      emerald: "#50C878",
+      burgundy: "#800020",
+      teal: "#008080",
+      olive: "#808000",
+      maroon: "#800000",
+    };
+    return colorMap[colorName.toLowerCase().trim()] || colorName.toLowerCase().trim();
   };
-  return colorMap[colorName.toLowerCase().trim()] || colorName.toLowerCase().trim();
-};
 
   // Update selected variant when filters change
   React.useEffect(() => {
@@ -587,6 +594,59 @@ const handleAddToCart = () => {
       "3 To 4 Days Delivery"
     );
   };
+
+  // ─── material_info helpers ───────────────────────────────────────────────────
+  const materialInfo = (selectedVariantData as ExtendedProductVariant)?.material_info;
+
+  const compositionItems = [
+    {
+      label: "Main Material",
+      value: (selectedVariantData as ExtendedProductVariant)?.material || "81% Polyester, 19% Viscose",
+    },
+    {
+      label: "Scatter Cushion Cover",
+      value: materialInfo?.scatter_cushion_cover ||
+        "100% Polyester, 56% Polyester, 40% Viscose, 4% Cotton / 100% Polyester",
+    },
+    {
+      label: "Scatter Cushion Filling",
+      value: materialInfo?.scatter_cushion_filling ||
+        "These Fibre-Filled Cushions Give Extra Cosiness.",
+    },
+  ];
+
+  const constructionItems = [
+    {
+      label: "Frame",
+      value: materialInfo?.frame_info ||
+        "All Our Sofa And Armchair Frames Feature Solid Hardwood.",
+    },
+    {
+      label: "Seat Base",
+      value: materialInfo?.seat_base_info ||
+        "Serpentine Springs Spread The Load Of The Seat Cushions.",
+    },
+    {
+      label: "Seat Cushion",
+      value: materialInfo?.seat_cushion_info ||
+        "Sink Into The Comfort Of Our Foam-Filled, Fibre-Topped Seat Cushions.",
+    },
+    {
+      label: "Back Support",
+      value: materialInfo?.back_support_info ||
+        "Tensioned Webbing Keeps The Back Cushions In Place.",
+    },
+    {
+      label: "Back Cushion",
+      value: materialInfo?.back_cushion_info ||
+        "These Are Fibre-Filled And Designed To Keep Their Shape.",
+    },
+    {
+      label: "Feet",
+      value: materialInfo?.feet_info || "Black Glides",
+    },
+  ];
+  // ─────────────────────────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
@@ -1198,16 +1258,13 @@ const handleAddToCart = () => {
             <div className="mt-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-                  {/* <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-                    Make 3 Payments Of £{(currentPrice / 3).toFixed(2)}
-                  </span> */}
                   <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-  Make 3 Payments Of £{(
-    (product.discount_offer && product.discount_offer > 0
-      ? currentPrice * (1 - product.discount_offer / 100)
-      : currentPrice) / 3
-  ).toFixed(2)}
-</span>
+                    Make 3 Payments Of £{(
+                      (product.discount_offer && product.discount_offer > 0
+                        ? currentPrice * (1 - product.discount_offer / 100)
+                        : currentPrice) / 3
+                    ).toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1640,66 +1697,39 @@ const handleAddToCart = () => {
                   MATERIALS & CARE
                 </h1>
                 <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
-                  {product?.care_instructions ||
+                  {materialInfo?.care_instructions ||
+                    product?.care_instructions ||
                     "Upholstered In Fabric With A Soft, Textured Touch. Together With The Coordinating Scatter Cushions, It's Really Cosy And Snuggly."}
                 </p>
 
                 <div className="space-y-6 md:space-y-8">
+                  {/* MATERIAL COMPOSITION */}
                   <div>
                     <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
                       MATERIAL COMPOSITION:
                     </h1>
                     <div className="space-y-1 text-sm text-[#999] md:space-y-2 md:text-base">
-                      {selectedVariantData?.material ? (
-                        <p>
-                          <span className="text-dark-gray font-semibold">Main Material:</span>{" "}
-                          {selectedVariantData.material}
+                      {compositionItems.map((item) => (
+                        <p key={item.label}>
+                          <span className="text-dark-gray font-semibold">{item.label}: </span>
+                          {item.value}
                         </p>
-                      ) : (
-                        <p>
-                          <span className="text-dark-gray font-semibold">Main Material: </span>{" "}
-                          81% Polyester, 19% Viscose
-                        </p>
-                      )}
-                      <p>
-                        <span className="text-dark-gray font-semibold">Scatter Cushion Cover: </span>
-                        100% Polyester, 56% Polyester, 40% Viscose, 4% Cotton / 100% Polyester
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Scatter Cushion Filling:</span>{" "}
-                        These Fibre-Filled Cushions Give Extra Cosiness.
-                      </p>
+                      ))}
                     </div>
                   </div>
 
+                  {/* MATERIAL CONSTRUCTION */}
                   <div>
                     <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
                       MATERIAL CONSTRUCTION:
                     </h1>
                     <div className="space-y-2 text-sm text-[#999] md:space-y-3 md:text-base">
-                      <p>
-                        <span className="text-dark-gray font-semibold">Frame:</span> All Our Sofa
-                        And Armchair Frames Feature Solid Hardwood.
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Seat Base: </span> Serpentine
-                        Springs Spread The Load Of The Seat Cushions.
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Seat Cushion: </span> Sink
-                        Into The Comfort Of Our Foam-Filled, Fibre-Topped Seat Cushions.
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Back Support: </span> Tensioned
-                        Webbing Keeps The Back Cushions In Place.
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Back Cushion: </span> These
-                        Are Fibre-Filled And Designed To Keep Their Shape.
-                      </p>
-                      <p>
-                        <span className="text-dark-gray font-semibold">Feet: </span> Black Glides
-                      </p>
+                      {constructionItems.map((item) => (
+                        <p key={item.label}>
+                          <span className="text-dark-gray font-semibold">{item.label}: </span>
+                          {item.value}
+                        </p>
+                      ))}
                     </div>
                   </div>
                 </div>
