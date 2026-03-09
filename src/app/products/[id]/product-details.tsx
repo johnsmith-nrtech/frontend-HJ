@@ -598,55 +598,30 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   // ─── material_info helpers ───────────────────────────────────────────────────
   const materialInfo = (selectedVariantData as ExtendedProductVariant)?.material_info;
 
-  const compositionItems = [
-    {
-      label: "Main Material",
-      value: (selectedVariantData as ExtendedProductVariant)?.material || "81% Polyester, 19% Viscose",
-    },
-    {
-      label: "Scatter Cushion Cover",
-      value: materialInfo?.scatter_cushion_cover ||
-        "100% Polyester, 56% Polyester, 40% Viscose, 4% Cotton / 100% Polyester",
-    },
-    {
-      label: "Scatter Cushion Filling",
-      value: materialInfo?.scatter_cushion_filling ||
-        "These Fibre-Filled Cushions Give Extra Cosiness.",
-    },
-  ];
+const compositionItems = [
+  {
+    label: "Main Material",
+    value: (selectedVariantData as ExtendedProductVariant)?.material,
+  },
+  {
+    label: "Scatter Cushion Cover",
+    value: materialInfo?.scatter_cushion_cover,
+  },
+  {
+    label: "Scatter Cushion Filling",
+    value: materialInfo?.scatter_cushion_filling,
+  },
+].filter(item => item.value && item.value.trim() !== "");
 
-  const constructionItems = [
-    {
-      label: "Frame",
-      value: materialInfo?.frame_info ||
-        "All Our Sofa And Armchair Frames Feature Solid Hardwood.",
-    },
-    {
-      label: "Seat Base",
-      value: materialInfo?.seat_base_info ||
-        "Serpentine Springs Spread The Load Of The Seat Cushions.",
-    },
-    {
-      label: "Seat Cushion",
-      value: materialInfo?.seat_cushion_info ||
-        "Sink Into The Comfort Of Our Foam-Filled, Fibre-Topped Seat Cushions.",
-    },
-    {
-      label: "Back Support",
-      value: materialInfo?.back_support_info ||
-        "Tensioned Webbing Keeps The Back Cushions In Place.",
-    },
-    {
-      label: "Back Cushion",
-      value: materialInfo?.back_cushion_info ||
-        "These Are Fibre-Filled And Designed To Keep Their Shape.",
-    },
-    {
-      label: "Feet",
-      value: materialInfo?.feet_info || "Black Glides",
-    },
-  ];
-  // ─────────────────────────────────────────────────────────────────────────────
+const constructionItems = [
+  { label: "Frame", value: materialInfo?.frame_info },
+  { label: "Seat Base", value: materialInfo?.seat_base_info },
+  { label: "Seat Cushion", value: materialInfo?.seat_cushion_info },
+  { label: "Back Support", value: materialInfo?.back_support_info },
+  { label: "Back Cushion", value: materialInfo?.back_cushion_info },
+  { label: "Feet", value: materialInfo?.feet_info },
+].filter(item => item.value && item.value.trim() !== "");
+
 
   if (isLoading) {
     return (
@@ -1697,9 +1672,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                   MATERIALS & CARE
                 </h1>
                 <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
-                  {materialInfo?.care_instructions ||
-                    product?.care_instructions ||
-                    "Upholstered In Fabric With A Soft, Textured Touch. Together With The Coordinating Scatter Cushions, It's Really Cosy And Snuggly."}
+                  {materialInfo?.care_instructions || product?.care_instructions || ""}
                 </p>
 
                 <div className="space-y-6 md:space-y-8">
