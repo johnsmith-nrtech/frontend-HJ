@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
@@ -43,7 +45,6 @@ interface ShippingInfo {
 }
 
 interface CartState {
-  // State
   items: LocalCartItem[];
   totalItems: number;
   subtotal: number;
@@ -54,12 +55,9 @@ interface CartState {
   isLoading: boolean;
   error: string | null;
   loadingItems: Set<string>;
-
-  // Server sync state (for authenticated users)
   serverCart: ApiCart | null;
   lastSyncedAt: number | null;
 
-  // Actions
   addItem: (
     item: Omit<LocalCartItem, "quantity" | "created_at" | "updated_at">,
     quantity?: number
@@ -72,19 +70,16 @@ interface CartState {
   setItemLoading: (itemId: string, loading: boolean) => void;
   isItemLoading: (itemId: string) => boolean;
 
-  // Authentication and sync actions
   checkAuthStatus: () => boolean;
   syncWithServer: () => Promise<void>;
   syncCartWithServerAfterLogin: () => Promise<void>;
 
-  // Local state management
   addItemLocally: (item: LocalCartItem) => void;
   removeItemLocally: (id: string) => void;
   updateQuantityLocally: (id: string, quantity: number) => void;
   updateAssemblyRequiredLocally: (id: string, required: boolean) => void;
   clearCartLocally: () => void;
 
-  // Utility actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setShippingInfo: (shipping: ShippingInfo) => void;
@@ -105,38 +100,45 @@ interface CartState {
 }
 
 // Helper function to convert API cart item to local cart item
-const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => ({
-  id: apiItem.id,
-  variant_id: apiItem.variant.id,
-  name: apiItem.variant.product.name,
-  price: apiItem.variant.price,
-  quantity: apiItem.quantity,
-  assembly_required: apiItem.assembly_required,
-  assemble_charges: apiItem.variant.assemble_charges,
-  size: apiItem.variant.size,
-  color: apiItem.variant.color,
-  stock: apiItem.variant.stock,
-  created_at: apiItem.created_at,
-  updated_at: apiItem.updated_at,
-  delivery_time_days: apiItem.variant.delivery_time_days ?? "N/A",
-  image:
-    apiItem.variant.variant_images?.[0]?.url ||
-    apiItem.variant.product.images?.[0]?.url,
+const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
+  const originalPrice = apiItem.variant.price;
+  const discountOffer = (apiItem.variant.product as any)?.discount_offer;
+  const finalPrice =
+    discountOffer && Number(discountOffer) > 0
+      ? Math.round(originalPrice * (1 - Number(discountOffer) / 100) * 100) / 100
+      : originalPrice;
 
-  variant: {
-    color: apiItem.variant.color,
-    size: apiItem.variant.size,
-    material: apiItem.variant.material,
-    delivery_time_days: apiItem.variant.delivery_time_days,
+  return {
+    id: apiItem.id,
+    variant_id: apiItem.variant.id,
+    name: apiItem.variant.product.name,
+    price: finalPrice,
+    quantity: apiItem.quantity,
+    assembly_required: apiItem.assembly_required,
     assemble_charges: apiItem.variant.assemble_charges,
-    sku: apiItem.variant.sku,
-  },
-});
+    size: apiItem.variant.size,
+    color: apiItem.variant.color,
+    stock: apiItem.variant.stock,
+    created_at: apiItem.created_at,
+    updated_at: apiItem.updated_at,
+    delivery_time_days: apiItem.variant.delivery_time_days ?? "N/A",
+    image:
+      apiItem.variant.variant_images?.[0]?.url ||
+      apiItem.variant.product.images?.[0]?.url,
+    variant: {
+      color: apiItem.variant.color,
+      size: apiItem.variant.size,
+      material: apiItem.variant.material,
+      delivery_time_days: apiItem.variant.delivery_time_days,
+      assemble_charges: apiItem.variant.assemble_charges,
+      sku: apiItem.variant.sku,
+    },
+  };
+};
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
-      // Initial state
       items: [],
       totalItems: 0,
       subtotal: 0,
@@ -154,11 +156,9 @@ export const useCartStore = create<CartState>()(
       serverCart: null,
       lastSyncedAt: null,
 
-      // Add item to cart
       addItem: async (item, quantity = 1) => {
         const { addItemLocally, performActionForAuthUser } = get();
 
-        // Create optimistic item for immediate UI feedback
         const optimisticItem: LocalCartItem = {
           id: item.variant_id,
           variant_id: item.variant_id,
@@ -175,7 +175,6 @@ export const useCartStore = create<CartState>()(
           updated_at: new Date().toISOString(),
         };
 
-        // Add optimistically
         addItemLocally(optimisticItem);
         get().calculateTotals();
 
@@ -194,11 +193,9 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      // Remove item from cart
       removeItem: async (id) => {
         const { items, removeItemLocally, performActionForAuthUser } = get();
 
-        // Check if item exists
         const itemToRemove = items.find((item) => item.id === id);
         if (!itemToRemove) {
           console.warn(`Item with id ${id} not found in cart`);
@@ -214,14 +211,11 @@ export const useCartStore = create<CartState>()(
           action: async () => {
             await CartApiService.removeFromCart(id);
           },
-          revertAction: () => {
-            // No optimistic update performed here since we remove only after server confirmation
-          },
+          revertAction: () => {},
           extraParams: { id },
         });
       },
 
-      // Update item quantity
       updateQuantity: async (id, quantity) => {
         if (quantity <= 0) {
           await get().removeItem(id);
@@ -229,12 +223,9 @@ export const useCartStore = create<CartState>()(
         }
 
         const { updateQuantityLocally, performActionForAuthUser } = get();
-
-        // update quantity optimistically
         const currentItem = get().items.find((item) => item.id === id);
         updateQuantityLocally(id, quantity);
 
-        // perform action for authenticated user
         await performActionForAuthUser({
           action: async () => {
             await CartApiService.updateCartItem(id, { quantity });
@@ -249,13 +240,8 @@ export const useCartStore = create<CartState>()(
       },
 
       updateAssemblyRequired: async (id, required) => {
-        const {
-          updateAssemblyRequiredLocally,
+        const { updateAssemblyRequiredLocally, performActionForAuthUser } = get();
 
-          performActionForAuthUser,
-        } = get();
-
-        // update assembly requirement optimistically
         updateAssemblyRequiredLocally(id, required);
 
         await performActionForAuthUser({
@@ -265,18 +251,13 @@ export const useCartStore = create<CartState>()(
             });
           },
           revertAction: () => {
-            // revert the optimistic update
             updateAssemblyRequiredLocally(id, !required);
           },
           extraParams: { id },
         });
       },
 
-      performActionForAuthUser: async ({
-        action,
-        revertAction,
-        extraParams,
-      }) => {
+      performActionForAuthUser: async ({ action, revertAction, extraParams }) => {
         if (!get().checkAuthStatus()) {
           console.warn("User not authenticated, action aborted.");
           return;
@@ -309,64 +290,39 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Update item color (with variant support)
       updateItemColor: (id, color) => {
         set((state) => {
           const updatedItems = state.items.map((item) => {
             if (item.id === id) {
-              // Check if the color is available for this item
-              const availableColors = item.variant?.availableColors ||
+              const availableColors =
+                item.variant?.availableColors ||
                 item.availableColors || [
                   item.variant?.color || item.color || "Black",
                 ];
 
-              // Only update if the color is available
               if (availableColors.includes(color)) {
                 return {
                   ...item,
                   color,
                   variant: item.variant
-                    ? {
-                        ...item.variant,
-                        color,
-                      }
-                    : {
-                        color,
-                        availableColors,
-                      },
+                    ? { ...item.variant, color }
+                    : { color, availableColors },
                 };
               }
             }
             return item;
           });
 
-          return {
-            items: updatedItems,
-          };
+          return { items: updatedItems };
         });
       },
 
-      // Set shipping information
-      setShippingInfo: (shipping) => {
-        set({
-          shippingInfo: shipping,
-        });
-      },
+      setShippingInfo: (shipping) => set({ shippingInfo: shipping }),
+      setCouponCode: (code) => set({ couponCode: code }),
+      setDiscount: (discount) => set({ discount }),
 
-      // Set coupon code
-      setCouponCode: (code) => {
-        set({ couponCode: code });
-      },
-
-      // Set discount
-      setDiscount: (discount) => {
-        set({ discount });
-      },
-
-      // Clear entire cart
       clearCart: async () => {
-        const { setLoading, setError, clearCartLocally, syncWithServer } =
-          get();
+        const { setLoading, setError, clearCartLocally, syncWithServer } = get();
 
         setLoading(true);
         setError(null);
@@ -374,11 +330,9 @@ export const useCartStore = create<CartState>()(
         try {
           const currentAuthStatus = get().checkAuthStatus();
           if (currentAuthStatus) {
-            // Clear server cart for authenticated users
             await CartApiService.clearCart();
             await syncWithServer();
           } else {
-            // Clear localStorage for guest users
             clearCartLocally();
           }
         } catch (error) {
@@ -391,7 +345,6 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Calculate totals
       calculateTotals: () => {
         set((state) => {
           const totalItems = state.items.reduce(
@@ -401,7 +354,6 @@ export const useCartStore = create<CartState>()(
           const subtotal = state.items.reduce((sum, item) => {
             return sum + item.price * item.quantity;
           }, 0);
-
           const assemblyTotal = state.items.reduce((sum, item) => {
             const variantAssemblyCharge =
               item.variant?.assemble_charges || item.assemble_charges || 0;
@@ -415,22 +367,17 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      // Get cart total (amount)
       getCartTotal: () => {
         const state = get();
         return state.subtotal + state.assemblyTotal;
       },
 
-      // Check authentication status
       checkAuthStatus: () => {
         const user = SessionManager.getUser();
         const isAuthenticated = SessionManager.isAuthenticated();
-        const authStatus = !!(user && isAuthenticated);
-
-        return authStatus;
+        return !!(user && isAuthenticated);
       },
 
-      // Sync with server
       syncWithServer: async () => {
         const { setError, calculateTotals } = get();
 
@@ -447,9 +394,7 @@ export const useCartStore = create<CartState>()(
         } catch (error) {
           console.error("Failed to sync cart with server:", error);
           setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to sync with server"
+            error instanceof Error ? error.message : "Failed to sync with server"
           );
         }
       },
@@ -462,7 +407,6 @@ export const useCartStore = create<CartState>()(
           setLoading(true);
           const currentAuthStatus = await get().checkAuthStatus();
           if (currentAuthStatus) {
-            // Add to server for authenticated users
             await CartApiService.syncCartAfterLogin({
               data: items.map((i) => ({
                 variant_id: i.variant_id,
@@ -471,10 +415,7 @@ export const useCartStore = create<CartState>()(
               })),
             });
 
-            // Clear local cart after syncing
             clearCartLocally();
-
-            // Finally, sync local state with server
             await syncWithServer();
           }
         } catch (error) {
@@ -484,7 +425,6 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Local state management (for instant feedback)
       addItemLocally: (item) => {
         set((state) => {
           const existingItemIndex = state.items.findIndex(
@@ -493,17 +433,14 @@ export const useCartStore = create<CartState>()(
 
           let newItems;
           if (existingItemIndex >= 0) {
-            // Update quantity if item already exists
             const updatedItems = [...state.items];
             updatedItems[existingItemIndex] = {
               ...updatedItems[existingItemIndex],
-              quantity:
-                updatedItems[existingItemIndex].quantity + item.quantity,
+              quantity: updatedItems[existingItemIndex].quantity + item.quantity,
               updated_at: new Date().toISOString(),
             };
             newItems = updatedItems;
           } else {
-            // Add new item
             newItems = [...state.items, item];
           }
 
@@ -514,46 +451,32 @@ export const useCartStore = create<CartState>()(
       },
 
       removeItemLocally: (id) => {
-        set((state) => {
-          const newItems = state.items.filter((i) => i.id !== id);
-          return { items: newItems };
-        });
-
+        set((state) => ({
+          items: state.items.filter((i) => i.id !== id),
+        }));
         get().calculateTotals();
       },
 
       updateQuantityLocally: (id, quantity) => {
-        const { calculateTotals } = get();
-
-        set((state) => {
-          const newItems = state.items.map((i) =>
+        set((state) => ({
+          items: state.items.map((i) =>
             i.id === id
               ? { ...i, quantity, updated_at: new Date().toISOString() }
               : i
-          );
-          return { items: newItems };
-        });
-
-        calculateTotals();
+          ),
+        }));
+        get().calculateTotals();
       },
 
       updateAssemblyRequiredLocally: (id, required) => {
-        const { calculateTotals } = get();
-
-        set((state) => {
-          const newItems = state.items.map((i) =>
+        set((state) => ({
+          items: state.items.map((i) =>
             i.id === id
-              ? {
-                  ...i,
-                  assembly_required: required,
-                  updated_at: new Date().toISOString(),
-                }
+              ? { ...i, assembly_required: required, updated_at: new Date().toISOString() }
               : i
-          );
-          return { items: newItems };
-        });
-
-        calculateTotals();
+          ),
+        }));
+        get().calculateTotals();
       },
 
       clearCartLocally: () => {
@@ -562,18 +485,14 @@ export const useCartStore = create<CartState>()(
           totalItems: 0,
           subtotal: 0,
           assemblyTotal: 0,
-
           discount: 0,
           couponCode: "",
         });
       },
 
-      // Utility actions
       setLoading: (loading) => set({ isLoading: loading }),
-
       setError: (error) => set({ error }),
 
-      // Item-specific loading state management
       setItemLoading: (itemId, loading) =>
         set((state) => {
           const newLoadingItems = new Set(state.loadingItems);
@@ -593,7 +512,6 @@ export const useCartStore = create<CartState>()(
 
     {
       name: "cart-storage",
-      // Persist essential data, not loading states
       partialize: (state) => ({
         items: state.items,
         totalItems: state.totalItems,
@@ -608,7 +526,6 @@ export const useCartStore = create<CartState>()(
   )
 );
 
-// Hook for cart operations
 export const useCart = () => {
   const {
     items,
@@ -686,7 +603,6 @@ export const useCartAnimationStore = create<CartAnimationState>((set) => ({
   addToCart: (item) => {
     console.log(item);
     set({ isSuccessModalOpen: true });
-
     setTimeout(() => {
       set({ isSuccessModalOpen: false, isOpen: true });
     }, 3000);

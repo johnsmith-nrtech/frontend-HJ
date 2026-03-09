@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { RelatedProductsSelector } from "@/components/admin/related-products-selector";
 import {
   Select,
   SelectContent,
@@ -119,6 +120,7 @@ export default function EditProductPage() {
   const productId = params.id as string;
 
   const [activeTab, setActiveTab] = useState("basic-info");
+  const [relatedProductIds, setRelatedProductIds] = useState<string[]>([]);
 
   // Use React Query hooks
   const {
@@ -201,6 +203,7 @@ export default function EditProductPage() {
         assembly_required: values.assembly_required,
         assembly_instructions: values.assembly_instructions || undefined,
         delivery_info: values.delivery_info,
+        related_product_ids: relatedProductIds,
       };
 
       // Use the mutation
@@ -306,6 +309,17 @@ export default function EditProductPage() {
                           <FormDescription>
                             A descriptive name for the product.
                           </FormDescription>
+                          {/* <div className="space-y-2">
+  <label className="text-sm font-medium">Related Products</label>
+  <p className="text-muted-foreground text-xs">
+    Select products to show as related on this product's page.
+  </p>
+  <RelatedProductsSelector
+    value={relatedProductIds}
+    onChange={setRelatedProductIds}
+    excludeProductId={productId}
+  />
+</div> */}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -435,6 +449,17 @@ export default function EditProductPage() {
                       </FormItem>
                     )}
                   />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Related Products</label>
+                    <p className="text-muted-foreground text-xs">
+                      Select products to show as related on this product's page.
+                    </p>
+                    <RelatedProductsSelector
+                      value={relatedProductIds}
+                      onChange={setRelatedProductIds}
+                      excludeProductId={productId}
+                    />
+                  </div>
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField

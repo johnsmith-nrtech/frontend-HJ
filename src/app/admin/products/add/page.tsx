@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RelatedProductsSelector } from "@/components/admin/related-products-selector";
 import {
   Select,
   SelectContent,
@@ -113,6 +114,17 @@ const formSchema = z.object({
   material: z.string().optional(),
   brand: z.string().optional(),
   featured: z.boolean().optional(),
+
+  // Material Info for default variant
+default_care_instructions: z.string().optional(),
+default_scatter_cushion_cover: z.string().optional(),
+default_scatter_cushion_filling: z.string().optional(),
+default_frame_info: z.string().optional(),
+default_seat_base_info: z.string().optional(),
+default_seat_cushion_info: z.string().optional(),
+default_back_support_info: z.string().optional(),
+default_back_cushion_info: z.string().optional(),
+default_feet_info: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -123,9 +135,8 @@ export default function AddProductPage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const isSubmittingRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [additionalVariants, setAdditionalVariants] = useState<
-    ProductVariant[]
-  >([]);
+  const [additionalVariants, setAdditionalVariants] = useState<ProductVariant[]>([]);
+  const [relatedProductIds, setRelatedProductIds] = useState<string[]>([]);
 
   const {
     isAuthenticated,
@@ -182,6 +193,15 @@ export default function AddProductPage() {
       material: "",
       brand: "",
       featured: false,
+      default_care_instructions: "",
+      default_scatter_cushion_cover: "",
+      default_scatter_cushion_filling: "",
+      default_frame_info: "",
+      default_seat_base_info: "",
+      default_seat_cushion_info: "",
+      default_back_support_info: "",
+      default_back_cushion_info: "",
+      default_feet_info: "",
     },
   });
 
@@ -323,6 +343,18 @@ export default function AddProductPage() {
         material: values.material || undefined,
         brand: values.brand || undefined,
         featured: Boolean(values.featured),
+        related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
+        material_info: {
+        care_instructions: values.default_care_instructions || undefined,
+        scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
+        scatter_cushion_filling: values.default_scatter_cushion_filling || undefined,
+  frame_info: values.default_frame_info || undefined,
+  seat_base_info: values.default_seat_base_info || undefined,
+  seat_cushion_info: values.default_seat_cushion_info || undefined,
+  back_support_info: values.default_back_support_info || undefined,
+  back_cushion_info: values.default_back_cushion_info || undefined,
+  feet_info: values.default_feet_info || undefined,
+},
       };
 
       // Create the product
@@ -627,6 +659,16 @@ export default function AddProductPage() {
                       </FormItem>
                     )}
                   />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Related Products</label>
+                    <p className="text-muted-foreground text-xs">
+                      Select products to show as related on this product's page.
+                    </p>
+                    <RelatedProductsSelector
+                      value={relatedProductIds}
+                      onChange={setRelatedProductIds}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1099,6 +1141,137 @@ export default function AddProductPage() {
                       </FormItem>
                     )}
                   />
+                  {/* Material Composition & Construction */}
+<div className="space-y-3 border-t pt-4">
+  <h4 className="text-sm font-medium">Material Composition & Construction</h4>
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <FormField
+      control={form.control}
+      name="default_care_instructions"
+      render={({ field }) => (
+        <FormItem className="col-span-2">
+          <FormLabel>Care Instructions</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Upholstered In Fabric With A Soft, Textured Touch..." {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_scatter_cushion_cover"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Scatter Cushion Cover</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., 100% Polyester" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_scatter_cushion_filling"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Scatter Cushion Filling</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Fibre-Filled Cushions" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_frame_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Frame</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Solid Hardwood" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_seat_base_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Seat Base</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Serpentine Springs" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_seat_cushion_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Seat Cushion</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Foam-Filled, Fibre-Topped" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_back_support_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Back Support</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Tensioned Webbing" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_back_cushion_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Back Cushion</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Fibre-Filled" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+
+    <FormField
+      control={form.control}
+      name="default_feet_info"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Feet</FormLabel>
+          <FormControl>
+            <Input placeholder="e.g., Black Glides" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </div>
+</div>
                 </CardContent>
               </Card>
             </TabsContent>

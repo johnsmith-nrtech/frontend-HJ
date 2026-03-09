@@ -176,6 +176,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const [showViewInRoom, setShowViewInRoom] = useState(false);
   const [selectedTab, setSelectedTab] = useState("images");
   const [showMobileOptionsSheet, setShowMobileOptionsSheet] = useState(false);
+  const [showVariantError, setShowVariantError] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
   const { isInWishlist, toggleItem } = useWishlistStore();
@@ -284,25 +285,10 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     return [];
   }, [product, createVariantsFromImages]);
 
-  // Initialize variant selections when product loads
-  // React.useEffect(() => {
-  //   if (allVariants && allVariants.length > 0 && !selectedVariant) {
-  //     // ✅ Always prefer featured variant as default
-  //     const firstAvailableVariant =
-  //       allVariants.find((v) => (v as ExtendedProductVariant).featured === true) ||
-  //       allVariants.find((v) => v.stock > 0) ||
-  //       allVariants[0];
 
-  //     if (firstAvailableVariant) {
-  //       setSelectedColor(firstAvailableVariant.color || null);
-  //       setSelectedSize(firstAvailableVariant.size || null);
-  //       setSelectedMaterial(firstAvailableVariant.material || null);
-  //       setSelectedVariant(firstAvailableVariant.id);
-  //     }
-  //   }
-  // }, [allVariants, selectedVariant]);
 
-  React.useEffect(() => {
+
+React.useEffect(() => {
   if (allVariants && allVariants.length > 0 && !selectedVariant) {
     const sorted = [...allVariants].sort((a, b) => {
       const dateA = new Date((a as ExtendedProductVariant).created_at || 0).getTime();
@@ -313,9 +299,6 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     const firstAvailableVariant = sorted[0];
 
     if (firstAvailableVariant) {
-      setSelectedColor(firstAvailableVariant.color || null);
-      setSelectedSize(firstAvailableVariant.size || null);
-      setSelectedMaterial(firstAvailableVariant.material || null);
       setSelectedVariant(firstAvailableVariant.id);
     }
   }
@@ -448,43 +431,59 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const isWishlisted = isInWishlist(currentVariantId || "");
   const { addToCart } = useCartAnimationStore();
 
-  const handleAddToCart = () => {
-    addToCart({ item: "item added" });
 
-    if (product && currentVariant && currentStock > 0) {
-      const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
+const handleAddToCart = () => {
+  // Check if color needs to be selected
+  if (uniqueColors.length > 0 && !selectedColor) {
+    setShowVariantError(true);
+    document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  // Check if size needs to be selected
+  if (uniqueSizes.length > 0 && !selectedSize) {
+    setShowVariantError(true);
+    document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  if (currentStock === 0) {
+    return;
+  }
 
-      // Build variant description
-      const variantParts = [];
-      if (selectedColor) variantParts.push(selectedColor);
-      if (selectedSize) variantParts.push(selectedSize);
-      if (selectedMaterial) variantParts.push(selectedMaterial);
-      const variantDescription =
-        variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
+  setShowVariantError(false);
+  addToCart({ item: "item added" });
 
-      // Calculate final price after discount
-      const finalPrice = product.discount_offer && product.discount_offer > 0
-        ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
-        : currentPrice;
+  if (product && currentVariant && currentStock > 0) {
+    const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
 
-      addItem({
-        id: currentVariant.id,
-        name: `${product.name}${variantDescription}`,
-        price: finalPrice,
-        image: productImage,
-        variant_id: currentVariant.id,
+    const variantParts = [];
+    if (selectedColor) variantParts.push(selectedColor);
+    if (selectedSize) variantParts.push(selectedSize);
+    if (selectedMaterial) variantParts.push(selectedMaterial);
+    const variantDescription =
+      variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
+
+    const finalPrice = product.discount_offer && product.discount_offer > 0
+      ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
+      : currentPrice;
+
+    addItem({
+      id: currentVariant.id,
+      name: `${product.name}${variantDescription}`,
+      price: finalPrice,
+      image: productImage,
+      variant_id: currentVariant.id,
+      color: selectedColor || currentVariant.color,
+      assembly_required: false,
+      assemble_charges: currentVariant.assemble_charges || 0,
+      variant: {
         color: selectedColor || currentVariant.color,
-        assembly_required: false,
-        assemble_charges: currentVariant.assemble_charges || 0,
-        variant: {
-          color: selectedColor || currentVariant.color,
-          size: selectedSize || currentVariant.size,
-          material: selectedMaterial || currentVariant.material,
-          sku: currentVariant.sku,
-        },
-      });
-    }
-  };
+        size: selectedSize || currentVariant.size,
+        material: selectedMaterial || currentVariant.material,
+        sku: currentVariant.sku,
+      },
+    });
+  }
+};
 
   const handleWishlistToggle = async () => {
     if (currentVariantId && product && currentVariant) {
@@ -509,33 +508,32 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     }
   };
 
-  // Dynamic color mapping - only for colors that exist in variants
   const getColorHex = (colorName: string): string => {
-    const colorMap: Record<string, string> = {
-      Black: "#000000",
-      White: "#FFFFFF",
-      Gray: "#808080",
-      Grey: "#808080",
-      Brown: "#8B4513",
-      Beige: "#F5F5DC",
-      Navy: "#000080",
-      Blue: "#0000FF",
-      Green: "#008000",
-      Red: "#FF0000",
-      Pink: "#FFC0CB",
-      Purple: "#800080",
-      Orange: "#FFA500",
-      Yellow: "#FFFF00",
-      Cream: "#FFFDD0",
-      Charcoal: "#36454F",
-      Emerald: "#50C878",
-      Burgundy: "#800020",
-      Teal: "#008080",
-      Olive: "#808000",
-      Maroon: "#800000",
-    };
-    return colorMap[colorName] || "#000000";
+  const colorMap: Record<string, string> = {
+    black: "#000000",
+    white: "#FFFFFF",
+    gray: "#808080",
+    grey: "#808080",
+    brown: "#8B4513",
+    beige: "#F5F5DC",
+    navy: "#000080",
+    blue: "#0000FF",
+    green: "#008000",
+    red: "#FF0000",
+    pink: "#FFC0CB",
+    purple: "#800080",
+    orange: "#FFA500",
+    yellow: "#FFFF00",
+    cream: "#F5F0E1",
+    charcoal: "#36454F",
+    emerald: "#50C878",
+    burgundy: "#800020",
+    teal: "#008080",
+    olive: "#808000",
+    maroon: "#800000",
   };
+  return colorMap[colorName.toLowerCase().trim()] || colorName.toLowerCase().trim();
+};
 
   // Update selected variant when filters change
   React.useEffect(() => {
@@ -654,7 +652,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
         <div className="mx-auto flex max-w-7xl gap-2 sm:gap-3">
           <Button
             onClick={handleAddToCart}
-            disabled={currentStock === 0 || !currentVariant}
+            disabled={currentStock === 0}
             variant="primary"
             size="sm"
             rounded="full"
@@ -981,10 +979,20 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
             {/* Color Selection */}
             {uniqueColors.length > 0 && (
-              <div className="space-y-2">
+              <div id="variant-selection" className="space-y-2">
                 <span className="text-gray text-base">
-                  Color - {selectedColor || "Select Color"}
+                  Color - {selectedColor || (
+                  <span className={showVariantError && !selectedColor ? "text-red-500 font-medium" : ""}>
+                  Select Color
                 </span>
+                )}
+                </span>
+                {/* Error message */}
+                {showVariantError && !selectedColor && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <span>⚠</span> Please select a color to continue
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2 sm:gap-3">
                   {uniqueColors.map((color) => {
                     const isSelected = selectedColor === color;
@@ -1000,6 +1008,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                         onClick={() => {
                           if (isInStock) {
                             setSelectedColor(color);
+                            setShowVariantError(false);
                             const colorVariants = (allVariants || []).filter(
                               (v) => v.color === color && v.stock > 0
                             );
@@ -1040,8 +1049,18 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
             {uniqueSizes.length > 0 && (
               <div className="space-y-3">
                 <span className="text-gray text-base font-medium">
-                  Size - {selectedSize || "Select Size"}
+                  Size - {selectedSize || (
+                    <span className={showVariantError && !selectedSize ? "text-red-500 font-medium" : ""}>
+                      Select Size
+                    </span>
+                  )}
                 </span>
+                {/* Error message */}
+                {showVariantError && !selectedSize && (
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <span>⚠</span> Please select a size to continue
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2 sm:gap-3">
                   {uniqueSizes.map((size) => {
                     const isSelected = selectedSize === size;
@@ -1056,6 +1075,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                         onClick={() => {
                           if (isInStock) {
                             setSelectedSize(size);
+                            setShowVariantError(false);
                             const sizeVariants = (allVariants || []).filter(
                               (v) =>
                                 v.size === size &&
@@ -1178,9 +1198,16 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
             <div className="mt-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+                  {/* <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
                     Make 3 Payments Of £{(currentPrice / 3).toFixed(2)}
-                  </span>
+                  </span> */}
+                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+  Make 3 Payments Of £{(
+    (product.discount_offer && product.discount_offer > 0
+      ? currentPrice * (1 - product.discount_offer / 100)
+      : currentPrice) / 3
+  ).toFixed(2)}
+</span>
                 </div>
               </div>
             </div>
@@ -1200,7 +1227,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
                 <Button
                   onClick={handleAddToCart}
-                  disabled={currentStock === 0 || !currentVariant}
+                  disabled={currentStock === 0}
                   variant="primary"
                   size="xl"
                   rounded="full"
