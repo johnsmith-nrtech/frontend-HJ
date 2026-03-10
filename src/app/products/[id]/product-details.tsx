@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "@/components/ui/modern-image-gallery.css";
 import { useProduct, useRelatedProducts } from "@/hooks/use-products";
 import { useCartAnimationStore, useCartStore } from "@/lib/store/cart-store";
@@ -154,6 +154,15 @@ const marqueeItems = [
   { text: "FREE DELIVERY", icon: "/sofa-icon.png" },
 ];
 
+// ── tabList defined outside component so it's stable and accessible everywhere ──
+const tabList = [
+  { key: "images",      label: "Images",      section: "style" },
+  { key: "dimensions",  label: "Dimensions",  section: "dimensions" },
+  { key: "material",    label: "Material",    section: "material" },
+  { key: "recommended", label: "Recommended", section: "recommended" },
+  { key: "reviews",     label: "Reviews",     section: "reviews" },
+];
+
 export default function ProductDetails({ productId }: ProductDetailsProps) {
   const isMobile = useIsMobile();
   const { targetRef: featuresRef, isIntersecting: featuresInView } = useInView({
@@ -191,6 +200,43 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   const addItem = useCartStore((state) => state.addItem);
   const { isInWishlist, toggleItem } = useWishlistStore();
+
+  // ─── SCROLL SPY: update active tab based on visible section ───
+useEffect(() => {
+  // Delay to ensure DOM is fully painted
+  const timer = setTimeout(() => {
+    const observers: IntersectionObserver[] = [];
+
+    tabList.forEach(({ key, section }) => {
+      const element = document.getElementById(section);
+      if (!element) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setSelectedTab(key);
+            }
+          });
+        },
+        {
+          root: null,
+          rootMargin: "-30% 0px -60% 0px",
+          threshold: 0,
+        }
+      );
+
+      observer.observe(element);
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach((obs) => obs.disconnect());
+    };
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [isLoading]);
 
   // Create variants from images and product data since API doesn't include variants array
   const createVariantsFromImages = React.useCallback(() => {
@@ -598,30 +644,31 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   // ─── material_info helpers ───────────────────────────────────────────────────
   const materialInfo = (selectedVariantData as ExtendedProductVariant)?.material_info;
 
-const compositionItems = [
-  {
-    label: "Main Material",
-    value: (selectedVariantData as ExtendedProductVariant)?.material,
-  },
-  {
-    label: "Scatter Cushion Cover",
-    value: materialInfo?.scatter_cushion_cover,
-  },
-  {
-    label: "Scatter Cushion Filling",
-    value: materialInfo?.scatter_cushion_filling,
-  },
-].filter(item => item.value && item.value.trim() !== "");
+  const compositionItems = [
+    {
+      label: "Main Material",
+      value: (selectedVariantData as ExtendedProductVariant)?.material,
+    },
+    {
+      label: "Scatter Cushion Cover",
+      value: materialInfo?.scatter_cushion_cover,
+    },
+    {
+      label: "Scatter Cushion Filling",
+      value: materialInfo?.scatter_cushion_filling,
+    },
+  ].filter(item => item.value && item.value.trim() !== "");
 
-const constructionItems = [
-  { label: "Frame", value: materialInfo?.frame_info },
-  { label: "Seat Base", value: materialInfo?.seat_base_info },
-  { label: "Seat Cushion", value: materialInfo?.seat_cushion_info },
-  { label: "Back Support", value: materialInfo?.back_support_info },
-  { label: "Back Cushion", value: materialInfo?.back_cushion_info },
-  { label: "Feet", value: materialInfo?.feet_info },
-].filter(item => item.value && item.value.trim() !== "");
+  const constructionItems = [
+    { label: "Frame", value: materialInfo?.frame_info },
+    { label: "Seat Base", value: materialInfo?.seat_base_info },
+    { label: "Seat Cushion", value: materialInfo?.seat_cushion_info },
+    { label: "Back Support", value: materialInfo?.back_support_info },
+    { label: "Back Cushion", value: materialInfo?.back_cushion_info },
+    { label: "Feet", value: materialInfo?.feet_info },
+  ].filter(item => item.value && item.value.trim() !== "");
 
+  // ─── EARLY RETURNS (after all hooks) ─────────────────────────────────────────
 
   if (isLoading) {
     return (
@@ -664,14 +711,6 @@ const constructionItems = [
       </div>
     );
   }
-
-  const tabList = [
-    { key: "images", label: "Images", section: "style" },
-    { key: "dimensions", label: "Dimensions", section: "dimensions" },
-    { key: "material", label: "Material", section: "material" },
-    { key: "recommended", label: "Recommended", section: "recommended" },
-    { key: "reviews", label: "Reviews", section: "reviews" },
-  ];
 
   return (
     <div className="w-full overflow-hidden">
@@ -753,7 +792,7 @@ const constructionItems = [
         </Breadcrumb>
 
         {/* Product Details */}
-        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+        <div id="style" className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           {/* Mobile: Product Title First */}
           {isMobile && (
             <div className="flex items-center justify-between lg:hidden">

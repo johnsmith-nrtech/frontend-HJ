@@ -6,7 +6,7 @@ import Image from "next/image";
 import { BundleCard } from "@/components/bundle-card";
 import { MarqueeStrip } from "@/components/marquee-strip";
 import { Button } from "@/components/button-custom";
-import { Search } from "lucide-react";
+import { BundlePageHeroSection } from "./components/bundle-page-hero-section";
 import {
   Select,
   SelectContent,
@@ -88,27 +88,15 @@ export default function BundlesPage() {
     <div className="w-full">
 
       {/* ─── Hero ──────────────────────────────────────── */}
-      <div className="relative h-[220px] w-full overflow-hidden bg-[#e8f0f7] sm:h-[280px] md:h-[320px]">
-        <div className="flex h-full flex-col items-start justify-center px-6 sm:px-[32px]">
-          <p className="font-open-sans mb-2 text-sm font-medium uppercase tracking-widest text-[#56748e]">
-            Curated Collections
-          </p>
-          <h1 className="font-bebas text-4xl uppercase text-[#222222] sm:text-5xl md:text-6xl">
-            All Bundles
-          </h1>
-          <p className="font-open-sans mt-2 max-w-md text-sm text-gray-500">
-            Hand-picked product combinations — save more when you buy together.
-          </p>
-        </div>
-      </div>
+      <BundlePageHeroSection />
 
       {/* ─── Marquee ───────────────────────────────────── */}
-      {/* <MarqueeStrip
+      <MarqueeStrip
         items={marqueeItems}
         backgroundColor="bg-blue"
         textColor="text-white"
         className="py-3 sm:py-4 md:mt-[-70px] 2xl:mt-[0px]"
-      /> */}
+      />
 
       {/* ─── Main ──────────────────────────────────────── */}
       <div className="bg-gray-50 py-8 md:py-12">
@@ -139,21 +127,6 @@ export default function BundlesPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-start gap-2">
-  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
-    Search
-  </span>
-  <div className="relative">
-    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-blue" />
-    <input
-      type="text"
-      placeholder="Search bundles..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="text-blue border-blue h-9 w-[130px] rounded-full border pl-10 pr-4 text-sm bg-white shadow-sm outline-none focus:ring-0 placeholder:text-gray-400 sm:w-[280px]"
-    />
-  </div>
-</div>
 
               {/* Sort + View mode */}
               <div className="flex items-center gap-6">

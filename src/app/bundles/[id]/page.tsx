@@ -45,15 +45,15 @@ function BundleProductCard({ product }: { product: BundleProduct }) {
           <span className="font-semibold text-gray-900">
             {formatPrice(product.base_price)}
           </span>
-          {product.discount_offer && product.discount_offer > 0 && (
+          {/* {product.discount_offer && product.discount_offer > 0 && (
             <Badge variant="secondary" className="text-xs">
               {product.discount_offer}% off
             </Badge>
-          )}
+          )} */}
         </div>
       </div>
       <Link href={`/products/${product.id}`}>
-        <Button variant="outline" size="sm">
+        <Button className="cursor-pointer" variant="outline" size="sm">
           View
         </Button>
       </Link>
@@ -231,7 +231,7 @@ export default function BundleDetailPage() {
                 ))}
               </div>
 
-              <Button className="w-full" size="lg">
+              <Button className="w-full cursor-pointer" size="lg">
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Add Bundle to Cart
               </Button>

@@ -1,4 +1,3 @@
-// src/app/admin/bundles/page.tsx
 "use client";
 
 import { useState, useRef } from "react";
@@ -393,7 +392,7 @@ export default function AdminBundlesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="cursor-pointer">
               {editingBundle ? "Edit Bundle" : "Create New Bundle"}
             </DialogTitle>
             <DialogDescription>
@@ -539,7 +538,7 @@ export default function AdminBundlesPage() {
                           imagePreview: null,
                         }))
                       }
-                      className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
+                      className="absolute cursor-pointer right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -548,6 +547,7 @@ export default function AdminBundlesPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  className="cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <ImageIcon className="mr-2 h-4 w-4" />
@@ -602,7 +602,7 @@ export default function AdminBundlesPage() {
                         {product.name}
                         <button
                           onClick={() => toggleProduct(id)}
-                          className="ml-1 rounded-full hover:bg-white/20"
+                          className="ml-1 cursor-pointer rounded-full hover:bg-white/20"
                         >
                           <X className="h-3 w-3" />
                         </button>
