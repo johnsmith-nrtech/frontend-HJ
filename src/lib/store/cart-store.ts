@@ -194,27 +194,33 @@ export const useCartStore = create<CartState>()(
       },
 
       removeItem: async (id) => {
-        const { items, removeItemLocally, performActionForAuthUser } = get();
+  const { items, removeItemLocally, performActionForAuthUser } = get();
 
-        const itemToRemove = items.find((item) => item.id === id);
-        if (!itemToRemove) {
-          console.warn(`Item with id ${id} not found in cart`);
-          return;
-        }
+  const itemToRemove = items.find((item) => item.id === id);
+  if (!itemToRemove) {
+    console.warn(`Item with id ${id} not found in cart`);
+    return;
+  }
 
-        if (!get().checkAuthStatus()) {
-          removeItemLocally(id);
-          return;
-        }
+  // ── If bundle (no server record), remove locally only ──
+  if (itemToRemove.delivery_time_days === "Bundle") {
+    removeItemLocally(id);
+    return;
+  }
 
-        await performActionForAuthUser({
-          action: async () => {
-            await CartApiService.removeFromCart(id);
-          },
-          revertAction: () => {},
-          extraParams: { id },
-        });
-      },
+  if (!get().checkAuthStatus()) {
+    removeItemLocally(id);
+    return;
+  }
+
+  await performActionForAuthUser({
+    action: async () => {
+      await CartApiService.removeFromCart(id);
+    },
+    revertAction: () => {},
+    extraParams: { id },
+  });
+},
 
       updateQuantity: async (id, quantity) => {
         if (quantity <= 0) {
@@ -400,30 +406,43 @@ export const useCartStore = create<CartState>()(
       },
 
       syncCartWithServerAfterLogin: async () => {
-        console.log("Syncing guest cart with server after login...");
-        const { items, clearCartLocally, syncWithServer, setLoading } = get();
+  console.log("Syncing guest cart with server after login...");
+  const { items, clearCartLocally, syncWithServer, setLoading } = get();
 
-        try {
-          setLoading(true);
-          const currentAuthStatus = await get().checkAuthStatus();
-          if (currentAuthStatus) {
-            await CartApiService.syncCartAfterLogin({
-              data: items.map((i) => ({
-                variant_id: i.variant_id,
-                quantity: i.quantity,
-                assembly_required: i.assembly_required,
-              })),
-            });
+  try {
+    setLoading(true);
+    const currentAuthStatus = await get().checkAuthStatus();
+    if (currentAuthStatus) {
+      // ── Filter out bundles before syncing with server ──
+      const syncableItems = items.filter(
+        (i) => i.delivery_time_days !== "Bundle"
+      );
 
-            clearCartLocally();
-            await syncWithServer();
-          }
-        } catch (error) {
-          console.error("Failed to sync guest cart after login:", error);
-        } finally {
-          setLoading(false);
-        }
-      },
+      await CartApiService.syncCartAfterLogin({
+        data: syncableItems.map((i) => ({
+          variant_id: i.variant_id,
+          quantity: i.quantity,
+          assembly_required: i.assembly_required,
+        })),
+      });
+
+      clearCartLocally();
+      await syncWithServer();
+
+      // ── Re-add bundles locally after sync ──
+      const bundleItems = items.filter(
+        (i) => i.delivery_time_days === "Bundle"
+      );
+      bundleItems.forEach((bundle) => {
+        get().addItemLocally(bundle);
+      });
+    }
+  } catch (error) {
+    console.error("Failed to sync guest cart after login:", error);
+  } finally {
+    setLoading(false);
+  }
+},
 
       addItemLocally: (item) => {
         set((state) => {
@@ -585,27 +604,29 @@ export const useCart = () => {
 interface CartAnimationState {
   isOpen: boolean;
   isSuccessModalOpen: boolean;
+  addedItemType: "product" | "bundle";  // ← add this
   openCart: () => void;
   closeCart: () => void;
   openSuccessModal: () => void;
   closeSuccessModal: () => void;
-  addToCart: (item: { item: string }) => void;
+  addToCart: (item: { item: string; type?: "product" | "bundle" }) => void;
   toggleCart: () => void;
 }
 
 export const useCartAnimationStore = create<CartAnimationState>((set) => ({
   isOpen: false,
   isSuccessModalOpen: false,
+  addedItemType: "product",  // ← add this
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
   openSuccessModal: () => set({ isSuccessModalOpen: true }),
   closeSuccessModal: () => set({ isSuccessModalOpen: false }),
   addToCart: (item) => {
-    console.log(item);
-    set({ isSuccessModalOpen: true });
-    setTimeout(() => {
-      set({ isSuccessModalOpen: false, isOpen: true });
-    }, 3000);
-  },
+  console.log(item);
+  set({ isSuccessModalOpen: true, addedItemType: item.type || "product" });
+  setTimeout(() => {
+    set({ isSuccessModalOpen: false, isOpen: true });
+  }, 3000);
+},
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 }));

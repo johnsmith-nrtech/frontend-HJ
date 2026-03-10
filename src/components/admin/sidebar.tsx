@@ -38,6 +38,11 @@ export const adminNavItems = [
     icon: <Package className="mr-3 h-5 w-5" />,
   },
   {
+    title: "Bundles",
+    href: "/admin/bundles",
+    icon: <Package className="mr-3 h-5 w-5" />,
+  },
+  {
     title: "Categories",
     href: "/admin/categories",
     icon: <FolderTree className="mr-3 h-5 w-5" />,
