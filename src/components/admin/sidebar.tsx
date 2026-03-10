@@ -7,6 +7,7 @@ import {
   Package,
   Users,
   Settings,
+  PackageCheck,
   LogOut,
   Menu,
   X,
@@ -40,7 +41,7 @@ export const adminNavItems = [
   {
     title: "Bundles",
     href: "/admin/bundles",
-    icon: <Package className="mr-3 h-5 w-5" />,
+    icon: <PackageCheck className="mr-3 h-5 w-5" />,
   },
   {
     title: "Categories",
