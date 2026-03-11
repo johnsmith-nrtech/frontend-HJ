@@ -7,7 +7,6 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "./button-custom";
 import { Bundle } from "@/lib/api/bundles";
-// import { useCart, useCartAnimationStore } from "@/lib/store/cart-store";
 import { useCartStore, useCartAnimationStore } from "@/lib/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 
@@ -72,7 +71,7 @@ const handleAddToCart = () => {
       id: bundle.id,
       variant_id: bundle.id,
       name: bundle.bundlename,
-      price: finalPrice,                  // ✅ full bundle price
+      price: finalPrice,
       quantity: 1,
       assembly_required: false,
       image: mainImage,
