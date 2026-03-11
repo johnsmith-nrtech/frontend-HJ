@@ -55,27 +55,38 @@ const { addToCart } = useCartAnimationStore();
   // ─── Klarna installments ──────────────────────────────
   const klarnaAmount = Math.round((finalPrice / 3) * 100) / 100;
 
-  const handleAddToCart = () => {
+const handleAddToCart = () => {
   setIsAddingToCart(true);
   try {
-    const bundleCartItem = {
+    const productsWithVariants = bundle.products.filter(
+      (p) => p.variants && p.variants.length > 0
+    );
+
+    if (productsWithVariants.length === 0) {
+      toast.error("Bundle products not loaded. Please refresh.");
+      return;
+    }
+
+    // ✅ ONE cart item for the whole bundle
+    addItemLocally({
       id: bundle.id,
       variant_id: bundle.id,
       name: bundle.bundlename,
-      price: finalPrice,
+      price: finalPrice,                  // ✅ full bundle price
       quantity: 1,
       assembly_required: false,
       image: mainImage,
-      size: undefined,
-      color: undefined,
       stock: 999,
       assemble_charges: 0,
       delivery_time_days: "Bundle",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    };
+      // ✅ store variant IDs for checkout
+      bundleVariants: bundle.products
+        .map((p) => p.variants?.[0]?.id)
+        .filter(Boolean),
+    } as any);
 
-    addItemLocally(bundleCartItem);
     calculateTotals();
     toast.success(`${bundle.bundlename} added to cart!`);
     addToCart({ item: bundle.bundlename, type: "bundle" });

@@ -164,13 +164,33 @@ export function clearStoredOrderId(): void {
  * Convert cart items to payment request format
  */
 export function convertCartItemsToPaymentFormat(
-  cartItems: CartItemRequest[]
+  cartItems: any[]
 ): CartItemRequest[] {
-  return cartItems.map((item) => ({
-    variant_id: item.variant_id,
-    quantity: item.quantity,
-    assembly_required: item.assembly_required,
-  }));
+  const result: CartItemRequest[] = [];
+
+  cartItems.forEach((item) => {
+    if (item.delivery_time_days === "Bundle" && item.bundleVariants?.length > 0) {
+      const pricePerVariant = item.price / item.bundleVariants.length;
+      // ✅ Expand bundle into individual variant items for backend
+      item.bundleVariants.forEach((variantId: string) => {
+        result.push({
+          variant_id: variantId,       // ✅ real variant ID
+          quantity: item.quantity,
+          assembly_required: false,
+          unit_price_override: pricePerVariant,
+        });
+      });
+    } else {
+      // Normal product
+      result.push({
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        assembly_required: item.assembly_required,
+      });
+    }
+  });
+
+  return result;
 }
 
 /**

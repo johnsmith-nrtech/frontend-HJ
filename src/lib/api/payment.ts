@@ -16,6 +16,7 @@ export interface CartItemRequest {
   variant_id: string; // UUID of the product variant
   quantity: number; // Must be > 0
   assembly_required: boolean; // Whether assembly is required
+  unit_price_override?: number;
 }
 
 export interface CreatePaymentRequest {

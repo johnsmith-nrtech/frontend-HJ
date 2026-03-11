@@ -27,6 +27,7 @@ export interface LocalCartItem {
   assemble_charges?: number;
   created_at: string;
   updated_at: string;
+  bundleVariants?: string[];
   variant?: {
     color?: string;
     size?: string;

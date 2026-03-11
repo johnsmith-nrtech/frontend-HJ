@@ -349,11 +349,10 @@ export default function OrdersPage() {
                 </TableHeader>
                 <TableBody>
                   {data.items.map((order) => {
-                    // const totalAmount = calculateOrderGrandTotal(order);
                     const totalAmount = calculateOrderGrandTotal(order);
-const discountedTotal = order.discount_amount 
-  ? totalAmount - order.discount_amount 
-  : totalAmount;
+// const discountedTotal = order.discount_amount 
+//   ? totalAmount - order.discount_amount 
+//   : totalAmount;
                     console.log(order);
                     return (
                       <TableRow key={order.id}>

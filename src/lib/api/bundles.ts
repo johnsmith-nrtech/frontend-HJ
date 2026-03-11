@@ -9,6 +9,13 @@ export interface BundleProduct {
   base_price: number;
   discount_offer?: number;
   images?: { id: string; url: string; type: string; order: number }[];
+  variants?: {
+    id: string;
+    price: number;
+    stock: number;
+    assemble_charges: number;
+    delivery_time_days?: string;
+  }[];
 }
 
 export interface Bundle {
