@@ -515,14 +515,14 @@ useEffect(() => {
       const variantDescription =
         variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
 
-      const finalPrice = product.discount_offer && product.discount_offer > 0
-        ? Math.round(currentPrice * (1 - product.discount_offer / 100) * 100) / 100
+      const discountedPrice = product.discount_offer && product.discount_offer > 0
+        ? Math.round(currentPrice * (1 - product.discount_offer / 100))
         : currentPrice;
 
       addItem({
         id: currentVariant.id,
         name: `${product.name}${variantDescription}`,
-        price: finalPrice,
+        price: discountedPrice,
         image: productImage,
         variant_id: currentVariant.id,
         color: selectedColor || currentVariant.color,
@@ -1031,7 +1031,8 @@ useEffect(() => {
                     {product.discount_offer && product.discount_offer > 0 ? (
                       <>
                         <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
-                          £{(currentPrice * (1 - product.discount_offer / 100)).toFixed(2)}
+                          {/* £{(currentPrice * (1 - product.discount_offer / 100)).toFixed(2)} */}
+                          £{Math.round(currentPrice * (1 - product.discount_offer / 100)).toFixed(2)}
                         </span>
                         <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
                           £{currentPrice.toFixed(2)}
@@ -1273,11 +1274,11 @@ useEffect(() => {
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
                   <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-                    Make 3 Payments Of £{(
-                      (product.discount_offer && product.discount_offer > 0
-                        ? currentPrice * (1 - product.discount_offer / 100)
-                        : currentPrice) / 3
-                    ).toFixed(2)}
+                    Make 3 Payments Of £{
+                      (Math.round(product.discount_offer && product.discount_offer > 0
+  ? currentPrice * (1 - product.discount_offer / 100)
+  : currentPrice) / 3).toFixed(2)}
+                    
                   </span>
                 </div>
               </div>

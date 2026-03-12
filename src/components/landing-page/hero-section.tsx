@@ -50,9 +50,9 @@ const HeroSection = () => {
           </div>
         </div>
 
-        <div className="relative min-h-[400px] overflow-hidden sm:min-h-[500px] md:min-h-[650px] lg:mb-[-4rem] 2xl:min-h-[1000px]">
+        <div className="relative lg:min-h-[500px] overflow-hidden sm:min-h-[500px] md:min-h-[650px] lg:mb-[-4rem] 2xl:min-h-[1000px]">
           {/* Hero Image - Background for entire section */}
-          <div className="absolute inset-0 ml-0 h-full max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px] flex items-center justify-center">
+          <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px] flex items-center justify-center">
             {heroSettings?.width && heroSettings?.height ? (
               <Image
                 src={imageSrc}

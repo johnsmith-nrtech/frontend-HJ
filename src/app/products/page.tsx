@@ -483,6 +483,7 @@ function ProductsContent() {
               })}
             >
               {displayProducts.map((product, index) => {
+                console.log(product.name, product.discount_offer, product.price);
                 const discount = Number(product.discount_offer) || 0;
                 const originalPrice = product.price;
                 const discountedPrice =

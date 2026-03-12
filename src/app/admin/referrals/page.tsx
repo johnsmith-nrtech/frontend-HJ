@@ -26,6 +26,7 @@ interface ReferralStats {
 
 interface ReferralSettings {
   referrerReward: number;
+  referrerRewardType: 'percentage' | 'fixed';
   receiverDiscount: number;
   receiverDiscountType: 'percentage' | 'fixed';
   minOrderAmount: number;
@@ -38,8 +39,9 @@ export default function AdminReferralsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
-  
+  const [referrerRewardType, setReferrerRewardType] = useState<'percentage' | 'fixed'>('fixed');
+  const [receiverDiscountType, setReceiverDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,7 +71,8 @@ export default function AdminReferralsPage() {
       const res = await ApiService.fetchWithAuth("/coupons/admin/settings");
       const json = await res.json();
       setSettings(json);
-      setDiscountType(json.receiverDiscountType || 'percentage');
+      setReferrerRewardType(json.referrerRewardType || 'fixed');
+      setReceiverDiscountType(json.receiverDiscountType || 'percentage');
     } catch (err) {
       console.error("Failed to fetch settings:", err);
     }
@@ -78,12 +81,13 @@ export default function AdminReferralsPage() {
   const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
-    
+
     const formData = new FormData(e.currentTarget);
     const updatedSettings = {
       referrerReward: Number(formData.get('referrerReward')),
+      referrerRewardType,
       receiverDiscount: Number(formData.get('receiverDiscount')),
-      receiverDiscountType: discountType,
+      receiverDiscountType,
       minOrderAmount: Number(formData.get('minOrderAmount')) || 0,
       maxDiscountAmount: formData.get('maxDiscountAmount') ? Number(formData.get('maxDiscountAmount')) : null,
     };
@@ -91,12 +95,10 @@ export default function AdminReferralsPage() {
     try {
       const res = await ApiService.fetchWithAuth("/coupons/admin/settings", {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedSettings),
       });
-      
+
       if (res.ok) {
         const response = await res.json();
         setSettings(response.settings);
@@ -113,7 +115,6 @@ export default function AdminReferralsPage() {
     }
   };
 
-  // Filter data based on search term
   const filteredHistory = data?.history?.filter(item => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -125,73 +126,98 @@ export default function AdminReferralsPage() {
     );
   }) || [];
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
 
-  // Handle page change
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
+  // Helper to display referrer reward nicely
+  const formatReferrerReward = () => {
+    if (!settings) return '—';
+    return settings.referrerRewardType === 'fixed'
+      ? `£${settings.referrerReward}`
+      : `${settings.referrerReward}% of order`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
+
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Configure Referral Program</h2>
-              <button 
-                onClick={() => setIsSettingsOpen(false)} 
+              <button
+                onClick={() => setIsSettingsOpen(false)}
                 className="rounded-lg cursor-pointer p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveSettings}>
               <div className="space-y-5">
-                {/* Referrer Reward - Pounds */}
+
+                {/* Referrer Reward */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Referrer Reward <span className="text-xs text-gray-500">(£)</span>
+                    Referrer Reward
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">£</span>
-                    <input
-                      type="number"
-                      name="referrerReward"
-                      defaultValue={settings?.referrerReward || 500}
-                      step="0.01"
-                      min="0"
-                      max="10000"
-                      className="w-full rounded-lg border border-gray-300 py-2 pr-3 pl-8 focus:border-blue-500 focus:outline-none"
-                      required
-                    />
+                  <div className="flex gap-2">
+                    <select
+                      value={referrerRewardType}
+                      onChange={(e) => setReferrerRewardType(e.target.value as 'percentage' | 'fixed')}
+                      className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="fixed">£</option>
+                      <option value="percentage">%</option>
+                    </select>
+                    <div className="relative flex-1">
+                      {referrerRewardType === 'fixed' && (
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">£</span>
+                      )}
+                      <input
+                        type="number"
+                        name="referrerReward"
+                        defaultValue={settings?.referrerReward || 500}
+                        step="0.01"
+                        min="0"
+                        max={referrerRewardType === 'percentage' ? 100 : 10000}
+                        className={`w-full rounded-lg border border-gray-300 py-2 focus:border-blue-500 focus:outline-none ${referrerRewardType === 'fixed' ? 'pl-8 pr-3' : 'px-3 pr-8'}`}
+                        required
+                      />
+                      {referrerRewardType === 'percentage' && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                      )}
+                    </div>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    Amount referrer gets in wallet (in pounds)
+                    {referrerRewardType === 'fixed'
+                      ? 'Fixed £ amount added to referrer wallet'
+                      : 'Percentage of order total added to referrer wallet'}
                   </p>
                 </div>
-                
 
+                {/* Receiver Discount */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Receiver Discount
                   </label>
                   <div className="flex gap-2">
                     <select
-                      value={discountType}
-                      onChange={(e) => setDiscountType(e.target.value as 'percentage' | 'fixed')}
+                      value={receiverDiscountType}
+                      onChange={(e) => setReceiverDiscountType(e.target.value as 'percentage' | 'fixed')}
                       className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none"
                     >
                       <option value="percentage">%</option>
                       <option value="fixed">£</option>
                     </select>
                     <div className="relative flex-1">
-                      {discountType === 'fixed' && (
+                      {receiverDiscountType === 'fixed' && (
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">£</span>
                       )}
                       <input
@@ -200,21 +226,23 @@ export default function AdminReferralsPage() {
                         defaultValue={settings?.receiverDiscount || 10}
                         step="0.01"
                         min="0"
-                        max={discountType === 'percentage' ? 100 : 10000}
-                        className={`w-full rounded-lg border border-gray-300 py-2 focus:border-blue-500 focus:outline-none ${discountType === 'fixed' ? 'pl-8 pr-3' : 'px-3 pr-8'}`}
+                        max={receiverDiscountType === 'percentage' ? 100 : 10000}
+                        className={`w-full rounded-lg border border-gray-300 py-2 focus:border-blue-500 focus:outline-none ${receiverDiscountType === 'fixed' ? 'pl-8 pr-3' : 'px-3 pr-8'}`}
                         required
                       />
-                      {discountType === 'percentage' && (
+                      {receiverDiscountType === 'percentage' && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
                       )}
                     </div>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    {discountType === 'percentage' ? 'Percentage discount for new customer' : 'Fixed £ discount for new customer'}
+                    {receiverDiscountType === 'percentage'
+                      ? 'Percentage discount for new customer'
+                      : 'Fixed £ discount for new customer'}
                   </p>
                 </div>
 
-                {/* Optional: Minimum Order Amount */}
+                {/* Min Order Amount */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Minimum Order Amount <span className="text-xs text-gray-500">(optional)</span>
@@ -230,12 +258,10 @@ export default function AdminReferralsPage() {
                       className="w-full rounded-lg border border-gray-300 py-2 pr-3 pl-8 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Minimum order amount to apply discount (0 = no minimum)
-                  </p>
+                  <p className="mt-1 text-xs text-gray-500">0 = no minimum</p>
                 </div>
 
-                {/* Optional: Max Discount Amount */}
+                {/* Max Discount Amount */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Max Discount Amount <span className="text-xs text-gray-500">(optional)</span>
@@ -252,9 +278,7 @@ export default function AdminReferralsPage() {
                       placeholder="No limit"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Maximum discount amount (leave empty for no limit)
-                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Leave empty for no limit</p>
                 </div>
               </div>
 
@@ -293,9 +317,7 @@ export default function AdminReferralsPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Referrals History</h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Track referral activity and rewards
-          </p>
+          <p className="mt-2 text-sm text-gray-500">Track referral activity and rewards</p>
         </div>
         <button
           onClick={() => setIsSettingsOpen(true)}
@@ -315,14 +337,12 @@ export default function AdminReferralsPage() {
             </div>
             <p className="text-sm text-gray-500">Total Referrals</p>
           </div>
-          <p className="mt-3 text-3xl font-bold text-gray-900">
-            {data?.totalReferrals ?? 0}
-          </p>
+          <p className="mt-3 text-3xl font-bold text-gray-900">{data?.totalReferrals ?? 0}</p>
           <p className="mt-1 text-xs text-gray-400">
-            Referrer gets: £{settings?.referrerReward || 500} each
+            Referrer gets: {formatReferrerReward()} each
           </p>
         </div>
-        
+
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-red-100 p-2">
@@ -338,7 +358,6 @@ export default function AdminReferralsPage() {
           </p>
         </div>
 
-        
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-green-100 p-2">
@@ -349,9 +368,7 @@ export default function AdminReferralsPage() {
           <p className="mt-3 text-3xl font-bold text-gray-900">
             £{(data?.totalEarned ?? 0).toFixed(2)}
           </p>
-          <p className="mt-1 text-xs text-gray-400">
-            Paid out to referrers
-          </p>
+          <p className="mt-1 text-xs text-gray-400">Paid out to referrers</p>
         </div>
       </div>
 
@@ -365,7 +382,7 @@ export default function AdminReferralsPage() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              setCurrentPage(1);
             }}
             className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none"
           />
@@ -414,29 +431,14 @@ export default function AdminReferralsPage() {
                 </thead>
                 <tbody>
                   {paginatedHistory.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-gray-50 transition hover:bg-gray-50"
-                    >
+                    <tr key={item.id} className="border-b border-gray-50 transition hover:bg-gray-50">
                       <td className="px-5 py-4 text-gray-400">{startIndex + index + 1}</td>
-                      <td className="px-5 py-4 font-medium text-gray-900">
-                        {item.referrerName || "—"}
-                      </td>
-                      <td className="px-5 py-4 text-gray-600">
-                        {item.referrerEmail || "—"}
-                      </td>
-                      <td className="px-5 py-4 font-medium text-gray-900">
-                        {item.receiverName || "—"}
-                      </td>
-                      <td className="px-5 py-4 text-gray-600">
-                        {item.receiverEmail || "—"}
-                      </td>
-                      <td className="px-5 py-4 font-mono text-xs text-gray-500">
-                        #{item.orderId?.slice(-8).toUpperCase()}
-                      </td>
-                      <td className="px-5 py-4 font-medium text-red-500">
-                        -£{Number(item.discountGiven || 0).toFixed(2)}
-                      </td>
+                      <td className="px-5 py-4 font-medium text-gray-900">{item.referrerName || "—"}</td>
+                      <td className="px-5 py-4 text-gray-600">{item.referrerEmail || "—"}</td>
+                      <td className="px-5 py-4 font-medium text-gray-900">{item.receiverName || "—"}</td>
+                      <td className="px-5 py-4 text-gray-600">{item.receiverEmail || "—"}</td>
+                      <td className="px-5 py-4 font-mono text-xs text-gray-500">#{item.orderId?.slice(-8).toUpperCase()}</td>
+                      <td className="px-5 py-4 font-medium text-red-500">-£{Number(item.discountGiven || 0).toFixed(2)}</td>
                       <td className="px-5 py-4">
                         <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
                           +£{Number(item.referrerEarned || 0).toFixed(2)}
@@ -444,9 +446,7 @@ export default function AdminReferralsPage() {
                       </td>
                       <td className="px-5 py-4 text-gray-400">
                         {new Date(item.date).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
+                          day: "2-digit", month: "short", year: "numeric",
                         })}
                       </td>
                     </tr>
@@ -455,38 +455,24 @@ export default function AdminReferralsPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
                 <div className="text-sm text-gray-500">
                   Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredHistory.length)} of {filteredHistory.length} results
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}
+                    className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                     Previous
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page)}
-                      className={`rounded-lg px-3 py-1 text-sm transition ${
-                        currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
+                    <button key={page} onClick={() => goToPage(page)}
+                      className={`rounded-lg px-3 py-1 text-sm transition ${currentPage === page ? "bg-blue-600 text-white" : "border border-gray-300 text-gray-600 hover:bg-gray-50"}`}>
                       {page}
                     </button>
                   ))}
-                  <button
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}
+                    className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                     Next
                   </button>
                 </div>

@@ -220,7 +220,7 @@ export default function ReferralPage() {
                       -£{Number(item.discountGiven || 0).toFixed(2)}
                     </td> */}
                     <td className="px-6 py-4 text-red-500">
-                      -{item.discountGiven % 1 === 0 && item.discountGiven <= 100 ? `${item.discountGiven}%` : `£${Number(item.discountGiven).toFixed(2)}`}
+                      -£{Number(item.discountGiven || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">

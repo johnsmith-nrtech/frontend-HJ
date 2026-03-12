@@ -203,6 +203,7 @@ export function useCheckoutForm() {
             referral_code: appliedCoupon.code,
             order_id: orderId,
             discount_given: discountAmount,
+            order_total: totalPrice,
           }),
         });
       }
@@ -319,7 +320,13 @@ export function useCheckoutForm() {
       setCouponError("");
 
       if (data.is_referral) {
-        toast.success(`Referral code applied! You get ${data.discount_value}% off`);
+        toast.success(
+  `Referral code applied! You get ${
+    data.discount_type === 'fixed'
+      ? `£${data.discount_value} off`
+      : `${data.discount_value}% off`
+  }`
+);
       }
     } catch (err: any) {
       setCouponError(err.message);
