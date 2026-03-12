@@ -185,7 +185,7 @@ export function convertCartItemsToPaymentFormat(
       result.push({
         variant_id: item.variant_id,
         quantity: item.quantity,
-        assembly_required: item.assembly_required,
+        assembly_required: item.assembly_required ?? false,
       });
     }
   });

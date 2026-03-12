@@ -81,8 +81,11 @@ export function useCheckoutForm() {
   React.useEffect(() => {
     if (appliedCoupon) {
       if (appliedCoupon.discount_type === "percentage") {
+         const calculated = (totalPrice * appliedCoupon.discount_value) / 100;
+      console.log('📊 Percentage discount calculated:', calculated, 'totalPrice:', totalPrice, 'value:', appliedCoupon.discount_value);
         setDiscountAmount((totalPrice * appliedCoupon.discount_value) / 100);
       } else {
+        console.log('💷 Fixed discount set:', appliedCoupon.discount_value);
         setDiscountAmount(appliedCoupon.discount_value);
       }
     } else {
@@ -304,6 +307,11 @@ export function useCheckoutForm() {
       });
 
       const data = await res.json();
+
+      // TEMP DEBUG LOGS
+console.log('🎟️ Coupon API response:', data);
+console.log('discount_type:', data.discount_type, '| discount_value:', data.discount_value);
+console.log('totalPrice at time of apply:', totalPrice);
 
       if (!res.ok) {
         throw new Error(data.message || "Invalid or expired coupon");
