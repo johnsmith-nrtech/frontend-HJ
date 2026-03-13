@@ -101,18 +101,10 @@ interface CartState {
 }
 
 // Helper function to convert API cart item to local cart item
-// const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
-//   const originalPrice = apiItem.variant.price;
-//   const discountOffer = (apiItem.variant.product as any)?.discount_offer;
-//   const finalPrice =
-//     discountOffer && Number(discountOffer) > 0
-//       ? Math.round(originalPrice * (1 - Number(discountOffer) / 100) * 100) / 100
-//       : originalPrice;
-
 const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
   const discountOffer = Number((apiItem.variant.product as any)?.discount_offer) || 0;
   const finalPrice = discountOffer > 0
-    ? Math.round(apiItem.variant.price * (1 - discountOffer / 100))
+    ? parseFloat((apiItem.variant.price * (1 - discountOffer / 100)).toFixed(2))
     : apiItem.variant.price;
 
   return {

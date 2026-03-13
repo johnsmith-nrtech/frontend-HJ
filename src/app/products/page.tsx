@@ -488,7 +488,7 @@ function ProductsContent() {
                 const originalPrice = product.price;
                 const discountedPrice =
                   discount > 0
-                    ? Math.round(originalPrice - (originalPrice * discount) / 100)
+                    ? parseFloat((originalPrice - (originalPrice * discount) / 100).toFixed(2))
                     : originalPrice;
 
                 return (
