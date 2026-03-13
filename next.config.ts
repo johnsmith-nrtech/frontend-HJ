@@ -131,6 +131,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -224,15 +225,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "kxycnvwrxfxpqgsusftj.supabase.co",
+        hostname: "kxycnvwrxfpqgsusfti.supabase.co",
         port: "",
-        pathname: "/**",
+        pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
         hostname: "*.supabase.co",
         port: "",
-        pathname: "/**",
+        pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
@@ -243,6 +244,7 @@ const nextConfig: NextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 
