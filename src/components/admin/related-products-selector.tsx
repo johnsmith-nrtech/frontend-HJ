@@ -78,7 +78,7 @@ export function RelatedProductsSelector({
                     alt={name}
                     width={20}
                     height={20}
-                    className="rounded-full object-cover"
+                    className="rounded object-cover"
                   />
                 )}
                 <span className="max-w-[150px] truncate">{name}</span>
