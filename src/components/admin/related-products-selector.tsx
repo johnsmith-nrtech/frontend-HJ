@@ -66,7 +66,8 @@ export function RelatedProductsSelector({
           {value.map((id) => {
             const product = allProducts.find((p: any) => p.id === id);
             const name = product?.name || id;
-            const image = product?.images?.[0]?.url;
+            // const image = product?.images?.[0]?.url;
+            const image = product?.images?.slice().sort((a: any) => (a.type === "main" ? -1 : 1))?.[0]?.url;
             return (
               <div
                 key={id}
@@ -140,7 +141,8 @@ export function RelatedProductsSelector({
               ) : (
                 allProducts.map((product: any) => {
                   const isSelected = value.includes(product.id);
-                  const image = product?.images?.[0]?.url;
+                  // const image = product?.images?.[0]?.url;
+                  const image = product?.images?.slice().sort((a: any) => (a.type === "main" ? -1 : 1))?.[0]?.url;
                   return (
                     <button
                       key={product.id}
