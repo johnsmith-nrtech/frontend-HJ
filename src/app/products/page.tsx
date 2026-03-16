@@ -251,19 +251,27 @@ function ProductsContent() {
             selectedVariant = sizeMatch || materialMatch || defaultVariant;
           }
 
-          const mainImage = product.images?.find((img) => img.type === "main" && !img.variant_id);
-          const firstProductImage = product.images?.find((img) => !img.variant_id);
+          // const mainImage = product.images?.find((img) => img.type === "main" && !img.variant_id);
+          // const firstProductImage = product.images?.find((img) => !img.variant_id);
 
-          // Get images from featured/default variant
-          const defaultVariantImages = (defaultVariant as any)?.images;
-          const defaultVariantImage = defaultVariantImages
-          ?.filter((img: any) => img.type === "main")
-          ?.[0] || defaultVariantImages?.[0];
+          // // Get images from featured/default variant
+          // const defaultVariantImages = (defaultVariant as any)?.images;
+          // const defaultVariantImage = defaultVariantImages
+          // ?.filter((img: any) => img.type === "main")
+          // ?.[0] || defaultVariantImages?.[0];
+
+          // const imageUrl =
+          //   // defaultVariantImage?.url ||
+          //   mainImage?.url ||
+          //   firstProductImage?.url ||
+          //   "/placeholder.svg";
+
+          const sortedImages = [...(product.images || [])]
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
           const imageUrl =
-            defaultVariantImage?.url ||
-            mainImage?.url ||
-            firstProductImage?.url ||
+            sortedImages.find((img) => img.type === "main")?.url ||
+            sortedImages[0]?.url ||
             "/placeholder.svg";
 
           return {
