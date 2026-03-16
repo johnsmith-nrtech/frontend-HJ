@@ -86,9 +86,12 @@ export function ProductImageManager({
   const uploadImagesMutation = useUploadProductImages();
   const updateImageDetailsMutation = useUpdateImageDetails();
 
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
-    if (!isReorderingRef.current) {
+    if (!hasInitialized.current && existingImages.length > 0) {
       setImages(existingImages);
+      hasInitialized.current = true;
     }
   }, [existingImages.length]);
 
@@ -117,37 +120,38 @@ export function ProductImageManager({
     [defaultType, images.length]
   );
 
-  const updateImagesAndNotify = useCallback(
-    async (newImages: ManagedImage[], shouldSaveOrder = false) => {
-      setImages(newImages);
+const updateImagesAndNotify = useCallback(
+  async (newImages: ManagedImage[], shouldSaveOrder = false) => {
+    setImages(newImages);
+
+    if (!shouldSaveOrder) {
       onImagesChange(newImages);
+    }
 
-      // Save image order to backend if needed - use individual PUT calls for each image
-      if (shouldSaveOrder && productId) {
-        const existingImages = newImages.filter(
-          (img): img is ExistingImage => !("isNew" in img)
-        );
-        if (existingImages.length > 0) {
-          try {
-            // Update each image's order individually using PUT /products/admin/images/{id}
-            const updatePromises = existingImages.map((img) =>
-              updateImageDetailsMutation.mutateAsync({
-                imageId: img.id,
-                data: { order: img.order, type: img.type },
-              })
-            );
+    if (shouldSaveOrder && productId) {
+      const existingImagesToUpdate = newImages.filter(
+        (img): img is ExistingImage => !("isNew" in img)
+      );
+      if (existingImagesToUpdate.length > 0) {
+        try {
+          const updatePromises = existingImagesToUpdate.map((img) =>
+            updateImageDetailsMutation.mutateAsync({
+              imageId: img.id,
+              data: { order: img.order, type: img.type },
+            })
+          );
 
-            await Promise.all(updatePromises);
-            toast.success("Image order updated successfully");
-          } catch (error) {
-            console.error("Error updating image order:", error);
-            toast.error("Failed to update image order");
-          }
+          await Promise.all(updatePromises);
+          toast.success("Image order updated successfully");
+        } catch (error) {
+          console.error("Error updating image order:", error);
+          toast.error("Failed to update image order");
         }
       }
-    },
-    [onImagesChange, productId, updateImageDetailsMutation]
-  );
+    }
+  },
+  [onImagesChange, productId, updateImageDetailsMutation]
+);
 
   const uploadNewImages = useCallback(
     async (newImages: NewImageFile[]) => {
@@ -437,11 +441,7 @@ export function ProductImageManager({
       type: (index === 0 ? "main" : (img.type === "main" ? "gallery" : img.type)) as "gallery" | "main" | "360",
     }));
 
-    isReorderingRef.current = true;
     updateImagesAndNotify(reorderedImages, true);
-    setTimeout(() => {
-      isReorderingRef.current = false;
-    }, 500);
     toast.success("Image position updated");
   },
   [images, disabled, updateImagesAndNotify]
@@ -465,11 +465,7 @@ export function ProductImageManager({
       type: (index === 0 ? "main" : (img.type === "main" ? "gallery" : img.type)) as "gallery" | "main" | "360",
     }));
 
-    isReorderingRef.current = true;
     updateImagesAndNotify(reorderedImages, true);
-    setTimeout(() => {
-      isReorderingRef.current = false;
-    }, 500);
     toast.success("Thumbnail updated");
   },
   [images, disabled, updateImagesAndNotify]

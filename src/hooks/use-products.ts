@@ -425,7 +425,7 @@ export function useUpdateImageDetails() {
     }) => updateImageDetails(imageId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Image details updated successfully");
+      // ← removed toast here
     },
     onError: (error: Error) => {
       toast.error("Failed to update image details", {

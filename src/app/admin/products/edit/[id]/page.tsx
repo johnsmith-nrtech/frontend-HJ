@@ -624,7 +624,7 @@ export default function EditProductPage() {
                   }))}
                   onImagesChange={() => {
                     // Refetch product data when images change
-                    refetchProduct();
+                    // refetchProduct();
                   }}
                   allowedTypes={["gallery", "main", "360"]}
                   defaultType="gallery"
