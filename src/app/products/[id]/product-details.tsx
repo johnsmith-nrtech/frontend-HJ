@@ -1796,14 +1796,20 @@ useEffect(() => {
 
                       const productImage = (() => {
                         try {
-                          const imageUrl = relatedProduct.images?.[0]?.url;
+                          const sortedImages = [...(relatedProduct.images || [])]
+                          .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                          const imageUrl =
+                          sortedImages.find((img) => img.type === "main")?.url ||
+                          sortedImages[0]?.url;
+
                           if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/")))
                             return imageUrl;
-                          return "/hero-img.png";
-                        } catch {
-                          return "/hero-img.png";
-                        }
-                      })();
+                            return "/hero-img.png";
+                          } catch {
+                            return "/hero-img.png";
+                          }
+                          })();
 
                       return (
                         <ProductCard
@@ -1869,13 +1875,19 @@ useEffect(() => {
 
                       const productImage = (() => {
                         try {
-                          const imageUrl = relatedProduct.images?.[0]?.url;
+                          const sortedImages = [...(relatedProduct.images || [])]
+                          .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                          const imageUrl =
+                          sortedImages.find((img) => img.type === "main")?.url ||
+                          sortedImages[0]?.url;
+
                           if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/")))
                             return imageUrl;
-                          return "/hero-img.png";
+                            return "/hero-img.png";
                         } catch {
                           return "/hero-img.png";
-                        }
+                        }   
                       })();
 
                       return (

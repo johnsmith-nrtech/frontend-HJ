@@ -1571,7 +1571,7 @@ export default function AddProductPage() {
                   <EnhancedImageUpload
                     onFilesChange={setImageFiles}
                     maxFiles={20}
-                    // existingImages={imageFiles}
+                    existingImages={imageFiles}
                     disabled={createProductMutation.isPending}
                     title="Product Images"
                     allowedTypes={["gallery", "main", "360"]}
