@@ -1,21 +1,97 @@
 "use client";
 
-import { useFeaturedProducts } from "@/hooks/use-products";
+import { useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ProductCard } from "@/components/product-card";
 import Link from "next/link";
 import { Button } from "../button-custom";
 import Image from "next/image";
-import { FeaturedProduct } from "@/lib/api/products";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+interface BestSellerVariant {
+  id: string;
+  price: number;
+  color?: string;
+  size?: string;
+  stock: number;
+  delivery_time_days?: string;
+  assemble_charges?: number;
+  featured?: boolean;
+}
+
+interface BestSellerImage {
+  id: string;
+  url: string;
+  type: string;
+  order: number;
+}
+
+interface BestSellerProductData {
+  id: string;
+  name: string;
+  base_price: number;
+  discount_offer?: number;
+  images?: BestSellerImage[];
+  variants?: BestSellerVariant[];
+}
+
+interface BestSellerItem {
+  id: string;
+  product_id: string;
+  created_at: string;
+  product?: BestSellerProductData;
+}
+
+interface ProcessedProduct {
+  id: string;
+  name: string;
+  currentPrice: number;
+  originalPrice: number;
+  hasDiscount: boolean;
+  discountPercentage?: string;
+  productImage: string;
+  variantId?: string;
+  color?: string;
+  size?: string;
+  stock: number;
+  deliveryInfo: string;
+  assembleCharges: number;
+}
+
+function useBestSellerProducts() {
+  return useQuery<BestSellerItem[]>({
+    queryKey: ["bestSellerProducts"],
+    queryFn: async () => {
+      const res = await fetch(`${API_URL}/best-sellers`, { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch best sellers");
+      return res.json();
+    },
+  });
+}
 
 const ShopOurBestSeller = () => {
-  const { data: featuredProducts, isLoading, error } = useFeaturedProducts({
-    limit: 4,
-    includeCategory: true,
-  });
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: bestSellers = [], isLoading, error } = useBestSellerProducts();
 
-  // Helper function to process product
-  const processProduct = (product: FeaturedProduct) => {
-    const originalPrice = product.default_variant?.price || product.base_price || 0;
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -390 : 390,
+      behavior: "smooth",
+    });
+  };
+
+  const processProduct = (item: BestSellerItem): ProcessedProduct | null => {
+    const product = item.product;
+    if (!product) return null;
+
+    const defaultVariant: BestSellerVariant | undefined =
+      product.variants?.find((v: BestSellerVariant) => v.featured) ||
+      product.variants?.[0];
+
+    const originalPrice = defaultVariant?.price || product.base_price || 0;
     const discount = Number(product.discount_offer) || 0;
 
     const currentPrice =
@@ -26,29 +102,34 @@ const ShopOurBestSeller = () => {
     const hasDiscount = discount > 0;
     const discountPercentage = hasDiscount ? `${discount}% off` : undefined;
 
+    const mainImage =
+      [...(product.images || [])]
+        .sort((a: BestSellerImage, b: BestSellerImage) => (a.order || 0) - (b.order || 0))
+        .find((img: BestSellerImage) => img.type === "main")?.url ||
+      product.images?.[0]?.url;
+
     const productImage =
-      product.main_image?.url?.startsWith("http") ||
-      product.main_image?.url?.startsWith("/")
-        ? product.main_image.url
+      mainImage?.startsWith("http") || mainImage?.startsWith("/")
+        ? mainImage
         : "/hero-img.png";
 
     return {
-      ...product,
+      id: product.id,
+      name: product.name,
       currentPrice,
       originalPrice,
       hasDiscount,
       discountPercentage,
       productImage,
-      default_variant: product.default_variant
-        ? {
-            ...product.default_variant,
-            assemble_charges: product.default_variant.assemble_charges || 0,
-          }
-        : undefined,
+      variantId: defaultVariant?.id,
+      color: defaultVariant?.color,
+      size: defaultVariant?.size,
+      stock: defaultVariant?.stock ?? 0,
+      deliveryInfo: defaultVariant?.delivery_time_days || "3 to 4 days",
+      assembleCharges: defaultVariant?.assemble_charges || 0,
     };
   };
 
-  // Loading/Error States
   if (error) {
     return (
       <div className="py-10 md:py-16 px-8 text-center text-red-600">
@@ -57,27 +138,37 @@ const ShopOurBestSeller = () => {
     );
   }
 
-  if (isLoading || !featuredProducts || featuredProducts.length === 0) {
+  if (isLoading) {
     return (
       <div className="py-10 md:py-16 px-8">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-96 animate-pulse rounded-lg bg-gray-100" />
+        <div className="flex gap-4 overflow-hidden">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-96 w-[calc(33.333%-11px)] shrink-0 animate-pulse rounded-lg bg-gray-100"
+            />
           ))}
         </div>
       </div>
     );
   }
 
-  const getDesktopProducts = () => featuredProducts.slice(0, 2);
-  const getDesktopProductsLg = () => featuredProducts.slice(0, 3);
+  if (bestSellers.length === 0) return null;
+
+  const processed = bestSellers
+    .map((item: BestSellerItem) => processProduct(item))
+    .filter((p: ProcessedProduct | null): p is ProcessedProduct => p !== null);
+
+  if (processed.length === 0) return null;
 
   return (
     <div className="py-10 md:py-16">
       <div className="px-4 sm:px-[32px]">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between md:mb-10">
-          <h1 className="text-3xl sm:text-6xl lg:text-[85px]">SHOP OUR BEST SELLER</h1>
+          <h1 className="text-3xl sm:text-6xl lg:text-[85px]">
+            SHOP OUR BEST SELLER
+          </h1>
           <Link href="/products">
             <Button
               variant="main"
@@ -99,104 +190,66 @@ const ShopOurBestSeller = () => {
           </Link>
         </div>
 
-        {/* Mobile: 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-4 md:hidden">
-          {featuredProducts.slice(0, 4).map((product, index) => {
-            const processed = processProduct(product);
-            return (
-              <ProductCard
-                key={product.id}
-                variant={index % 2 === 0 ? "layout1" : "layout2"}
-                id={product.id}
-                name={product.name || "SUNSET TURKISH SOFA"}
-                price={processed.currentPrice}
-                originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
-                discount={processed.discountPercentage}
-                imageSrc={processed.productImage}
-                rating={4.9}
-                paymentOption={{
-                  service: "Klarna",
-                  installments: 3,
-                  amount: Math.round((processed.currentPrice / 3) * 100) / 100,
-                }}
-                isSale={processed.hasDiscount}
-                variantId={product.default_variant?.id}
-                size={product.default_variant?.size}
-                color={product.default_variant?.color}
-                stock={product.default_variant?.stock}
-                deliveryInfo={processed.default_variant?.delivery_time_days}
-                assemble_charges={processed.default_variant?.assemble_charges || 0}
-              />
-            );
-          })}
-        </div>
+        {/* Scrollable row with nav buttons */}
+        <div className="relative">
+          {/* Left button */}
+          <button
+            onClick={() => scroll("left")}
+            className="absolute -left-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
 
-        {/* Desktop: 2-column grid */}
-        <div className="hidden md:block lg:hidden">
-          <div className="grid grid-cols-2 gap-6 md:gap-8">
-            {getDesktopProducts().map((product, index) => {
-              const processed = processProduct(product);
-              return (
-                <ProductCard
+          {/* Outer clips to 3 cards */}
+          <div className="overflow-hidden mx-2">
+            {/* Inner scrollable */}
+            <div
+              ref={scrollRef}
+              className="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {processed.map((product: ProcessedProduct, index: number) => (
+                <div
                   key={product.id}
-                  variant={index % 2 === 0 ? "layout1" : "layout2"}
-                  id={product.id}
-                  name={product.name}
-                  price={processed.currentPrice}
-                  originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
-                  discount={processed.discountPercentage}
-                  imageSrc={processed.productImage}
-                  rating={4.9}
-                  paymentOption={{
-                    service: "Klarna",
-                    installments: 3,
-                    amount: Math.round((processed.currentPrice / 3) * 100) / 100,
-                  }}
-                  isSale={processed.hasDiscount}
-                  variantId={product.default_variant?.id}
-                  size={product.default_variant?.size}
-                  color={product.default_variant?.color}
-                  stock={product.default_variant?.stock}
-                  deliveryInfo={processed.default_variant?.delivery_time_days}
-                  assemble_charges={processed.default_variant?.assemble_charges || 0}
-                />
-              );
-            })}
+                  className="w-[calc(33.333%-11px)] shrink-0 min-w-[260px]"
+                >
+                  <ProductCard
+                    variant={index % 2 === 0 ? "layout1" : "layout2"}
+                    id={product.id}
+                    name={product.name}
+                    price={product.currentPrice}
+                    originalPrice={
+                      product.hasDiscount ? product.originalPrice : undefined
+                    }
+                    discount={product.discountPercentage}
+                    imageSrc={product.productImage}
+                    rating={4.9}
+                    paymentOption={{
+                      service: "Klarna",
+                      installments: 3,
+                      amount: Math.round((product.currentPrice / 3) * 100) / 100,
+                    }}
+                    isSale={product.hasDiscount}
+                    variantId={product.variantId}
+                    size={product.size}
+                    color={product.color}
+                    stock={product.stock}
+                    deliveryInfo={product.deliveryInfo}
+                    assemble_charges={product.assembleCharges}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Desktop: 3-column grid */}
-        <div className="hidden lg:block">
-          <div className="grid grid-cols-2 gap-6 md:gap-8 lg:grid-cols-3">
-            {getDesktopProductsLg().map((product, index) => {
-              const processed = processProduct(product);
-              return (
-                <ProductCard
-                  key={product.id}
-                  variant={index % 2 === 0 ? "layout1" : "layout2"}
-                  id={product.id}
-                  name={product.name}
-                  price={processed.currentPrice}
-                  originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
-                  discount={processed.discountPercentage}
-                  imageSrc={processed.productImage}
-                  rating={4.9}
-                  paymentOption={{
-                    service: "Klarna",
-                    installments: 3,
-                    amount: Math.round((processed.currentPrice / 3) * 100) / 100,
-                  }}
-                  isSale={processed.hasDiscount}
-                  variantId={product.default_variant?.id}
-                  size={product.default_variant?.size}
-                  color={product.default_variant?.color}
-                  stock={product.default_variant?.stock}
-                  deliveryInfo={processed.default_variant?.delivery_time_days}
-                  assemble_charges={processed.default_variant?.assemble_charges || 0}
-                />
-              );
-            })}
-          </div>
+          {/* Right button */}
+          <button
+            onClick={() => scroll("right")}
+            className="absolute -right-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </div>

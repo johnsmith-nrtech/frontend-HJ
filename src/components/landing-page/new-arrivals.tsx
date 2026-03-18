@@ -1,6 +1,6 @@
 "use client";
 
-import { useFeaturedProducts } from "@/hooks/use-products";
+import { useNewArrivals } from "@/hooks/use-products";
 import { ProductCard } from "@/components/product-card";
 import Link from "next/link";
 import { Button } from "../button-custom";
@@ -17,20 +17,23 @@ import Autoplay from "embla-carousel-autoplay";
 import { FeaturedProduct } from "@/lib/api/products";
 
 const NewArrivals = () => {
-  const { data: featuredProducts, isLoading, error } = useFeaturedProducts({
+  const { data, isLoading, error } = useNewArrivals({
     limit: 4,
     includeCategory: true,
   });
 
+  const products = data as FeaturedProduct[] | undefined;
+
   // Helper function to process product
-  const processProduct = (product: FeaturedProduct) => {
-    const originalPrice = product.default_variant?.price || product.base_price || 0;
-    const discount = Number(product.discount_offer) || 0;
+const processProduct = (product: FeaturedProduct) => {
+    const basePrice = product.base_price || 0;
+    const variantPrice = product.default_variant?.price || basePrice;
+    const discount = Number((product as any).discount_offer) || 0;
 
     const discountedPrice =
       discount > 0
-        ? Math.round(originalPrice - (originalPrice * discount) / 100)
-        : originalPrice;
+        ? Math.round(variantPrice - (variantPrice * discount) / 100)
+        : variantPrice;
 
     const hasDiscount = discount > 0;
     const discountPercentage = hasDiscount ? `${discount}% off` : undefined;
@@ -44,7 +47,7 @@ const NewArrivals = () => {
     return {
       ...product,
       currentPrice: discountedPrice,
-      originalPrice,
+      originalPrice: variantPrice,
       discount,
       discountPercentage,
       hasDiscount,
@@ -67,7 +70,7 @@ const NewArrivals = () => {
     );
   }
 
-  if (isLoading || !featuredProducts || featuredProducts.length === 0) {
+  if (isLoading || !products || products.length === 0) {
     return (
       <div className="py-10 md:py-16 px-8">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -80,8 +83,8 @@ const NewArrivals = () => {
   }
 
   // Desktop helpers
-  const getDesktopProducts = () => featuredProducts.slice(0, 2);
-  const getDesktopProductsLg = () => featuredProducts.slice(0, 3);
+  const getDesktopProducts = () => products.slice(0, 2);
+  const getDesktopProductsLg = () => products.slice(0, 3);
 
   return (
     <div className="bg-light-blue py-10 md:py-16">
@@ -118,7 +121,7 @@ const NewArrivals = () => {
             className="pb-8"
           >
             <CarouselContent>
-              {featuredProducts.slice(0, 4).map((product, index) => {
+              {products.slice(0, 4).map((product: FeaturedProduct, index: number) => {
                 const processed = processProduct(product);
                 return (
                   <CarouselItem key={product.id} className="basis-1/2">
@@ -157,7 +160,7 @@ const NewArrivals = () => {
         {/* Desktop 2-col */}
         <div className="hidden md:block lg:hidden">
           <div className="grid grid-cols-2 gap-6 md:gap-8">
-            {getDesktopProducts().map((product, index) => {
+            {getDesktopProducts().map((product: FeaturedProduct, index: number) => {
               const processed = processProduct(product);
               return (
                 <ProductCard
@@ -191,7 +194,7 @@ const NewArrivals = () => {
         {/* Desktop 3-col */}
         <div className="hidden lg:block">
           <div className="grid grid-cols-2 gap-6 md:gap-8 lg:grid-cols-3">
-            {getDesktopProductsLg().map((product, index) => {
+            {getDesktopProductsLg().map((product: FeaturedProduct, index: number) => {
               const processed = processProduct(product);
               return (
                 <ProductCard

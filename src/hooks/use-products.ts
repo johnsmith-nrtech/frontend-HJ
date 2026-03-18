@@ -482,3 +482,23 @@ export function useRelatedProducts(
     enabled: !!productId, // Only run the query if productId is provided
   });
 }
+
+
+// Hook for fetching new arrival products
+export function useNewArrivals(params?: {
+  limit?: number;
+  period?: "week" | "month" | "year" | "all";
+  includeCategory?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["newArrivals", params],
+    queryFn: async () => {
+      const { limit = 8, period = "all", includeCategory = true } = params || {};
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/new-arrivals?limit=${limit}&period=${period}&includeCategory=${includeCategory}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch new arrivals");
+      return res.json();
+    },
+  });
+}

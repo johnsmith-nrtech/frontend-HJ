@@ -10,6 +10,8 @@ import {
   PackageCheck,
   LogOut,
   Menu,
+  Star,
+  Tag,
   X,
   Home,
   ShoppingCart,
@@ -87,6 +89,16 @@ export const adminNavItems = [
     title: "Content",
     href: "/admin/content",
     icon: <FileText className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Sales",
+    href: "/admin/sales",
+    icon: <Tag className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Best Sellers",
+    href: "/admin/best-sellers",
+    icon: <Star className="mr-3 h-5 w-5" />,
   },
   // {
   //   title: "Settings",
