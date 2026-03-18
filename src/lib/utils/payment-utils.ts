@@ -58,7 +58,7 @@ export function redirectToPayment(
 
   // Add all the fields as hidden inputs
   Object.entries(payment_form.fields).forEach(([name, value]) => {
-    if (value !== undefined && value !== null && value !== "null") {
+    if (value !== undefined && value !== null && value !== "null" && value !== "") {
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = name;
