@@ -164,7 +164,7 @@ export const CheckoutDetailsTab = ({
                   })) || []} />
                 <FormSelectWithLabel label="COUNTRY *" value={formData.country}
                   onChange={(e) => handleInputChange("country", e.target.value)}
-                  options={[{ value: "uk", label: "United Kingdom" }]}
+                  options={[{ value: "GB", label: "United Kingdom" }]}
                   placeholder="Country" />
                 <FormInputWithLabel label="TOWN / CITY *" value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)} />
@@ -174,10 +174,11 @@ export const CheckoutDetailsTab = ({
                   <FormInputWithLabel label="ZIP CODE (Format: AAA-AAA)" placeholder="AAA-AAA"
                     value={formData.zipCode}
                     onChange={(e) => {
-                      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "").replace(/-/g, "").slice(0, 6);
-                      if (v.length > 3) v = v.slice(0, 3) + "-" + v.slice(3);
+                      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "").replace(/ /g, "").slice(0, 7);
+                      if (v.length > 4) v = v.slice(0, v.length - 3) + " " + v.slice(v.length - 3);
                       handleInputChange("zipCode", v);
-                    }} />
+                    }}
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="billing" checked={formData.differentBilling}

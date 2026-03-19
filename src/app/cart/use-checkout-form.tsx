@@ -188,9 +188,17 @@ export function useCheckoutForm() {
     window.location.href = "/login";
   };
 
+  // const getCountryCode = (country: string): string => {
+  //   const countryMap: Record<string, string> = { us: "US", uk: "GB", ca: "CA" };
+  //   return countryMap[country] || "GB";
+  // };
+
   const getCountryCode = (country: string): string => {
-    const countryMap: Record<string, string> = { us: "US", uk: "GB", ca: "CA" };
-    return countryMap[country] || "GB";
+    const countryMap: Record<string, string> = { 
+      us: "US", uk: "GB", ca: "CA",
+      GB: "GB", US: "US", CA: "CA",
+    };
+    return countryMap[country] || country;
   };
 
   // After order placed — process referral reward and consume wallet
