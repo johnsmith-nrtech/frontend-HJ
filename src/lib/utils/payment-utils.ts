@@ -64,9 +64,9 @@ export function redirectToPayment(
       input.name = name;
       input.value = String(value);
       form.appendChild(input);
-      console.log(`  ✅ Added field: ${name} = ${value}`);
+      console.log(`✅ Added field: ${name} = ${value}`);
     } else {
-      console.log(`  ⚠️ Skipped field: ${name} (value: ${value})`);
+      console.log(`⚠️ Skipped field: ${name} (value: ${value})`);
     }
   });
 
