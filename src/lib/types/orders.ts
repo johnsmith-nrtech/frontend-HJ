@@ -48,6 +48,7 @@ export interface OrderItem {
   variant_id: string;
   quantity: number;
   unit_price: number;
+  original_price: number | null;
   discount_applied: number;
   assembly_required: boolean;
   created_at: string;

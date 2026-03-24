@@ -121,9 +121,12 @@ const getStatusBadge = (status: OrderStatus) => {
 
 // Format currency
 const formatCurrency = (amount: number, currency: string = "GBP") => {
+  const hasDecimals = amount % 1 !== 0;
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: currency,
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
@@ -340,7 +343,10 @@ export default function OrdersPage() {
                     </TableHead>
                     <TableHead className="min-w-[100px]">Status</TableHead>
                     <TableHead className="hidden min-w-[100px] sm:table-cell">
-                      Total
+                      Original Price
+                    </TableHead>
+                    <TableHead className="hidden min-w-[110px] sm:table-cell">
+                      Discounted Price
                     </TableHead>
                     <TableHead className="min-w-[80px] text-right">
                       Actions
@@ -349,11 +355,49 @@ export default function OrdersPage() {
                 </TableHeader>
                 <TableBody>
                   {data.items.map((order) => {
-                    const totalAmount = calculateOrderGrandTotal(order);
-// const discountedTotal = order.discount_amount 
-//   ? totalAmount - order.discount_amount 
-//   : totalAmount;
-                    console.log(order);
+                    // const grandTotal = calculateOrderGrandTotal(order);
+                    // const originalTotal =
+                    //   order.total_amount +
+                    //   (order.zone?.delivery_charges || 0) +
+                    //   (order.floor?.charges || 0) +
+                    //   (order.shipping_cost || 0) +
+                    //   (order.tax_amount || 0);
+                    // const hasDiscount =
+                    //   order.discount_amount && order.discount_amount > 0;
+
+const grandTotal = calculateOrderGrandTotal(order);
+
+// Use ONLY items array for original total - don't use order.total_amount
+const itemsOriginalTotal = (order.items || []).reduce((sum, item) => {
+  return sum + (item.original_price ?? item.unit_price) * item.quantity;
+}, 0);
+
+const originalTotal =
+  itemsOriginalTotal +
+  (order.zone?.delivery_charges || 0) +
+  (order.floor?.charges || 0) +
+  (order.shipping_cost || 0) +
+  (order.tax_amount || 0);
+
+// Grand total using discounted unit_price
+const discountedItemsTotal = (order.items || []).reduce((sum, item) => {
+  return sum + item.unit_price * item.quantity;
+}, 0);
+
+const correctGrandTotal =
+  discountedItemsTotal +
+  (order.zone?.delivery_charges || 0) +
+  (order.floor?.charges || 0) +
+  (order.shipping_cost || 0) +
+  (order.tax_amount || 0) -
+  (order.discount_amount || 0);
+
+const hasProductDiscount = (order.items || []).some(
+  (item) => item.original_price != null && item.original_price > item.unit_price
+);
+const hasCouponDiscount = order.discount_amount && order.discount_amount > 0;
+const hasDiscount = hasProductDiscount || hasCouponDiscount;
+
                     return (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">
@@ -380,7 +424,7 @@ export default function OrdersPage() {
                             </span>
                             {/* Show total on mobile */}
                             <div className="text-muted-foreground mt-1 text-xs sm:hidden">
-                              {formatCurrency(totalAmount, order.currency)}
+                              {formatCurrency(grandTotal, order.currency)}
                             </div>
                           </div>
                         </TableCell>
@@ -398,9 +442,34 @@ export default function OrdersPage() {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {formatCurrency(totalAmount, order.currency)}
-                        </TableCell>
+
+                        {/* Original Price Column */}
+<TableCell className="hidden sm:table-cell">
+  {hasDiscount ? (
+    <span className="text-muted-foreground line-through">
+      {formatCurrency(originalTotal, order.currency)}
+    </span>
+  ) : (
+    <span>{formatCurrency(originalTotal, order.currency)}</span>
+  )}
+</TableCell>
+
+{/* Discounted Price Column */}
+<TableCell className="hidden sm:table-cell">
+  {hasDiscount ? (
+    <div className="flex flex-col">
+      <span className="font-medium text-green-600">
+        {formatCurrency(correctGrandTotal, order.currency)}
+      </span>
+      {hasProductDiscount && (
+        <span className="text-xs text-green-500">Product discount applied</span>
+      )}
+    </div>
+  ) : (
+    <span className="text-muted-foreground text-sm">No discount</span>
+  )}
+</TableCell>
+
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -546,15 +615,6 @@ export default function OrdersPage() {
                   <DialogTitle className="truncate text-lg font-bold sm:text-2xl">
                     Order Details
                   </DialogTitle>
-                  {/* Mobile close button */}
-                  {/* <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsViewDialogOpen(false)}
-                    className="h-8 w-8 p-1 sm:hidden"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button> */}
                 </div>
                 <DialogDescription className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <p className="flex items-center gap-2">
@@ -593,15 +653,6 @@ export default function OrdersPage() {
                       format(new Date(selectedOrder.created_at), "MMM d, yyyy")}
                   </div>
                 </div>
-                {/* Desktop close button */}
-                {/* <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsViewDialogOpen(false)}
-                  className="hidden h-8 w-8 p-2 sm:flex"
-                >
-                  <X className="h-4 w-4" />
-                </Button> */}
               </div>
             </div>
           </DialogHeader>
@@ -641,9 +692,6 @@ export default function OrdersPage() {
                           Items ({selectedOrder.items?.length || 0})
                         </span>
                         <span className="sm:hidden">Items</span>
-                        {/* <span className="ml-1 rounded-full bg-gray-200 px-1 py-0 text-xs text-gray-700">
-                          {selectedOrder.items?.length || 0}
-                        </span> */}
                       </TabsTrigger>
                       <TabsTrigger
                         value="payment"
@@ -784,97 +832,94 @@ export default function OrdersPage() {
                         </Card>
 
                         {/* Order Summary Card */}
-<Card className="col-span-1 sm:col-span-2 lg:col-span-1">
-  <CardContent className="p-3 sm:p-4">
-    <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-      <div className="rounded-lg bg-purple-100 p-1.5 sm:p-2">
-        <DollarSign className="h-4 w-4 text-purple-600 sm:h-5 sm:w-5" />
-      </div>
-      <div className="min-w-0">
-        <h3 className="text-sm font-semibold sm:text-base">
-          Order Total
-        </h3>
-        <p className="text-xs text-gray-500 sm:text-sm">
-          Pricing breakdown
-        </p>
-      </div>
-    </div>
-    <div className="space-y-1 sm:space-y-2">
-      <div className="flex justify-between text-xs sm:text-sm">
-        <span>Subtotal:</span>
-        <span>
-          {formatCurrency(
-            selectedOrder.total_amount,
-            selectedOrder.currency
-          )}
-        </span>
-      </div>
-      <div className="flex justify-between text-xs sm:text-sm">
-        <span>
-          Floor Charges ({selectedOrder.floor?.name || "N/A"}):
-        </span>
-        <span>
-          {formatCurrency(
-            selectedOrder.floor?.charges || 0,
-            selectedOrder.currency
-          )}
-        </span>
-      </div>
-      <div className="flex justify-between text-xs sm:text-sm">
-        <span>
-          Zone Charges ({selectedOrder.zone?.zip_code || "N/A"}):
-        </span>
-        <span>
-          {formatCurrency(
-            selectedOrder.zone?.delivery_charges || 0,
-            selectedOrder.currency
-          )}
-        </span>
-      </div>
-      
-      {/* 🔴 ADD DISCOUNT LINE HERE 🔴 */}
-      {selectedOrder.discount_amount > 0 && (
-        <div className="flex justify-between text-xs text-green-600 sm:text-sm">
-          <span>Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ''}:</span>
-          <span>-{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}</span>
-        </div>
-      )}
-      
-      {selectedOrder.shipping_cost > 0 && (
-        <div className="flex justify-between text-xs sm:text-sm">
-          <span>Shipping:</span>
-          <span>
-            {formatCurrency(
-              selectedOrder.shipping_cost,
-              selectedOrder.currency
-            )}
-          </span>
-        </div>
-      )}
-      {selectedOrder.tax_amount > 0 && (
-        <div className="flex justify-between text-xs sm:text-sm">
-          <span>Tax:</span>
-          <span>
-            {formatCurrency(
-              selectedOrder.tax_amount,
-              selectedOrder.currency
-            )}
-          </span>
-        </div>
-      )}
-      <Separator />
-      <div className="flex justify-between text-sm font-semibold sm:text-base">
-        <span>Total:</span>
-        <span className="text-green-600">
-          {formatCurrency(
-            calculateOrderGrandTotal(selectedOrder),
-            selectedOrder.currency
-          )}
-        </span>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+                        <Card className="col-span-1 sm:col-span-2 lg:col-span-1">
+                          <CardContent className="p-3 sm:p-4">
+                            <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                              <div className="rounded-lg bg-purple-100 p-1.5 sm:p-2">
+                                <DollarSign className="h-4 w-4 text-purple-600 sm:h-5 sm:w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="text-sm font-semibold sm:text-base">
+                                  Order Total
+                                </h3>
+                                <p className="text-xs text-gray-500 sm:text-sm">
+                                  Pricing breakdown
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-1 sm:space-y-2">
+                              <div className="flex justify-between text-xs sm:text-sm">
+                                <span>Subtotal:</span>
+                                <span>
+                                  {formatCurrency(
+                                    selectedOrder.total_amount,
+                                    selectedOrder.currency
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs sm:text-sm">
+                                <span>
+                                  Floor Charges ({selectedOrder.floor?.name || "N/A"}):
+                                </span>
+                                <span>
+                                  {formatCurrency(
+                                    selectedOrder.floor?.charges || 0,
+                                    selectedOrder.currency
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs sm:text-sm">
+                                <span>
+                                  Zone Charges ({selectedOrder.zone?.zip_code || "N/A"}):
+                                </span>
+                                <span>
+                                  {formatCurrency(
+                                    selectedOrder.zone?.delivery_charges || 0,
+                                    selectedOrder.currency
+                                  )}
+                                </span>
+                              </div>
+                              {selectedOrder.discount_amount > 0 && (
+                                <div className="flex justify-between text-xs text-green-600 sm:text-sm">
+                                  <span>Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ""}:</span>
+                                  <span>-{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}</span>
+                                </div>
+                              )}
+                              {selectedOrder.shipping_cost > 0 && (
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                  <span>Shipping:</span>
+                                  <span>
+                                    {formatCurrency(
+                                      selectedOrder.shipping_cost,
+                                      selectedOrder.currency
+                                    )}
+                                  </span>
+                                </div>
+                              )}
+                              {selectedOrder.tax_amount > 0 && (
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                  <span>Tax:</span>
+                                  <span>
+                                    {formatCurrency(
+                                      selectedOrder.tax_amount,
+                                      selectedOrder.currency
+                                    )}
+                                  </span>
+                                </div>
+                              )}
+                              <Separator />
+                              <div className="flex justify-between text-sm font-semibold sm:text-base">
+                                <span>Total:</span>
+                                <span className="text-green-600">
+                                  {formatCurrency(
+                                    calculateOrderGrandTotal(selectedOrder),
+                                    selectedOrder.currency
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                       </div>
 
                       {/* Quick Actions */}
@@ -896,9 +941,7 @@ export default function OrdersPage() {
                               className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm"
                             >
                               <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
-                              <span className="hidden sm:inline">
-                                Copy Email
-                              </span>
+                              <span className="hidden sm:inline">Copy Email</span>
                               <span className="sm:hidden">Email</span>
                             </Button>
                             {selectedOrder.contact_phone && (
@@ -914,9 +957,7 @@ export default function OrdersPage() {
                                 className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm"
                               >
                                 <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
-                                <span className="hidden sm:inline">
-                                  Copy Phone
-                                </span>
+                                <span className="hidden sm:inline">Copy Phone</span>
                                 <span className="sm:hidden">Phone</span>
                               </Button>
                             )}
@@ -932,9 +973,7 @@ export default function OrdersPage() {
                               className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm"
                             >
                               <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
-                              <span className="hidden sm:inline">
-                                Copy Address
-                              </span>
+                              <span className="hidden sm:inline">Copy Address</span>
                               <span className="sm:hidden">Address</span>
                             </Button>
                             <Button
@@ -948,9 +987,7 @@ export default function OrdersPage() {
                               className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm"
                             >
                               <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                              <span className="hidden sm:inline">
-                                Send Email
-                              </span>
+                              <span className="hidden sm:inline">Send Email</span>
                               <span className="sm:hidden">Email</span>
                             </Button>
                           </div>
@@ -980,7 +1017,6 @@ export default function OrdersPage() {
                               </CardContent>
                             </Card>
                           )}
-
                           {selectedOrder.cancellation_reason && (
                             <Card>
                               <CardContent className="p-3 sm:p-6">
@@ -1134,10 +1170,7 @@ export default function OrdersPage() {
                                   {selectedOrder.contact_last_name}
                                 </p>
                                 <p>
-                                  {
-                                    selectedOrder.shipping_address
-                                      .street_address
-                                  }
+                                  {selectedOrder.shipping_address.street_address}
                                 </p>
                                 <p>
                                   {selectedOrder.shipping_address.city}
@@ -1146,8 +1179,7 @@ export default function OrdersPage() {
                                   {selectedOrder.shipping_address.postal_code}
                                 </p>
                                 <p>
-                                  {selectedOrder.shipping_address
-                                    .country_name ||
+                                  {selectedOrder.shipping_address.country_name ||
                                     selectedOrder.shipping_address.country}
                                 </p>
                                 {selectedOrder.contact_phone && (
@@ -1212,81 +1244,80 @@ export default function OrdersPage() {
                             {/* Mobile View - Card Layout */}
                             <div className="block sm:hidden">
                               <div className="divide-y divide-gray-200">
-                                {selectedOrder.items.map((item) => (
-                                  <div key={item.id} className="p-4">
-                                    <div className="flex items-start space-x-3">
-                                      {/*<Image fill
-                                        src={item.image_url}
-                                        alt={
-                                          item.variant?.product?.name ||
-                                          "Product"
-                                        }
-                                        className="h-16 w-16 flex-shrink-0 rounded-lg border object-cover"
-                                      />*/}
-                                      {item.image_url && (
-                                        <Image
-                                          src={item.image_url}
-                                          alt={
-                                            item.variant?.product?.name ||
-                                            "Product"
-                                          }
-                                          fill
-                                          className="h-16 w-16 flex-shrink-0 rounded-lg border object-cover"
-                                        />
-                                      )}
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-900">
-                                              {item.variant?.product?.name ||
-                                                "Unknown Product"}
-                                            </p>
-                                            {item.variant && (
-                                              <div className="mt-1 space-y-1 text-xs text-gray-500">
-                                                <p>
-                                                  Color: {item.variant.color} •
-                                                  Size: {item.variant.size}
+                                {selectedOrder.items.map((item) => {
+                                  // const discountPct = item.variant?.discount_percentage ?? 0;
+                                  // const discountedPrice = item.unit_price;
+                                  // const originalPrice = discountPct > 0
+                                  //   ? Math.round((discountedPrice / (1 - discountPct / 100)) * 100) / 100
+                                  //   : discountedPrice;
+                                  // const hasItemDiscount = discountPct > 0;
+                                  const originalPrice = item.original_price ?? item.unit_price;
+const discountedPrice = item.unit_price;
+const hasItemDiscount = originalPrice > discountedPrice;
+                                  return (
+                                    <div key={item.id} className="p-4">
+                                      <div className="flex items-start space-x-3">
+                                        {item.image_url && (
+                                          <Image
+                                            src={item.image_url}
+                                            alt={item.variant?.product?.name || "Product"}
+                                            fill
+                                            className="h-16 w-16 flex-shrink-0 rounded-lg border object-cover"
+                                          />
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                              <p className="text-sm font-medium text-gray-900">
+                                                {item.variant?.product?.name || "Unknown Product"}
+                                              </p>
+                                              {item.variant && (
+                                                <div className="mt-1 space-y-1 text-xs text-gray-500">
+                                                  <p>
+                                                    Color: {item.variant.color} • Size: {item.variant.size}
+                                                  </p>
+                                                  <p>SKU: {item.variant.sku}</p>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className="ml-2 text-right">
+                                              <p className="text-sm font-medium">Qty: {item.quantity}</p>
+                                              {hasItemDiscount ? (
+                                                <>
+                                                  <p className="text-xs text-gray-400 line-through">
+                                                    {formatCurrency(originalPrice, selectedOrder.currency)}
+                                                  </p>
+                                                  <p className="text-xs font-medium text-green-600">
+                                                    {formatCurrency(discountedPrice, selectedOrder.currency)}
+                                                  </p>
+                                                </>
+                                              ) : (
+                                                <p className="text-xs text-gray-500">
+                                                  {formatCurrency(discountedPrice, selectedOrder.currency)}
                                                 </p>
-                                                <p>SKU: {item.variant.sku}</p>
-                                              </div>
-                                            )}
+                                              )}
+                                            </div>
                                           </div>
-                                          <div className="ml-2 text-right">
-                                            <p className="text-sm font-medium">
-                                              Qty: {item.quantity}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
+                                          <div className="mt-2 flex items-center justify-between">
+                                            <div>
+                                              {item.discount_applied > 0 ? (
+                                                <span className="text-xs text-green-600">
+                                                  Discount: -{formatCurrency(item.discount_applied, selectedOrder.currency)}
+                                                </span>
+                                              ) : null}
+                                            </div>
+                                            <div className="text-sm font-medium">
                                               {formatCurrency(
-                                                item.unit_price,
+                                                item.unit_price * item.quantity - item.discount_applied,
                                                 selectedOrder.currency
                                               )}
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <div className="mt-2 flex items-center justify-between">
-                                          <div>
-                                            {item.discount_applied > 0 ? (
-                                              <span className="text-xs text-green-600">
-                                                Discount: -
-                                                {formatCurrency(
-                                                  item.discount_applied,
-                                                  selectedOrder.currency
-                                                )}
-                                              </span>
-                                            ) : null}
-                                          </div>
-                                          <div className="text-sm font-medium">
-                                            {formatCurrency(
-                                              item.unit_price * item.quantity -
-                                                item.discount_applied,
-                                              selectedOrder.currency
-                                            )}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
 
@@ -1295,100 +1326,103 @@ export default function OrdersPage() {
                               <Table>
                                 <TableHeader>
                                   <TableRow className="bg-gray-50">
-                                    <TableHead className="font-semibold">
-                                      Product
-                                    </TableHead>
-                                    <TableHead className="text-center font-semibold">
-                                      Quantity
-                                    </TableHead>
-                                    <TableHead className="font-semibold">
-                                      Unit Price
-                                    </TableHead>
-                                    <TableHead className="font-semibold">
-                                      Discount
-                                    </TableHead>
-                                    <TableHead className="text-right font-semibold">
-                                      Total
-                                    </TableHead>
+                                    <TableHead className="font-semibold">Product</TableHead>
+                                    <TableHead className="text-center font-semibold">Quantity</TableHead>
+                                    <TableHead className="font-semibold">Original Price</TableHead>
+                                    <TableHead className="font-semibold">Discounted Price</TableHead>
+                                    <TableHead className="font-semibold">Discount</TableHead>
+                                    <TableHead className="text-right font-semibold">Total</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {selectedOrder.items.map((item) => (
-                                    <TableRow key={item.id}>
-                                      <TableCell>
-                                        <div className="flex items-center space-x-4">
-                                          {item.image_url && (
-                                            <Image
-                                              fill
-                                              src={item.image_url}
-                                              alt={
-                                                item.variant?.product?.name ||
-                                                "Product"
-                                              }
-                                              className="h-16 w-16 rounded-lg border object-cover"
-                                            />
-                                          )}
-                                          <div className="flex-1">
-                                            <p className="font-medium text-gray-900">
-                                              {item.variant?.product?.name ||
-                                                "Unknown Product"}
-                                            </p>
-                                            {item.variant && (
-                                              <div className="space-y-1 text-sm text-gray-500">
-                                                <p>
-                                                  Color: {item.variant.color} •
-                                                  Size: {item.variant.size}
-                                                </p>
-                                                <p>SKU: {item.variant.sku}</p>
-                                                {item.variant.material && (
-                                                  <p>
-                                                    Material:{" "}
-                                                    {item.variant.material}
-                                                  </p>
-                                                )}
-                                                {item.variant.brand && (
-                                                  <p>
-                                                    Brand: {item.variant.brand}
-                                                  </p>
-                                                )}
-                                              </div>
+                                  {selectedOrder.items.map((item) => {
+                                    // const discountPct = item.variant?.discount_percentage ?? 0;
+                                    // const discountedPrice = item.unit_price;
+                                    // const originalPrice = discountPct > 0
+                                    //   ? Math.round((discountedPrice / (1 - discountPct / 100)) * 100) / 100
+                                    //   : discountedPrice;
+                                    // const hasItemDiscount = discountPct > 0;
+                                    const originalPrice = item.original_price ?? item.unit_price;
+const discountedPrice = item.unit_price;
+const hasItemDiscount = originalPrice > discountedPrice;
+                                    return (
+                                      <TableRow key={item.id}>
+                                        <TableCell>
+                                          <div className="flex items-center space-x-4">
+                                            {item.image_url && (
+                                              <Image
+                                                fill
+                                                src={item.image_url}
+                                                alt={item.variant?.product?.name || "Product"}
+                                                className="h-16 w-16 rounded-lg border object-cover"
+                                              />
                                             )}
+                                            <div className="flex-1">
+                                              <p className="font-medium text-gray-900">
+                                                {item.variant?.product?.name || "Unknown Product"}
+                                              </p>
+                                              {item.variant && (
+                                                <div className="space-y-1 text-sm text-gray-500">
+                                                  <p>
+                                                    Color: {item.variant.color} • Size: {item.variant.size}
+                                                  </p>
+                                                  <p>SKU: {item.variant.sku}</p>
+                                                  {item.variant.material && (
+                                                    <p>Material: {item.variant.material}</p>
+                                                  )}
+                                                  {item.variant.brand && (
+                                                    <p>Brand: {item.variant.brand}</p>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="text-center font-medium">
-                                        {item.quantity}
-                                      </TableCell>
-                                      <TableCell>
-                                        {formatCurrency(
-                                          item.unit_price,
-                                          selectedOrder.currency
-                                        )}
-                                      </TableCell>
-                                      <TableCell>
-                                        {item.discount_applied > 0 ? (
-                                          <span className="text-green-600">
-                                            -
-                                            {formatCurrency(
-                                              item.discount_applied,
-                                              selectedOrder.currency
-                                            )}
-                                          </span>
-                                        ) : (
-                                          <span className="text-gray-400">
-                                            No discount
-                                          </span>
-                                        )}
-                                      </TableCell>
-                                      <TableCell className="text-right font-medium">
-                                        {formatCurrency(
-                                          item.unit_price * item.quantity -
-                                            item.discount_applied,
-                                          selectedOrder.currency
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
+                                        </TableCell>
+                                        <TableCell className="text-center font-medium">
+                                          {item.quantity}
+                                        </TableCell>
+                                        {/* Original Price */}
+                                        <TableCell>
+                                          {hasItemDiscount ? (
+                                            <span className="text-muted-foreground line-through">
+                                              {formatCurrency(originalPrice, selectedOrder.currency)}
+                                            </span>
+                                          ) : (
+                                            <span>
+                                              {formatCurrency(originalPrice, selectedOrder.currency)}
+                                            </span>
+                                          )}
+                                        </TableCell>
+                                        {/* Discounted Price */}
+                                        <TableCell>
+                                          {hasItemDiscount ? (
+                                            <span className="font-medium text-green-600">
+                                              {formatCurrency(discountedPrice, selectedOrder.currency)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-muted-foreground text-sm">
+                                              No discount
+                                            </span>
+                                          )}
+                                        </TableCell>
+                                        <TableCell>
+                                          {item.discount_applied > 0 ? (
+                                            <span className="text-green-600">
+                                              -{formatCurrency(item.discount_applied, selectedOrder.currency)}
+                                            </span>
+                                          ) : (
+                                            <span className="text-gray-400">—</span>
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                          {formatCurrency(
+                                            item.unit_price * item.quantity - item.discount_applied,
+                                            selectedOrder.currency
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
                                 </TableBody>
                               </Table>
                             </div>
@@ -1428,56 +1462,40 @@ export default function OrdersPage() {
                               <div className="flex justify-between">
                                 <span className="text-xs sm:text-sm">Subtotal:</span>
                                 <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    selectedOrder.total_amount,
-                                    selectedOrder.currency
-                                  )}
+                                  {formatCurrency(selectedOrder.total_amount, selectedOrder.currency)}
                                 </span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="text-xs sm:text-sm">
                                   Floor Charges ({selectedOrder.floor?.name || "N/A"}):
                                 </span>
                                 <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    selectedOrder.floor?.charges || 0,
-                                    selectedOrder.currency
-                                  )}
+                                  {formatCurrency(selectedOrder.floor?.charges || 0, selectedOrder.currency)}
                                 </span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="text-xs sm:text-sm">
                                   Zone Charges ({selectedOrder.zone?.zip_code || "N/A"}):
                                 </span>
                                 <span className="text-xs font-medium sm:text-sm">
-                                  {formatCurrency(
-                                    selectedOrder.zone?.delivery_charges || 0,
-                                    selectedOrder.currency
-                                  )}
+                                  {formatCurrency(selectedOrder.zone?.delivery_charges || 0, selectedOrder.currency)}
                                 </span>
                               </div>
-      
                               {selectedOrder.discount_amount > 0 && (
                                 <div className="flex justify-between text-green-600">
                                   <span className="text-xs sm:text-sm">
-                                    Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ''}:
+                                    Discount {selectedOrder.coupon_code ? `(${selectedOrder.coupon_code})` : ""}:
                                   </span>
                                   <span className="text-xs font-medium sm:text-sm">
                                     -{formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}
                                   </span>
                                 </div>
                               )}
-      
                               {selectedOrder.shipping_cost > 0 && (
                                 <div className="flex justify-between">
                                   <span className="text-xs sm:text-sm">Shipping:</span>
                                   <span className="text-xs font-medium sm:text-sm">
-                                    {formatCurrency(
-                                      selectedOrder.shipping_cost,
-                                      selectedOrder.currency
-                                    )}
+                                    {formatCurrency(selectedOrder.shipping_cost, selectedOrder.currency)}
                                   </span>
                                 </div>
                               )}
@@ -1485,10 +1503,7 @@ export default function OrdersPage() {
                                 <div className="flex justify-between">
                                   <span className="text-xs sm:text-sm">Tax:</span>
                                   <span className="text-xs font-medium sm:text-sm">
-                                    {formatCurrency(
-                                      selectedOrder.tax_amount,
-                                      selectedOrder.currency
-                                    )}
+                                    {formatCurrency(selectedOrder.tax_amount, selectedOrder.currency)}
                                   </span>
                                 </div>
                               )}
@@ -1496,10 +1511,7 @@ export default function OrdersPage() {
                               <div className="flex justify-between text-sm font-semibold sm:text-lg">
                                 <span>Total:</span>
                                 <span className="text-green-600">
-                                  {formatCurrency(
-                                    calculateOrderGrandTotal(selectedOrder),
-                                    selectedOrder.currency
-                                  )}
+                                  {formatCurrency(calculateOrderGrandTotal(selectedOrder), selectedOrder.currency)}
                                 </span>
                               </div>
                             </div>
@@ -1513,44 +1525,31 @@ export default function OrdersPage() {
                               <div className="rounded-lg bg-blue-100 p-1.5 sm:p-2">
                                 <CreditCard className="h-4 w-4 text-blue-600 sm:h-5 sm:w-5" />
                               </div>
-                              <h3 className="text-sm font-semibold sm:text-base">
-                                Payment Details
-                              </h3>
+                              <h3 className="text-sm font-semibold sm:text-base">Payment Details</h3>
                             </div>
                             <div className="space-y-2 sm:space-y-3">
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Currency:
-                                </span>
+                                <span className="text-xs sm:text-sm">Currency:</span>
                                 <span className="text-xs font-medium sm:text-sm">
                                   {selectedOrder.currency}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Payment Status:
-                                </span>
+                                <span className="text-xs sm:text-sm">Payment Status:</span>
                                 {getStatusBadge(selectedOrder.status)}
                               </div>
                               {selectedOrder.coupon_code && (
                                 <div className="flex justify-between">
-                                  <span className="text-xs sm:text-sm">
-                                    Coupon Applied:
-                                  </span>
+                                  <span className="text-xs sm:text-sm">Coupon Applied:</span>
                                   <span className="text-xs font-medium text-green-600 sm:text-sm">
                                     {selectedOrder.coupon_code}
                                   </span>
                                 </div>
                               )}
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm">
-                                  Order Date:
-                                </span>
+                                <span className="text-xs sm:text-sm">Order Date:</span>
                                 <span className="text-xs font-medium sm:text-sm">
-                                  {format(
-                                    new Date(selectedOrder.created_at),
-                                    "PPP"
-                                  )}
+                                  {format(new Date(selectedOrder.created_at), "PPP")}
                                 </span>
                               </div>
                             </div>
@@ -1566,9 +1565,7 @@ export default function OrdersPage() {
                               <div className="rounded-lg bg-orange-100 p-1.5 sm:p-2">
                                 <FileText className="h-4 w-4 text-orange-600 sm:h-5 sm:w-5" />
                               </div>
-                              <h3 className="text-sm font-semibold sm:text-base">
-                                Coupon Details
-                              </h3>
+                              <h3 className="text-sm font-semibold sm:text-base">Coupon Details</h3>
                             </div>
                             <div className="rounded-lg bg-orange-50 p-3 sm:p-4">
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1578,20 +1575,14 @@ export default function OrdersPage() {
                                   </p>
                                   <p className="text-xs text-orange-600 sm:text-sm">
                                     Discount Applied:{" "}
-                                    {formatCurrency(
-                                      selectedOrder.discount_amount,
-                                      selectedOrder.currency
-                                    )}
+                                    {formatCurrency(selectedOrder.discount_amount, selectedOrder.currency)}
                                   </p>
                                 </div>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    copyToClipboard(
-                                      selectedOrder.coupon_code!,
-                                      "Coupon code"
-                                    )
+                                    copyToClipboard(selectedOrder.coupon_code!, "Coupon code")
                                   }
                                   className="w-full sm:w-auto"
                                 >
@@ -1615,63 +1606,51 @@ export default function OrdersPage() {
             <div className="flex w-full flex-col justify-between gap-3 sm:flex-row sm:gap-0">
               <div className="flex gap-2">
                 {selectedOrder &&
-                  getAllowedStatusTransitions(selectedOrder.status).length >
-                    0 && (
+                  getAllowedStatusTransitions(selectedOrder.status).length > 0 && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                        >
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           Change Status
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        {getAllowedStatusTransitions(selectedOrder.status).map(
-                          (status) => {
-                            const config = {
-                              pending: { icon: Package, label: "Pending" },
-                              paid: { icon: Clock, label: "Paid" },
-                              shipped: { icon: TruckIcon, label: "Shipped" },
-                              delivered: {
-                                icon: CheckCircle2,
-                                label: "Delivered",
-                              },
-                              cancelled: { icon: XCircle, label: "Cancelled" },
-                            }[status];
+                        {getAllowedStatusTransitions(selectedOrder.status).map((status) => {
+                          const config = {
+                            pending: { icon: Package, label: "Pending" },
+                            paid: { icon: Clock, label: "Paid" },
+                            shipped: { icon: TruckIcon, label: "Shipped" },
+                            delivered: { icon: CheckCircle2, label: "Delivered" },
+                            cancelled: { icon: XCircle, label: "Cancelled" },
+                          }[status];
 
-                            const IconComponent = config.icon;
+                          const IconComponent = config.icon;
 
-                            if (status === "cancelled") {
-                              return (
-                                <DropdownMenuItem
-                                  key={status}
-                                  onClick={() => {
-                                    setIsViewDialogOpen(false);
-                                    handleCancelOrder(selectedOrder);
-                                  }}
-                                >
-                                  <IconComponent className="mr-2 h-4 w-4" />
-                                  {config.label}
-                                </DropdownMenuItem>
-                              );
-                            }
-
+                          if (status === "cancelled") {
                             return (
                               <DropdownMenuItem
                                 key={status}
-                                onClick={() =>
-                                  handleStatusChange(selectedOrder.id, status)
-                                }
+                                onClick={() => {
+                                  setIsViewDialogOpen(false);
+                                  handleCancelOrder(selectedOrder);
+                                }}
                               >
                                 <IconComponent className="mr-2 h-4 w-4" />
                                 {config.label}
                               </DropdownMenuItem>
                             );
                           }
-                        )}
+
+                          return (
+                            <DropdownMenuItem
+                              key={status}
+                              onClick={() => handleStatusChange(selectedOrder.id, status)}
+                            >
+                              <IconComponent className="mr-2 h-4 w-4" />
+                              {config.label}
+                            </DropdownMenuItem>
+                          );
+                        })}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -1693,12 +1672,9 @@ export default function OrdersPage() {
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="w-full max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">
-              Cancel Order
-            </DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Cancel Order</DialogTitle>
             <DialogDescription className="text-sm sm:text-base">
-              Please provide a reason for cancelling this order. This action
-              cannot be undone.
+              Please provide a reason for cancelling this order. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1730,9 +1706,7 @@ export default function OrdersPage() {
               disabled={cancelOrderWithReason.isPending || !cancelReason.trim()}
               className="order-1 w-full sm:order-2 sm:w-auto"
             >
-              {cancelOrderWithReason.isPending
-                ? "Cancelling..."
-                : "Cancel Order"}
+              {cancelOrderWithReason.isPending ? "Cancelling..." : "Cancel Order"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1740,13 +1714,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
