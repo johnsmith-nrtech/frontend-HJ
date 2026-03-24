@@ -48,6 +48,8 @@ export interface Variant {
   product_id: string;
   sku: string;
   price: number;
+  compare_price?: number;
+  discount_percentage?: number;
   size: string;
   color: string;
   stock: number;

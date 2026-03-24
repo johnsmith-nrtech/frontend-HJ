@@ -52,6 +52,8 @@ interface ExtendedProductVariant {
   product_id: string;
   sku: string;
   price: number;
+  compare_price?: number;
+  discount_percentage?: number;
   color?: string;
   size?: string;
   material?: string;
@@ -97,6 +99,17 @@ interface ExtendedProductVariant {
     feet_info?: string;
   };
 }
+
+// Type guard to check if variant has compare_price
+const hasComparePrice = (variant: any): variant is ExtendedProductVariant & { compare_price: number } => {
+  return variant && typeof variant.compare_price === 'number' && variant.compare_price > 0;
+};
+
+// Type guard to check if variant has discount_percentage
+const hasDiscountPercentage = (variant: any): variant is ExtendedProductVariant & { discount_percentage: number } => {
+  return variant && typeof variant.discount_percentage === 'number' && variant.discount_percentage > 0;
+};
+
 
 interface ProductDetailsProps {
   productId: string;
@@ -237,6 +250,27 @@ useEffect(() => {
 
   return () => clearTimeout(timer);
 }, [isLoading]);
+
+
+// Helper function
+const getVariantDiscount = (variant: any): number => {
+  if (!variant) return 0;
+  
+  // Priority 1: Compare price discount
+  if (variant.compare_price && variant.compare_price > variant.price) {
+    // Calculate discount percentage from compare_price vs price
+    const discount = ((variant.compare_price - variant.price) / variant.compare_price) * 100;
+    return Math.round(discount);
+  }
+  
+  // Priority 2: Direct discount percentage
+  if (variant.discount_percentage && variant.discount_percentage > 0) {
+    return variant.discount_percentage;
+  }
+  
+  return 0;
+};
+
 
   // Create variants from images and product data since API doesn't include variants array
   const createVariantsFromImages = React.useCallback(() => {
@@ -515,9 +549,10 @@ useEffect(() => {
       const variantDescription =
         variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
 
-      const discountedPrice = product.discount_offer && product.discount_offer > 0
-        ? parseFloat((currentPrice * (1 - product.discount_offer / 100)).toFixed(2))
-        : currentPrice;
+      const discount = getVariantDiscount(currentVariant);
+const discountedPrice = discount > 0
+  ? parseFloat((currentPrice * (1 - discount / 100)).toFixed(2))
+  : currentPrice;
 
       addItem({
         id: currentVariant.id,
@@ -1027,7 +1062,7 @@ useEffect(() => {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center justify-between gap-8">
-                  <div className="font-bebas flex items-baseline gap-2 md:gap-3">
+                  {/* <div className="font-bebas flex items-baseline gap-2 md:gap-3">
                     {product.discount_offer && product.discount_offer > 0 ? (
                       <>
                         <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
@@ -1042,7 +1077,34 @@ useEffect(() => {
                         £{currentPrice.toFixed(2)}
                       </span>
                     )}
-                  </div>
+                  </div> */}
+
+                  <div className="font-bebas flex items-baseline gap-2 md:gap-3">
+  {(() => {
+    const discount = getVariantDiscount(currentVariant);
+    const hasDiscount = discount > 0;
+    const discountedPrice = hasDiscount ? currentPrice * (1 - discount / 100) : currentPrice;
+    
+    if (hasDiscount) {
+      return (
+        <>
+          <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
+            £{discountedPrice.toFixed(2)}
+          </span>
+          <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
+            £{currentPrice.toFixed(2)}
+          </span>
+        </>
+      );
+    } else {
+      return (
+        <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
+          £{currentPrice.toFixed(2)}
+        </span>
+      );
+    }
+  })()}
+</div>
 
                   <span className="w-fit rounded-full bg-[#FFA8CD] px-4 py-1 text-sm font-bold text-[#000] md:px-6 md:py-2">
                     Klarna
@@ -1272,12 +1334,19 @@ useEffect(() => {
             <div className="mt-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+                  {/* <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
                     Make 3 Payments Of £{(
                       (product.discount_offer && product.discount_offer > 0
                         ? currentPrice * (1 - product.discount_offer / 100)
                         : currentPrice) / 3).toFixed(2)}
-                  </span>
+                  </span> */}
+                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+  Make 3 Payments Of £{(() => {
+    const discount = getVariantDiscount(currentVariant);
+    const discountedPrice = discount > 0 ? currentPrice * (1 - discount / 100) : currentPrice;
+    return (discountedPrice / 3).toFixed(2);
+  })()}
+</span>
                 </div>
               </div>
             </div>

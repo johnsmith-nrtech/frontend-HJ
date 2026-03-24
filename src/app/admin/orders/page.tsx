@@ -355,16 +355,8 @@ export default function OrdersPage() {
                 </TableHeader>
                 <TableBody>
                   {data.items.map((order) => {
-                    // const grandTotal = calculateOrderGrandTotal(order);
-                    // const originalTotal =
-                    //   order.total_amount +
-                    //   (order.zone?.delivery_charges || 0) +
-                    //   (order.floor?.charges || 0) +
-                    //   (order.shipping_cost || 0) +
-                    //   (order.tax_amount || 0);
-                    // const hasDiscount =
-                    //   order.discount_amount && order.discount_amount > 0;
 
+// In the admin orders page, find this section where you calculate totals
 const grandTotal = calculateOrderGrandTotal(order);
 
 // Use ONLY items array for original total - don't use order.total_amount
@@ -392,6 +384,7 @@ const correctGrandTotal =
   (order.tax_amount || 0) -
   (order.discount_amount || 0);
 
+// ✅ FIX: Check for product-level discounts (original_price > unit_price)
 const hasProductDiscount = (order.items || []).some(
   (item) => item.original_price != null && item.original_price > item.unit_price
 );
@@ -461,14 +454,32 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
       <span className="font-medium text-green-600">
         {formatCurrency(correctGrandTotal, order.currency)}
       </span>
-      {hasProductDiscount && (
-        <span className="text-xs text-green-500">Product discount applied</span>
+      {hasProductDiscount && !hasCouponDiscount && (
+        <span className="text-xs text-muted-foreground">
+          Product discount applied
+        </span>
       )}
+      {/* {!hasProductDiscount && hasCouponDiscount && (
+        <span className="text-xs text-muted-foreground">
+          Coupon: {order.coupon_code}
+        </span>
+      )} */}
     </div>
   ) : (
     <span className="text-muted-foreground text-sm">No discount</span>
   )}
 </TableCell>
+{/* <TableCell className="hidden sm:table-cell">
+  {hasDiscount ? (
+    <div className="flex flex-col">
+      <span className="font-medium text-green-600">
+        {formatCurrency(correctGrandTotal, order.currency)}
+      </span>
+    </div>
+  ) : (
+    <span className="text-muted-foreground text-sm">No discount</span>
+  )}
+</TableCell> */}
 
                         <TableCell className="text-right">
                           <DropdownMenu>

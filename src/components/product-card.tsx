@@ -58,35 +58,39 @@ export function ProductCard({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCartAnimationStore();
 
-  const handleAddToCart = async () => {
-    if (!variantId) {
-      toast.error("Variant ID is missing");
-      return;
-    }
-    setIsAddingToCart(true);
-    try {
-      await addItem({
-        id: variantId,
-        name,
-        price,
-        image: imageSrc,
-        variant_id: variantId,
-        size,
-        color,
-        stock,
-        assembly_required: false,
-        assemble_charges: assemble_charges,
-      });
 
-      toast.success(`${name} added to cart!`);
-    } catch (error) {
-      console.error("Failed to add to cart:", error);
-      toast.error("Failed to add to cart");
-    } finally {
-      setIsAddingToCart(false);
-      addToCart({ item: "item added" });
-    }
-  };
+const handleAddToCart = async () => {
+  if (!variantId) {
+    toast.error("Variant ID is missing");
+    return;
+  }
+  
+  // Calculate final discounted price
+  let finalPrice = price;
+  
+  setIsAddingToCart(true);
+  try {
+    await addItem({
+      id: variantId,
+      name,
+      price: finalPrice,
+      image: imageSrc,
+      variant_id: variantId,
+      size,
+      color,
+      stock,
+      assembly_required: false,
+      assemble_charges: assemble_charges,
+    });
+    toast.success(`${name} added to cart!`);
+  } catch (error) {
+    console.error("Failed to add to cart:", error);
+    toast.error("Failed to add to cart");
+  } finally {
+    setIsAddingToCart(false);
+    addToCart({ item: "item added" });
+  }
+};
 
   const formatPrice = (amount: number) => {
     return `${amount.toFixed(2)}`;

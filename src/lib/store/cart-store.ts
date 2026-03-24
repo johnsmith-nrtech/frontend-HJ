@@ -36,6 +36,8 @@ export interface LocalCartItem {
     assemble_charges?: number;
     sku?: string;
     availableColors?: string[];
+    compare_price?: number;
+    discount_percentage?: number;
   };
 }
 
@@ -100,40 +102,56 @@ interface CartState {
   }) => Promise<void>;
 }
 
-// Helper function to convert API cart item to local cart item
-const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
-  const discountOffer = Number((apiItem.variant.product as any)?.discount_offer) || 0;
-  const finalPrice = discountOffer > 0
-    ? parseFloat((apiItem.variant.price * (1 - discountOffer / 100)).toFixed(2))
-    : apiItem.variant.price;
 
+const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
+  const variant = apiItem.variant;
+  const actualPrice = variant.price;
+  
+  let finalPrice = actualPrice;
+  
+  // If compare_price exists, calculate double discount with rounded percentage
+  if (variant.compare_price && variant.compare_price > actualPrice) {
+    const discountPercent = ((variant.compare_price - actualPrice) / variant.compare_price) * 100;
+    const roundedDiscountPercent = Math.round(discountPercent);
+    finalPrice = actualPrice * (1 - roundedDiscountPercent / 100);
+    finalPrice = Math.round(finalPrice * 100) / 100;
+  }
+  
+  // If discount_percentage exists
+  else if (variant.discount_percentage && variant.discount_percentage > 0) {
+    finalPrice = actualPrice * (1 - variant.discount_percentage / 100);
+    finalPrice = Math.round(finalPrice * 100) / 100;
+  }
+  
   return {
     id: apiItem.id,
-    variant_id: apiItem.variant.id,
-    name: apiItem.variant.product.name,
+    variant_id: variant.id,
+    name: variant.product.name,
     price: finalPrice,
     quantity: apiItem.quantity,
     assembly_required: apiItem.assembly_required,
-    assemble_charges: apiItem.variant.assemble_charges,
-    size: apiItem.variant.size,
-    color: apiItem.variant.color,
-    stock: apiItem.variant.stock,
+    assemble_charges: variant.assemble_charges,
+    size: variant.size,
+    color: variant.color,
+    stock: variant.stock,
     created_at: apiItem.created_at,
     updated_at: apiItem.updated_at,
-    delivery_time_days: apiItem.variant.delivery_time_days ?? "N/A",
+    delivery_time_days: variant.delivery_time_days ?? "N/A",
     image:
-      apiItem.variant.variant_images?.[0]?.url ||
-      apiItem.variant.product.images?.[0]?.url,
+      variant.variant_images?.[0]?.url ||
+      variant.product.images?.[0]?.url,
     variant: {
-      color: apiItem.variant.color,
-      size: apiItem.variant.size,
-      material: apiItem.variant.material,
-      delivery_time_days: apiItem.variant.delivery_time_days,
-      assemble_charges: apiItem.variant.assemble_charges,
-      sku: apiItem.variant.sku,
+      color: variant.color,
+      size: variant.size,
+      material: variant.material,
+      delivery_time_days: variant.delivery_time_days,
+      assemble_charges: variant.assemble_charges,
+      sku: variant.sku,
     },
   };
 };
+
+
 
 export const useCartStore = create<CartState>()(
   persist(

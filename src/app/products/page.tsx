@@ -54,6 +54,27 @@ interface PageProduct {
 
 //
 // ────────────────────────────────────────────────────────────────
+//   HELPER FUNCTION TO CALCULATE DISCOUNT FROM VARIANT
+// ────────────────────────────────────────────────────────────────
+//
+
+const getVariantDiscount = (variant: any): number => {
+  // Priority 1: Compare price discount
+  if (variant?.compare_price && variant?.compare_price > variant?.price) {
+    const discount = ((variant.compare_price - variant.price) / variant.compare_price) * 100;
+    return Math.round(discount);
+  }
+  
+  // Priority 2: Direct discount percentage
+  if (variant?.discount_percentage && variant?.discount_percentage > 0) {
+    return variant.discount_percentage;
+  }
+  
+  return 0;
+};
+
+//
+// ────────────────────────────────────────────────────────────────
 //   MAIN PRODUCTS CONTENT COMPONENT
 // ────────────────────────────────────────────────────────────────
 //
@@ -85,6 +106,9 @@ function ProductsContent() {
         const imageUrl =
           mainImage?.url || firstImage?.url || "/placeholder.svg";
 
+        // Calculate discount from variant
+        const discount = getVariantDiscount(selectedVariant);
+
         return {
           id: result.id,
           name: result.name,
@@ -96,9 +120,9 @@ function ProductsContent() {
           inStock: selectedVariant ? selectedVariant.stock > 0 : true,
           isFeatured: result.featured,
           isNew: false,
-          isSale: true,
-          discount: 15,
-          discount_offer: result.discount_offer,
+          isSale: discount > 0,
+          discount: discount,
+          discount_offer: discount,
           image: imageUrl,
           variantId: selectedVariant?.id,
           size: selectedVariant?.size,
@@ -213,20 +237,6 @@ function ProductsContent() {
       ? apiProducts.items.map((product) => {
 
           // ─── DEFAULT VARIANT SELECTION ───────────────────────
-          // 1. Featured variant = default (set this when creating product)
-          // 2. Fallback: earliest created variant (lowest id)
-          // let defaultVariant =
-          //   product.variants?.find((v) => v.featured === true) ||
-          //   product.variants?.reduce((prev, curr) =>
-          //     prev.id < curr.id ? prev : curr
-          //   );
-
-          // let defaultVariant =
-          //   product.variants?.find((v) => v.featured === true) ||
-          //   product.variants?.reduce((prev, curr) =>
-          //   new Date(prev.created_at) < new Date(curr.created_at) ? prev : curr
-          // );
-
           let defaultVariant = product.variants?.reduce((prev, curr) =>
             new Date(prev.created_at) < new Date(curr.created_at) ? prev : curr
           );
@@ -251,28 +261,16 @@ function ProductsContent() {
             selectedVariant = sizeMatch || materialMatch || defaultVariant;
           }
 
-          // const mainImage = product.images?.find((img) => img.type === "main" && !img.variant_id);
-          // const firstProductImage = product.images?.find((img) => !img.variant_id);
-
-          // // Get images from featured/default variant
-          // const defaultVariantImages = (defaultVariant as any)?.images;
-          // const defaultVariantImage = defaultVariantImages
-          // ?.filter((img: any) => img.type === "main")
-          // ?.[0] || defaultVariantImages?.[0];
-
-          // const imageUrl =
-          //   // defaultVariantImage?.url ||
-          //   mainImage?.url ||
-          //   firstProductImage?.url ||
-          //   "/placeholder.svg";
-
           const sortedImages = [...(product.images || [])]
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
 
           const imageUrl =
             sortedImages.find((img) => img.type === "main")?.url ||
             sortedImages[0]?.url ||
             "/placeholder.svg";
+
+          // Calculate discount from the selected variant
+          const discount = getVariantDiscount(selectedVariant);
 
           return {
             id: product.id,
@@ -288,9 +286,9 @@ function ProductsContent() {
             inStock: selectedVariant ? selectedVariant.stock > 0 : true,
             isFeatured: selectedVariant?.featured,
             isNew: false,
-            isSale: true,
-            discount: 15,
-            discount_offer: product.discount_offer,
+            isSale: discount > 0,
+            discount: discount,
+            discount_offer: discount,
             image: imageUrl,
             variantId: selectedVariant?.id,
             size: selectedVariant?.size,
@@ -491,8 +489,7 @@ function ProductsContent() {
               })}
             >
               {displayProducts.map((product, index) => {
-                console.log(product.name, product.discount_offer, product.price);
-                const discount = Number(product.discount_offer) || 0;
+                const discount = Number(product.discount) || 0;
                 const originalPrice = product.price;
                 const discountedPrice =
                   discount > 0
