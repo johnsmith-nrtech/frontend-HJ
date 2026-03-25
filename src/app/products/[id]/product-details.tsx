@@ -46,7 +46,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInView } from "@/hooks/use-in-view";
 
-// Extended ProductVariant interface to include all possible properties
+// ─────────────────────────────────────────────────────────────────
+//  INTERFACES
+// ─────────────────────────────────────────────────────────────────
+
 interface ExtendedProductVariant {
   id: string;
   product_id: string;
@@ -100,25 +103,69 @@ interface ExtendedProductVariant {
   };
 }
 
-// Type guard to check if variant has compare_price
-const hasComparePrice = (variant: any): variant is ExtendedProductVariant & { compare_price: number } => {
-  return variant && typeof variant.compare_price === 'number' && variant.compare_price > 0;
-};
-
-// Type guard to check if variant has discount_percentage
-const hasDiscountPercentage = (variant: any): variant is ExtendedProductVariant & { discount_percentage: number } => {
-  return variant && typeof variant.discount_percentage === 'number' && variant.discount_percentage > 0;
-};
-
-
 interface ProductDetailsProps {
   productId: string;
 }
 
-// Type guard functions
-function hasExtendedProperties(
-  variant: unknown
-): variant is ExtendedProductVariant {
+// ─────────────────────────────────────────────────────────────────
+//  DISCOUNT HELPERS
+//
+//  getVariantDiscount  → returns a % (0-100)
+//  Priority: compare_price > discount_percentage > product.discount_offer
+//
+//  getDiscountedPrice  → applies the % to the base price
+//  getOriginalPrice    → the "was" price to show struck-through
+//    - when compare_price exists → compare_price is the "was" price
+//    - otherwise                 → base price (variant.price) is the "was" price
+// ─────────────────────────────────────────────────────────────────
+
+const getVariantDiscount = (
+  variant: any,
+  productDiscountOffer?: number,
+): number => {
+  if (variant) {
+    if (variant.compare_price && variant.compare_price > variant.price) {
+      return Math.round(
+        ((variant.compare_price - variant.price) / variant.compare_price) * 100,
+      );
+    }
+    if (variant.discount_percentage && Number(variant.discount_percentage) > 0) {
+      return Number(variant.discount_percentage);
+    }
+  }
+  if (productDiscountOffer && Number(productDiscountOffer) > 0) {
+    return Number(productDiscountOffer);
+  }
+  return 0;
+};
+
+// Returns the "was" / original price to show as strikethrough
+const getOriginalPrice = (variant: any, fallbackPrice: number): number => {
+  if (variant?.compare_price && variant.compare_price > variant.price) {
+    return variant.compare_price;
+  }
+  return fallbackPrice;
+};
+
+// Returns the final displayed sale price
+const getDiscountedPrice = (
+  basePrice: number,
+  discountPct: number,
+  variant?: any,
+): number => {
+  if (discountPct <= 0) return basePrice;
+  // If compare_price is the source, the variant.price IS already the sale price
+  if (variant?.compare_price && variant.compare_price > variant.price) {
+    return variant.price;
+  }
+  return parseFloat((basePrice * (1 - discountPct / 100)).toFixed(2));
+};
+
+// ─────────────────────────────────────────────────────────────────
+//  TYPE GUARDS
+// ─────────────────────────────────────────────────────────────────
+
+function hasExtendedProperties(variant: unknown): variant is ExtendedProductVariant {
   return (
     variant !== null &&
     typeof variant === "object" &&
@@ -132,7 +179,7 @@ function hasExtendedProperties(
 }
 
 function hasPaymentOptions(
-  variant: unknown
+  variant: unknown,
 ): variant is ExtendedProductVariant & {
   payment_options: NonNullable<ExtendedProductVariant["payment_options"]>;
 } {
@@ -149,7 +196,7 @@ function hasDimensions(variant: unknown): variant is ExtendedProductVariant & {
   return Boolean(
     hasExtendedProperties(variant) &&
       variant.dimensions &&
-      typeof variant.dimensions === "object"
+      typeof variant.dimensions === "object",
   );
 }
 
@@ -160,6 +207,10 @@ interface DimensionItem {
   letter: string;
 }
 
+// ─────────────────────────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────────────────────────
+
 const marqueeItems = [
   { text: "10-YEARS GUARANTEE", icon: "/sofa-icon.png" },
   { text: "100-NIGHT TRAIL", icon: "/sofa-icon.png" },
@@ -167,14 +218,69 @@ const marqueeItems = [
   { text: "FREE DELIVERY", icon: "/sofa-icon.png" },
 ];
 
-// ── tabList defined outside component so it's stable and accessible everywhere ──
 const tabList = [
-  { key: "images",      label: "Images",      section: "style" },
-  { key: "dimensions",  label: "Dimensions",  section: "dimensions" },
-  { key: "material",    label: "Material",    section: "material" },
+  { key: "images", label: "Images", section: "style" },
+  { key: "dimensions", label: "Dimensions", section: "dimensions" },
+  { key: "material", label: "Material", section: "material" },
   { key: "recommended", label: "Recommended", section: "recommended" },
-  { key: "reviews",     label: "Reviews",     section: "reviews" },
+  { key: "reviews", label: "Reviews", section: "reviews" },
 ];
+
+// ─────────────────────────────────────────────────────────────────
+//  RELATED PRODUCT PRICE HELPER
+//  Computes finalPrice, originalPrice, hasDiscount, discountLabel
+//  for a related product, checking variant-level discounts first.
+// ─────────────────────────────────────────────────────────────────
+
+function getRelatedProductPricing(relatedProduct: any) {
+  const firstVariant = relatedProduct.variants?.[0];
+  const basePrice: number = firstVariant?.price ?? relatedProduct.base_price;
+
+  const discountPct = getVariantDiscount(
+    firstVariant,
+    relatedProduct.discount_offer,
+  );
+
+  const hasDiscount = discountPct > 0;
+  const finalPrice = getDiscountedPrice(basePrice, discountPct, firstVariant);
+  // "was" price: compare_price if available, else base variant price
+  const originalPrice = hasDiscount
+    ? getOriginalPrice(firstVariant, basePrice)
+    : undefined;
+
+  const discountLabel = hasDiscount ? `${discountPct}% off` : undefined;
+
+  const assembleCharges: number = firstVariant?.assemble_charges ?? 0;
+  const deliverInfo: string =
+    firstVariant?.delivery_time_days ?? "3 To 4 Days Delivery";
+
+  const sortedImages = [...(relatedProduct.images ?? [])].sort(
+    (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
+  );
+  const imageUrl =
+    sortedImages.find((img: any) => img.type === "main")?.url ??
+    sortedImages[0]?.url;
+  const productImage =
+    imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/"))
+      ? imageUrl
+      : "/hero-img.png";
+
+  return {
+    firstVariant,
+    basePrice,
+    finalPrice,
+    originalPrice,
+    hasDiscount,
+    discountLabel,
+    assembleCharges,
+    deliverInfo,
+    productImage,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  COMPONENT
+// ─────────────────────────────────────────────────────────────────
 
 export default function ProductDetails({ productId }: ProductDetailsProps) {
   const isMobile = useIsMobile();
@@ -182,11 +288,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     threshold: 0.1,
   });
 
-  const {
-    data: product,
-    isLoading,
-    error,
-  } = useProduct(productId, {
+  const { data: product, isLoading, error } = useProduct(productId, {
     includeVariants: true,
     includeImages: true,
     includeCategory: true,
@@ -197,13 +299,13 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     includeCategory: true,
   });
 
-  // Variant selection states
+  // ── variant selection ──────────────────────────────────────────
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
-  // UI states
+  // ── ui state ───────────────────────────────────────────────────
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [showViewInRoom, setShowViewInRoom] = useState(false);
@@ -214,146 +316,78 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const addItem = useCartStore((state) => state.addItem);
   const { isInWishlist, toggleItem } = useWishlistStore();
 
-  // ─── SCROLL SPY: update active tab based on visible section ───
-useEffect(() => {
-  // Delay to ensure DOM is fully painted
-  const timer = setTimeout(() => {
-    const observers: IntersectionObserver[] = [];
+  // ── scroll spy ────────────────────────────────────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const observers: IntersectionObserver[] = [];
+      tabList.forEach(({ key, section }) => {
+        const element = document.getElementById(section);
+        if (!element) return;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) setSelectedTab(key);
+            });
+          },
+          { root: null, rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+        );
+        observer.observe(element);
+        observers.push(observer);
+      });
+      return () => observers.forEach((obs) => obs.disconnect());
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
-    tabList.forEach(({ key, section }) => {
-      const element = document.getElementById(section);
-      if (!element) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setSelectedTab(key);
-            }
-          });
-        },
-        {
-          root: null,
-          rootMargin: "-30% 0px -60% 0px",
-          threshold: 0,
-        }
-      );
-
-      observer.observe(element);
-      observers.push(observer);
-    });
-
-    return () => {
-      observers.forEach((obs) => obs.disconnect());
-    };
-  }, 500);
-
-  return () => clearTimeout(timer);
-}, [isLoading]);
-
-
-// Helper function
-const getVariantDiscount = (variant: any): number => {
-  if (!variant) return 0;
-  
-  // Priority 1: Compare price discount
-  if (variant.compare_price && variant.compare_price > variant.price) {
-    // Calculate discount percentage from compare_price vs price
-    const discount = ((variant.compare_price - variant.price) / variant.compare_price) * 100;
-    return Math.round(discount);
-  }
-  
-  // Priority 2: Direct discount percentage
-  if (variant.discount_percentage && variant.discount_percentage > 0) {
-    return variant.discount_percentage;
-  }
-  
-  return 0;
-};
-
-
-  // Create variants from images and product data since API doesn't include variants array
+  // ── build variants ─────────────────────────────────────────────
   const createVariantsFromImages = React.useCallback(() => {
     if (!product?.images) return [];
-
-    // Group images by variant_id to identify variants
     const variantGroups = product.images.reduce(
       (acc, image) => {
         if (image.variant_id) {
-          if (!acc[image.variant_id]) {
-            acc[image.variant_id] = [];
-          }
+          if (!acc[image.variant_id]) acc[image.variant_id] = [];
           acc[image.variant_id].push(image);
         }
         return acc;
       },
-      {} as Record<
-        string,
-        {
-          url: string;
-          order: number;
-          variant_id: string | null;
-          created_at?: string;
-          updated_at?: string;
-        }[]
-      >
+      {} as Record<string, any[]>,
     );
-
-    // Create variant objects from image groups
-    const variants = Object.entries(variantGroups).map(
-      ([variantId, images]) => {
-        // Extract color from image URL or filename
-        const firstImage = images[0];
-        let color = "Unknown";
-
-        // Try to extract color from URL
-        const urlLower = firstImage.url.toLowerCase();
-        if (urlLower.includes("grey") || urlLower.includes("gray"))
-          color = "Grey";
-        else if (urlLower.includes("beige")) color = "Beige";
-        else if (urlLower.includes("mocha")) color = "Mocha";
-        else if (urlLower.includes("cream")) color = "Cream";
-        else if (urlLower.includes("black")) color = "Black";
-        else if (urlLower.includes("white")) color = "White";
-        else if (urlLower.includes("blue")) color = "Blue";
-        else if (urlLower.includes("red")) color = "Red";
-        else if (urlLower.includes("brown")) color = "Brown";
-        else if (urlLower.includes("green")) color = "Green";
-
-        return {
-          id: variantId,
-          product_id: product.id,
-          sku: `${product.name}-${color}`.replace(/\s+/g, "-"),
-          price: product.base_price,
-          color: color,
-          delivery_time_days: "3 To 4 Days Delivery",
-          size: "Standard",
-          material: "Premium Fabric",
-          stock: 10,
-          featured: false,
-          images: images.sort((a, b) => a.order - b.order),
-          created_at: firstImage.created_at,
-          updated_at: firstImage.updated_at,
-          assemble_charges: 0,
-        };
-      }
-    );
-
-    return variants;
+    return Object.entries(variantGroups).map(([variantId, images]) => {
+      const firstImage = images[0];
+      let color = "Unknown";
+      const urlLower = firstImage.url.toLowerCase();
+      if (urlLower.includes("grey") || urlLower.includes("gray")) color = "Grey";
+      else if (urlLower.includes("beige")) color = "Beige";
+      else if (urlLower.includes("mocha")) color = "Mocha";
+      else if (urlLower.includes("cream")) color = "Cream";
+      else if (urlLower.includes("black")) color = "Black";
+      else if (urlLower.includes("white")) color = "White";
+      else if (urlLower.includes("blue")) color = "Blue";
+      else if (urlLower.includes("red")) color = "Red";
+      else if (urlLower.includes("brown")) color = "Brown";
+      else if (urlLower.includes("green")) color = "Green";
+      return {
+        id: variantId,
+        product_id: product.id,
+        sku: `${product.name}-${color}`.replace(/\s+/g, "-"),
+        price: product.base_price,
+        color,
+        delivery_time_days: "3 To 4 Days Delivery",
+        size: "Standard",
+        material: "Premium Fabric",
+        stock: 10,
+        featured: false,
+        images: images.sort((a, b) => a.order - b.order),
+        created_at: firstImage.created_at,
+        updated_at: firstImage.updated_at,
+        assemble_charges: 0,
+      };
+    });
   }, [product]);
 
   const allVariants = React.useMemo(() => {
-    // First check if we have actual variants from the API
-    if (product?.variants && product.variants.length > 0) {
-      return product.variants;
-    }
-
-    // If no variants but we have images with variant_id, create variants from images
-    if (product?.images && product.images.some((img) => img.variant_id)) {
-      return createVariantsFromImages();
-    }
-
-    // If no variants and no variant-specific images, create a default variant
+    if (product?.variants && product.variants.length > 0) return product.variants;
+    if (product?.images?.some((img) => img.variant_id)) return createVariantsFromImages();
     if (product) {
       return [
         {
@@ -372,27 +406,21 @@ const getVariantDiscount = (variant: any): number => {
         },
       ];
     }
-
     return [];
   }, [product, createVariantsFromImages]);
 
   React.useEffect(() => {
     if (allVariants && allVariants.length > 0 && !selectedVariant) {
-      const sorted = [...allVariants].sort((a, b) => {
-        const dateA = new Date((a as ExtendedProductVariant).created_at || 0).getTime();
-        const dateB = new Date((b as ExtendedProductVariant).created_at || 0).getTime();
-        return dateA - dateB;
-      });
-
-      const firstAvailableVariant = sorted[0];
-
-      if (firstAvailableVariant) {
-        setSelectedVariant(firstAvailableVariant.id);
-      }
+      const sorted = [...allVariants].sort(
+        (a, b) =>
+          new Date((a as ExtendedProductVariant).created_at || 0).getTime() -
+          new Date((b as ExtendedProductVariant).created_at || 0).getTime(),
+      );
+      const first = sorted[0];
+      if (first) setSelectedVariant(first.id);
     }
   }, [allVariants, selectedVariant]);
 
-  // Get all unique options from variants
   const uniqueColors = [
     ...new Set((allVariants || []).map((v) => v.color).filter(Boolean)),
   ];
@@ -401,117 +429,75 @@ const getVariantDiscount = (variant: any): number => {
   ];
   const uniqueMaterials = [
     ...new Set(
-      (allVariants || [])
-        .map((v) => v.material || "No Material")
-        .filter(Boolean)
+      (allVariants || []).map((v) => v.material || "No Material").filter(Boolean),
     ),
   ];
 
-  // Find current variant based on selections
   const getCurrentVariant = React.useCallback(() => {
     if (!allVariants || allVariants.length === 0) return null;
-
-    if (!selectedColor && !selectedSize && !selectedMaterial) {
+    if (!selectedColor && !selectedSize && !selectedMaterial)
       return allVariants.find((v) => v.stock > 0) || allVariants[0];
-    }
-
-    const currentVariant = allVariants.find(
+    const found = allVariants.find(
       (v) =>
         (!selectedColor || v.color === selectedColor) &&
         (!selectedSize || v.size === selectedSize) &&
         (!selectedMaterial ||
           v.material === selectedMaterial ||
           (selectedMaterial === null && v.material === null) ||
-          (selectedMaterial === "No Material" && v.material === null))
+          (selectedMaterial === "No Material" && v.material === null)),
     );
-
-    if (currentVariant) {
-      if (!currentVariant.delivery_time_days) {
-        currentVariant.delivery_time_days = "3 To 4 Days Delivery";
-      }
-
-      return currentVariant;
-    }
+    if (found && !found.delivery_time_days)
+      found.delivery_time_days = "3 To 4 Days Delivery";
+    return found ?? null;
   }, [allVariants, selectedColor, selectedSize, selectedMaterial]);
 
   const currentVariant = getCurrentVariant();
-
-  // Current variant data with dynamic updates
   const selectedVariantData = currentVariant;
   const currentVariantId = currentVariant?.id || product?.variants?.[0]?.id;
   const currentPrice = currentVariant?.price || product?.base_price || 0;
   const currentStock = currentVariant?.stock || 0;
 
-  // Enhanced image handling for all variant images
+  // ── derived discount values for the CURRENT variant ───────────
+  const currentDiscount = getVariantDiscount(currentVariant, product?.discount_offer);
+  const currentHasDiscount = currentDiscount > 0;
+  const currentDiscountedPrice = getDiscountedPrice(currentPrice, currentDiscount, currentVariant);
+  const currentOriginalPrice = currentHasDiscount
+    ? getOriginalPrice(currentVariant, currentPrice)
+    : currentPrice;
+
+  // ── images ─────────────────────────────────────────────────────
   const getAllImages = React.useMemo(() => {
     if (!product?.images)
-      return {
-        all: [],
-        main: [],
-        byVariant: {} as Record<
-          string,
-          {
-            url: string;
-            order: number;
-            variant_id?: string;
-            created_at?: string;
-            updated_at?: string;
-          }[]
-        >,
-      };
-
-    // Get all images and organize them
+      return { all: [], main: [], byVariant: {} as Record<string, any[]> };
     const allImages = [...product.images];
-
-    // Separate main product images (variant_id = null) and variant images
     const mainImages = allImages
       .filter((img) => !img.variant_id)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-
     const variantImages = allImages.filter((img) => img.variant_id);
-
-    // Group variant images by variant_id and sort each group by order
     const byVariant = variantImages.reduce(
       (acc, img) => {
-        if (img.variant_id && !acc[img.variant_id]) acc[img.variant_id] = [];
-        if (img.variant_id) acc[img.variant_id].push(img);
+        if (img.variant_id) {
+          if (!acc[img.variant_id]) acc[img.variant_id] = [];
+          acc[img.variant_id].push(img);
+        }
         return acc;
       },
-      {} as Record<
-        string,
-        {
-          url: string;
-          order: number;
-          variant_id: string | null;
-          created_at?: string;
-          updated_at?: string;
-        }[]
-      >
+      {} as Record<string, any[]>,
     );
-
-    // Sort images within each variant group by order
-    Object.keys(byVariant).forEach((variantId) => {
-      byVariant[variantId].sort((a, b) => (a.order || 0) - (b.order || 0));
+    Object.keys(byVariant).forEach((vid) => {
+      byVariant[vid].sort((a, b) => (a.order || 0) - (b.order || 0));
     });
-
-    return {
-      all: allImages,
-      main: mainImages,
-      byVariant,
-    };
+    return { all: allImages, main: mainImages, byVariant };
   }, [product?.images]);
 
-  // Use the current variant's images for display
   const variantImages = React.useMemo(() => {
     if (!currentVariant?.id) return [];
     return getAllImages.byVariant[currentVariant.id] || [];
   }, [currentVariant?.id, getAllImages]);
 
   const hasVariantImages = variantImages.length > 0;
-
   const displayImages = hasVariantImages ? variantImages : getAllImages.main;
 
-  // Update image index when color changes (not size/material)
   React.useEffect(() => {
     setCurrentImageIndex(0);
   }, [selectedColor]);
@@ -519,45 +505,33 @@ const getVariantDiscount = (variant: any): number => {
   const isWishlisted = isInWishlist(currentVariantId || "");
   const { addToCart } = useCartAnimationStore();
 
+  // ── handlers ──────────────────────────────────────────────────
   const handleAddToCart = () => {
-    // Check if color needs to be selected
     if (uniqueColors.length > 0 && !selectedColor) {
       setShowVariantError(true);
       document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    // Check if size needs to be selected
     if (uniqueSizes.length > 0 && !selectedSize) {
       setShowVariantError(true);
       document.getElementById("variant-selection")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    if (currentStock === 0) {
-      return;
-    }
-
+    if (currentStock === 0) return;
     setShowVariantError(false);
     addToCart({ item: "item added" });
-
     if (product && currentVariant && currentStock > 0) {
       const productImage = displayImages.length > 0 ? displayImages[0].url : undefined;
-
       const variantParts = [];
       if (selectedColor) variantParts.push(selectedColor);
       if (selectedSize) variantParts.push(selectedSize);
       if (selectedMaterial) variantParts.push(selectedMaterial);
       const variantDescription =
         variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
-
-      const discount = getVariantDiscount(currentVariant);
-const discountedPrice = discount > 0
-  ? parseFloat((currentPrice * (1 - discount / 100)).toFixed(2))
-  : currentPrice;
-
       addItem({
         id: currentVariant.id,
         name: `${product.name}${variantDescription}`,
-        price: discountedPrice,
+        price: currentDiscountedPrice,
         image: productImage,
         variant_id: currentVariant.id,
         color: selectedColor || currentVariant.color,
@@ -576,17 +550,15 @@ const discountedPrice = discount > 0
   const handleWishlistToggle = async () => {
     if (currentVariantId && product && currentVariant) {
       try {
-        // Build variant description for wishlist
         const variantParts = [];
         if (selectedColor) variantParts.push(selectedColor);
         if (selectedSize) variantParts.push(selectedSize);
         if (selectedMaterial) variantParts.push(selectedMaterial);
         const variantDescription =
           variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
-
         await toggleItem(currentVariantId, {
           name: `${product.name}${variantDescription}`,
-          price: currentPrice,
+          price: currentDiscountedPrice, // ← use discounted price
           image: displayImages[0]?.url || product.images?.[0]?.url,
           variant_id: currentVariantId,
         });
@@ -598,77 +570,38 @@ const discountedPrice = discount > 0
 
   const getColorHex = (colorName: string): string => {
     const colorMap: Record<string, string> = {
-      black: "#000000",
-      white: "#FFFFFF",
-      gray: "#808080",
-      grey: "#808080",
-      brown: "#8B4513",
-      beige: "#F5F5DC",
-      navy: "#000080",
-      blue: "#0000FF",
-      green: "#008000",
-      red: "#FF0000",
-      pink: "#FFC0CB",
-      purple: "#800080",
-      orange: "#FFA500",
-      yellow: "#FFFF00",
-      cream: "#F5F0E1",
-      charcoal: "#36454F",
-      emerald: "#50C878",
-      burgundy: "#800020",
-      teal: "#008080",
-      olive: "#808000",
+      black: "#000000", white: "#FFFFFF", gray: "#808080", grey: "#808080",
+      brown: "#8B4513", beige: "#F5F5DC", navy: "#000080", blue: "#0000FF",
+      green: "#008000", red: "#FF0000", pink: "#FFC0CB", purple: "#800080",
+      orange: "#FFA500", yellow: "#FFFF00", cream: "#F5F0E1", charcoal: "#36454F",
+      emerald: "#50C878", burgundy: "#800020", teal: "#008080", olive: "#808000",
       maroon: "#800000",
     };
     return colorMap[colorName.toLowerCase().trim()] || colorName.toLowerCase().trim();
   };
 
-  // Update selected variant when filters change
   React.useEffect(() => {
     const variant = getCurrentVariant();
-    if (variant && variant.id !== selectedVariant) {
-      setSelectedVariant(variant.id);
-    }
-  }, [
-    selectedColor,
-    selectedSize,
-    selectedMaterial,
-    getCurrentVariant,
-    selectedVariant,
-  ]);
+    if (variant && variant.id !== selectedVariant) setSelectedVariant(variant.id);
+  }, [selectedColor, selectedSize, selectedMaterial, getCurrentVariant, selectedVariant]);
 
   const handleScrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const nextImage = () => {
+  const nextImage = () =>
     setCurrentImageIndex((prev) =>
-      prev === displayImages.length - 1 ? 0 : prev + 1
+      prev === displayImages.length - 1 ? 0 : prev + 1,
     );
-  };
-
-  const prevImage = () => {
+  const prevImage = () =>
     setCurrentImageIndex((prev) =>
-      prev === 0 ? displayImages.length - 1 : prev - 1
+      prev === 0 ? displayImages.length - 1 : prev - 1,
     );
-  };
-
-  const toggleZoom = () => {
-    setIsZoomed(!isZoomed);
-  };
-
-  const toggleViewInRoom = () => {
-    setShowViewInRoom(!showViewInRoom);
-  };
+  const toggleZoom = () => setIsZoomed(!isZoomed);
+  const toggleViewInRoom = () => setShowViewInRoom(!showViewInRoom);
 
   const getDeliveryDetails = () => {
-    if (!currentVariant) {
-      return "Not Available";
-    }
-
+    if (!currentVariant) return "Not Available";
     return (
       currentVariant.delivery_time_days ||
       product?.delivery_info?.text ||
@@ -676,23 +609,14 @@ const discountedPrice = discount > 0
     );
   };
 
-  // ─── material_info helpers ───────────────────────────────────────────────────
+  // ── material info ─────────────────────────────────────────────
   const materialInfo = (selectedVariantData as ExtendedProductVariant)?.material_info;
 
   const compositionItems = [
-    {
-      label: "Main Material",
-      value: (selectedVariantData as ExtendedProductVariant)?.material,
-    },
-    {
-      label: "Scatter Cushion Cover",
-      value: materialInfo?.scatter_cushion_cover,
-    },
-    {
-      label: "Scatter Cushion Filling",
-      value: materialInfo?.scatter_cushion_filling,
-    },
-  ].filter(item => item.value && item.value.trim() !== "");
+    { label: "Main Material", value: (selectedVariantData as ExtendedProductVariant)?.material },
+    { label: "Scatter Cushion Cover", value: materialInfo?.scatter_cushion_cover },
+    { label: "Scatter Cushion Filling", value: materialInfo?.scatter_cushion_filling },
+  ].filter((item) => item.value && item.value.trim() !== "");
 
   const constructionItems = [
     { label: "Frame", value: materialInfo?.frame_info },
@@ -701,10 +625,9 @@ const discountedPrice = discount > 0
     { label: "Back Support", value: materialInfo?.back_support_info },
     { label: "Back Cushion", value: materialInfo?.back_cushion_info },
     { label: "Feet", value: materialInfo?.feet_info },
-  ].filter(item => item.value && item.value.trim() !== "");
+  ].filter((item) => item.value && item.value.trim() !== "");
 
-  // ─── EARLY RETURNS (after all hooks) ─────────────────────────────────────────
-
+  // ── early returns ─────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="px-2 py-12 md:px-[32px]">
@@ -735,8 +658,7 @@ const discountedPrice = discount > 0
             <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
             <h3 className="mb-2 text-lg font-semibold">Product Not Found</h3>
             <p className="text-muted-foreground mb-4">
-              The product you&apos;re looking for doesn&apos;t exist or has been
-              removed.
+              The product you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button variant="primary">
               <Link href="/products">Browse All Products</Link>
@@ -747,15 +669,17 @@ const discountedPrice = discount > 0
     );
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  //  RENDER
+  // ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="w-full overflow-hidden">
-      {/* Sticky Action Buttons - Mobile */}
+      {/* Sticky Add-to-Cart — Mobile */}
       <div
         className={cn(
           "fixed right-0 bottom-0 left-0 z-50 block border-t border-gray-200 bg-white px-3 py-2 shadow-lg sm:px-4 sm:py-3 md:hidden",
-          {
-            hidden: featuresInView,
-          }
+          { hidden: featuresInView },
         )}
       >
         <div className="mx-auto flex max-w-7xl gap-2 sm:gap-3">
@@ -767,9 +691,7 @@ const discountedPrice = discount > 0
             rounded="full"
             className={cn(
               "sm:size-lg relative mx-auto max-w-[75%] flex-1 items-center justify-start py-4 text-xs sm:text-sm",
-              currentStock === 0 || !currentVariant
-                ? "cursor-not-allowed opacity-50"
-                : ""
+              currentStock === 0 || !currentVariant ? "cursor-not-allowed opacity-50" : "",
             )}
             icon={
               <Image
@@ -779,18 +701,12 @@ const discountedPrice = discount > 0
                 height={20}
                 className={cn(
                   "absolute top-1/2 right-1 h-5 w-5 -translate-y-1/2 rounded-full bg-[#fff] object-contain p-1 sm:right-2 sm:h-6 sm:w-6",
-                  currentStock === 0 || !currentVariant
-                    ? "opacity-50"
-                    : "text-blue"
+                  currentStock === 0 || !currentVariant ? "opacity-50" : "text-blue",
                 )}
               />
             }
           >
-            {currentStock === 0
-              ? "Out of Stock"
-              : !currentVariant
-                ? "Select Variant"
-                : "Add To Cart"}
+            {currentStock === 0 ? "Out of Stock" : !currentVariant ? "Select Variant" : "Add To Cart"}
           </Button>
         </div>
       </div>
@@ -819,33 +735,28 @@ const discountedPrice = discount > 0
               <ChevronRight className="h-4 w-4" />
             </BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbLink className="font-medium">
-                {product.name}
-              </BreadcrumbLink>
+              <BreadcrumbLink className="font-medium">{product.name}</BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Product Details */}
+        {/* Product Layout */}
         <div id="style" className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-          {/* Mobile: Product Title First */}
+          {/* Mobile: title first */}
           {isMobile && (
             <div className="flex items-center justify-between lg:hidden">
               <h1 className="text-dark-gray text-[32px] leading-tight uppercase md:text-[48px]">
                 {product.name}
               </h1>
-              <div>
-                <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
-                  {getDeliveryDetails()}
-                </Badge>
-              </div>
+              <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
+                {getDeliveryDetails()}
+              </Badge>
             </div>
           )}
 
-          {/* Product Image Gallery */}
+          {/* Image Gallery */}
           <div className="relative">
             <div className="flex gap-2 md:gap-4">
-              {/* Main Image Gallery */}
               <div className="w-full flex-1 md:max-w-[calc(100%-80px)]">
                 <div
                   className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-lg bg-gray-100"
@@ -854,23 +765,26 @@ const discountedPrice = discount > 0
                   {displayImages && displayImages.length > 0 ? (
                     <>
                       <Image
-                        src={
-                          displayImages[currentImageIndex]?.url ||
-                          "/placeholder.svg"
-                        }
+                        src={displayImages[currentImageIndex]?.url || "/placeholder.svg"}
                         alt={`${product.name} - Image ${currentImageIndex + 1}`}
                         fill
                         className={cn(
                           "bg-white object-contain transition-transform duration-300",
-                          isZoomed
-                            ? "scale-150 cursor-zoom-out"
-                            : "group-hover:scale-105"
+                          isZoomed ? "scale-150 cursor-zoom-out" : "group-hover:scale-105",
                         )}
                       />
                       {hasVariantImages && (
                         <div className="absolute top-2 left-2 z-10">
                           <div className="bg-blue/90 rounded-full px-2 py-1 text-xs font-medium text-white">
                             {currentVariant?.color || "Variant"} View
+                          </div>
+                        </div>
+                      )}
+                      {/* Discount badge on image */}
+                      {currentHasDiscount && (
+                        <div className="absolute top-2 right-2 z-10 md:hidden">
+                          <div className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+                            -{currentDiscount}%
                           </div>
                         </div>
                       )}
@@ -892,10 +806,7 @@ const discountedPrice = discount > 0
                   {isZoomed && (
                     <div className="absolute top-4 right-4 z-10">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsZoomed(false);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
                         className="bg-opacity-50 hover:bg-opacity-70 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"
                       >
                         ×
@@ -903,18 +814,12 @@ const discountedPrice = discount > 0
                     </div>
                   )}
 
-                  {/* Wishlist Button for Small Screens */}
                   <div className="absolute top-4 right-4 z-10 md:hidden">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWishlistToggle();
-                      }}
+                      onClick={(e) => { e.stopPropagation(); handleWishlistToggle(); }}
                       className={cn(
                         "flex h-10 w-10 items-center justify-center transition-all",
-                        isWishlisted
-                          ? ""
-                          : "border-white bg-white/90 backdrop-blur-sm"
+                        isWishlisted ? "" : "border-white bg-white/90 backdrop-blur-sm",
                       )}
                     >
                       <Image
@@ -928,36 +833,28 @@ const discountedPrice = discount > 0
                   </div>
                 </div>
 
-                {/* Thumbnail Gallery */}
+                {/* Thumbnails */}
                 {isMobile ? (
                   <div className="mt-4">
                     <div
                       className="flex gap-2 overflow-x-auto pb-2"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
+                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                     >
                       {displayImages.map((image, index) => (
                         <button
-                          key={`current-${index}`}
+                          key={`thumb-${index}`}
                           onClick={() => setCurrentImageIndex(index)}
                           className={cn(
                             "relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all",
                             currentImageIndex === index
                               ? "border-blue border-2"
-                              : "border-gray-200 hover:border-gray-300"
+                              : "border-gray-200 hover:border-gray-300",
                           )}
                         >
-                          <Image
-                            src={image.url}
-                            alt={`${product.name} - Thumbnail ${index + 1}`}
-                            fill
-                            className="bg-white object-contain"
-                          />
+                          <Image src={image.url} alt={`Thumbnail ${index + 1}`} fill className="bg-white object-contain" />
                           {hasVariantImages && (
                             <div className="absolute top-1 right-1">
-                              <div className="bg-blue h-2 w-2 rounded-full border border-white"></div>
+                              <div className="bg-blue h-2 w-2 rounded-full border border-white" />
                             </div>
                           )}
                         </button>
@@ -969,24 +866,19 @@ const discountedPrice = discount > 0
                     <div className="flex flex-wrap gap-2">
                       {displayImages.map((image, index) => (
                         <button
-                          key={`current-${index}`}
+                          key={`thumb-${index}`}
                           onClick={() => setCurrentImageIndex(index)}
                           className={cn(
                             "relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 bg-white transition-all",
                             currentImageIndex === index
                               ? "ring-offset-1"
-                              : "border-gray-200 hover:border-gray-300"
+                              : "border-gray-200 hover:border-gray-300",
                           )}
                         >
-                          <Image
-                            src={image.url}
-                            alt={`${product.name} - Thumbnail ${index + 1}`}
-                            fill
-                            className="bg-white object-contain"
-                          />
+                          <Image src={image.url} alt={`Thumbnail ${index + 1}`} fill className="bg-white object-contain" />
                           {hasVariantImages && (
                             <div className="absolute top-1 right-1">
-                              <div className="bg-blue h-2 w-2 rounded-full border border-white"></div>
+                              <div className="bg-blue h-2 w-2 rounded-full border border-white" />
                             </div>
                           )}
                         </button>
@@ -996,7 +888,7 @@ const discountedPrice = discount > 0
                 )}
               </div>
 
-              {/* Fixed Action Buttons Column */}
+              {/* Side action buttons */}
               <div className="hidden h-[400px] w-12 flex-shrink-0 flex-col items-center justify-between gap-2 md:flex md:h-[500px] md:w-16 md:gap-3 2xl:h-[600px]">
                 <div className="space-y-1 md:space-y-2">
                   <button
@@ -1009,7 +901,7 @@ const discountedPrice = discount > 0
                     onClick={handleWishlistToggle}
                     className={cn(
                       "flex h-10 w-10 items-center justify-center md:h-12 md:w-12",
-                      isWishlisted ? "border-red-200 bg-red-50" : "bg-white"
+                      isWishlisted ? "border-red-200 bg-red-50" : "bg-white",
                     )}
                   >
                     <Image
@@ -1021,24 +913,22 @@ const discountedPrice = discount > 0
                     />
                   </button>
                 </div>
-                <div>
-                  {displayImages.length > 1 && (
-                    <div className="flex flex-col gap-1 md:gap-2">
-                      <button
-                        onClick={prevImage}
-                        className="group border-dark-gray hover:bg-blue flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all hover:border-white hover:shadow-md md:h-10 md:w-10"
-                      >
-                        <ChevronLeft className="text-dark-gray h-3 w-3 group-hover:text-white md:h-4 md:w-4" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="group border-dark-gray hover:bg-blue flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all hover:border-white hover:shadow-md md:h-10 md:w-10"
-                      >
-                        <ChevronRight className="text-dark-gray h-3 w-3 group-hover:text-white md:h-4 md:w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {displayImages.length > 1 && (
+                  <div className="flex flex-col gap-1 md:gap-2">
+                    <button
+                      onClick={prevImage}
+                      className="group border-dark-gray hover:bg-blue flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all hover:border-white hover:shadow-md md:h-10 md:w-10"
+                    >
+                      <ChevronLeft className="text-dark-gray h-3 w-3 group-hover:text-white md:h-4 md:w-4" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="group border-dark-gray hover:bg-blue flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all hover:border-white hover:shadow-md md:h-10 md:w-10"
+                    >
+                      <ChevronRight className="text-dark-gray h-3 w-3 group-hover:text-white md:h-4 md:w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1046,30 +936,38 @@ const discountedPrice = discount > 0
           {/* Product Info */}
           <div className="space-y-4">
             <div className="space-y-3">
-              {/* Desktop: Product Title */}
+              {/* Desktop: title */}
               {!isMobile && (
                 <div>
                   <h1 className="text-dark-gray text-[32px] leading-tight uppercase md:text-[48px] lg:text-[56px]">
                     {product.name}
                   </h1>
-                  <div>
-                    <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
-                      {getDeliveryDetails()}
-                    </Badge>
-                  </div>
+                  <Badge className="rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
+                    {getDeliveryDetails()}
+                  </Badge>
                 </div>
               )}
 
+              {/* ── PRICE BLOCK ───────────────────────────────────
+                  Shows:
+                  - discounted price (large, dark)
+                  - original / compare price (smaller, struck through)
+                  - discount badge (% off)
+                  - Klarna badge
+              ─────────────────────────────────────────────────── */}
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center justify-between gap-8">
-                  {/* <div className="font-bebas flex items-baseline gap-2 md:gap-3">
-                    {product.discount_offer && product.discount_offer > 0 ? (
+                  <div className="font-bebas flex items-baseline gap-2 md:gap-3">
+                    {currentHasDiscount ? (
                       <>
                         <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
-                          £{(currentPrice * (1 - product.discount_offer / 100)).toFixed(2)}
+                          £{currentDiscountedPrice.toFixed(2)}
                         </span>
                         <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
-                          £{currentPrice.toFixed(2)}
+                          £{currentOriginalPrice.toFixed(2)}
+                        </span>
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-sm font-semibold text-red-600">
+                          -{currentDiscount}%
                         </span>
                       </>
                     ) : (
@@ -1077,34 +975,7 @@ const discountedPrice = discount > 0
                         £{currentPrice.toFixed(2)}
                       </span>
                     )}
-                  </div> */}
-
-                  <div className="font-bebas flex items-baseline gap-2 md:gap-3">
-  {(() => {
-    const discount = getVariantDiscount(currentVariant);
-    const hasDiscount = discount > 0;
-    const discountedPrice = hasDiscount ? currentPrice * (1 - discount / 100) : currentPrice;
-    
-    if (hasDiscount) {
-      return (
-        <>
-          <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
-            £{discountedPrice.toFixed(2)}
-          </span>
-          <span className="text-gray text-[20px] line-through md:text-[24px] lg:text-[30px]">
-            £{currentPrice.toFixed(2)}
-          </span>
-        </>
-      );
-    } else {
-      return (
-        <span className="text-dark-gray text-[28px] md:text-[36px] lg:text-[42px]">
-          £{currentPrice.toFixed(2)}
-        </span>
-      );
-    }
-  })()}
-</div>
+                  </div>
 
                   <span className="w-fit rounded-full bg-[#FFA8CD] px-4 py-1 text-sm font-bold text-[#000] md:px-6 md:py-2">
                     Klarna
@@ -1117,15 +988,21 @@ const discountedPrice = discount > 0
             {uniqueColors.length > 0 && (
               <div id="variant-selection" className="space-y-2">
                 <span className="text-gray text-base">
-                  Color - {selectedColor || (
-                  <span className={showVariantError && !selectedColor ? "text-red-500 font-medium" : ""}>
-                  Select Color
+                  Color -{" "}
+                  {selectedColor || (
+                    <span
+                      className={
+                        showVariantError && !selectedColor
+                          ? "font-medium text-red-500"
+                          : ""
+                      }
+                    >
+                      Select Color
+                    </span>
+                  )}
                 </span>
-                )}
-                </span>
-                {/* Error message */}
                 {showVariantError && !selectedColor && (
-                  <p className="text-red-500 text-sm flex items-center gap-1">
+                  <p className="flex items-center gap-1 text-sm text-red-500">
                     <span>⚠</span> Please select a color to continue
                   </p>
                 )}
@@ -1134,25 +1011,22 @@ const discountedPrice = discount > 0
                     const isSelected = selectedColor === color;
                     const colorCode = getColorHex(color);
                     const colorVariants = (allVariants || []).filter(
-                      (v) => v.color === color && v.stock > 0
+                      (v) => v.color === color && v.stock > 0,
                     );
                     const isInStock = colorVariants.length > 0;
-
                     return (
                       <button
                         key={color}
                         onClick={() => {
-                          if (isInStock) {
-                            setSelectedColor(color);
-                            setShowVariantError(false);
-                            const colorVariants = (allVariants || []).filter(
-                              (v) => v.color === color && v.stock > 0
-                            );
-                            if (colorVariants.length > 0) {
-                              const firstVariant = colorVariants[0];
-                              setSelectedSize(firstVariant.size || null);
-                              setSelectedMaterial(firstVariant.material || null);
-                            }
+                          if (!isInStock) return;
+                          setSelectedColor(color);
+                          setShowVariantError(false);
+                          const cv = (allVariants || []).filter(
+                            (v) => v.color === color && v.stock > 0,
+                          );
+                          if (cv.length > 0) {
+                            setSelectedSize(cv[0].size || null);
+                            setSelectedMaterial(cv[0].material || null);
                           }
                         }}
                         disabled={!isInStock}
@@ -1162,16 +1036,14 @@ const discountedPrice = discount > 0
                             ? "ring-blue ring-1 ring-offset-1"
                             : isInStock
                               ? "border-gray-300 hover:border-gray-400"
-                              : "cursor-not-allowed border-gray-200 opacity-50"
+                              : "cursor-not-allowed border-gray-200 opacity-50",
                         )}
-                        style={{
-                          backgroundColor: isInStock ? colorCode : "#f5f5f5",
-                        }}
+                        style={{ backgroundColor: isInStock ? colorCode : "#f5f5f5" }}
                         title={`${color}${!isInStock ? " (Out of Stock)" : ""}`}
                       >
                         {!isInStock && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6"></div>
+                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6" />
                           </div>
                         )}
                       </button>
@@ -1185,15 +1057,21 @@ const discountedPrice = discount > 0
             {uniqueSizes.length > 0 && (
               <div className="space-y-3">
                 <span className="text-gray text-base font-medium">
-                  Size - {selectedSize || (
-                    <span className={showVariantError && !selectedSize ? "text-red-500 font-medium" : ""}>
+                  Size -{" "}
+                  {selectedSize || (
+                    <span
+                      className={
+                        showVariantError && !selectedSize
+                          ? "font-medium text-red-500"
+                          : ""
+                      }
+                    >
                       Select Size
                     </span>
                   )}
                 </span>
-                {/* Error message */}
                 {showVariantError && !selectedSize && (
-                  <p className="text-red-500 text-sm flex items-center gap-1">
+                  <p className="flex items-center gap-1 text-sm text-red-500">
                     <span>⚠</span> Please select a size to continue
                   </p>
                 )}
@@ -1201,29 +1079,25 @@ const discountedPrice = discount > 0
                   {uniqueSizes.map((size) => {
                     const isSelected = selectedSize === size;
                     const sizeVariants = (allVariants || []).filter(
-                      (v) => v.size === size && v.stock > 0
+                      (v) => v.size === size && v.stock > 0,
                     );
                     const isInStock = sizeVariants.length > 0;
-
                     return (
                       <button
                         key={size}
                         onClick={() => {
-                          if (isInStock) {
-                            setSelectedSize(size);
-                            setShowVariantError(false);
-                            const sizeVariants = (allVariants || []).filter(
-                              (v) =>
-                                v.size === size &&
-                                (!selectedColor || v.color === selectedColor) &&
-                                v.stock > 0
-                            );
-                            if (sizeVariants.length > 0) {
-                              const firstVariant = sizeVariants[0];
-                              if (!selectedColor)
-                                setSelectedColor(firstVariant.color || null);
-                              setSelectedMaterial(firstVariant.material || null);
-                            }
+                          if (!isInStock) return;
+                          setSelectedSize(size);
+                          setShowVariantError(false);
+                          const sv = (allVariants || []).filter(
+                            (v) =>
+                              v.size === size &&
+                              (!selectedColor || v.color === selectedColor) &&
+                              v.stock > 0,
+                          );
+                          if (sv.length > 0) {
+                            if (!selectedColor) setSelectedColor(sv[0].color || null);
+                            setSelectedMaterial(sv[0].material || null);
                           }
                         }}
                         disabled={!isInStock}
@@ -1233,14 +1107,14 @@ const discountedPrice = discount > 0
                             ? "border-blue bg-blue ring-blue text-white ring-2 ring-offset-2"
                             : isInStock
                               ? "border-gray-300 bg-white text-gray-700 hover:scale-105 hover:border-gray-400"
-                              : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                              : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400",
                         )}
                         title={!isInStock ? `${size} (Out of Stock)` : size}
                       >
                         {size}
                         {!isInStock && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6"></div>
+                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6" />
                           </div>
                         )}
                       </button>
@@ -1261,38 +1135,29 @@ const discountedPrice = discount > 0
                     const isSelected =
                       selectedMaterial === material ||
                       (selectedMaterial === null && material === "No Material");
-                    const materialVariants = (allVariants || []).filter(
+                    const matVariants = (allVariants || []).filter(
                       (v) =>
                         (material === "No Material"
                           ? v.material === null || v.material === "No Material"
-                          : v.material === material) && v.stock > 0
+                          : v.material === material) && v.stock > 0,
                     );
-                    const isInStock = materialVariants.length > 0;
-
+                    const isInStock = matVariants.length > 0;
                     return (
                       <button
                         key={material}
                         onClick={() => {
-                          if (isInStock) {
-                            setSelectedMaterial(
-                              material === "No Material" ? null : material
-                            );
-                            const materialVariants = (allVariants || []).filter(
-                              (v) =>
-                                (material === "No Material"
-                                  ? v.material === null
-                                  : v.material === material) &&
-                                (!selectedColor || v.color === selectedColor) &&
-                                (!selectedSize || v.size === selectedSize) &&
-                                v.stock > 0
-                            );
-                            if (materialVariants.length > 0) {
-                              const firstVariant = materialVariants[0];
-                              if (!selectedColor)
-                                setSelectedColor(firstVariant.color || null);
-                              if (!selectedSize)
-                                setSelectedSize(firstVariant.size || null);
-                            }
+                          if (!isInStock) return;
+                          setSelectedMaterial(material === "No Material" ? null : material);
+                          const mv = (allVariants || []).filter(
+                            (v) =>
+                              (material === "No Material" ? v.material === null : v.material === material) &&
+                              (!selectedColor || v.color === selectedColor) &&
+                              (!selectedSize || v.size === selectedSize) &&
+                              v.stock > 0,
+                          );
+                          if (mv.length > 0) {
+                            if (!selectedColor) setSelectedColor(mv[0].color || null);
+                            if (!selectedSize) setSelectedSize(mv[0].size || null);
                           }
                         }}
                         disabled={!isInStock}
@@ -1302,16 +1167,14 @@ const discountedPrice = discount > 0
                             ? "border-blue bg-blue ring-blue text-white ring-2 ring-offset-2"
                             : isInStock
                               ? "border-gray-300 bg-white text-gray-700 hover:scale-105 hover:border-gray-400"
-                              : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                              : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400",
                         )}
-                        title={
-                          !isInStock ? `${material} (Out of Stock)` : material
-                        }
+                        title={!isInStock ? `${material} (Out of Stock)` : material}
                       >
                         {material}
                         {!isInStock && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6"></div>
+                            <div className="h-[1px] w-4 rotate-45 bg-red-500 sm:w-6" />
                           </div>
                         )}
                       </button>
@@ -1321,34 +1184,16 @@ const discountedPrice = discount > 0
               </div>
             )}
 
-            {/* Stock Status */}
-            <div className="space-y-1">
-              {currentVariant && (
-                <p className="text-xs text-gray-500">
-                  SKU: {currentVariant.sku || "N/A"}
-                </p>
-              )}
-            </div>
+            {/* SKU */}
+            {currentVariant && (
+              <p className="text-xs text-gray-500">SKU: {currentVariant.sku || "N/A"}</p>
+            )}
 
-            {/* Klarna Payment */}
+            {/* Klarna instalment line */}
             <div className="mt-3">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
-                  {/* <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-                    Make 3 Payments Of £{(
-                      (product.discount_offer && product.discount_offer > 0
-                        ? currentPrice * (1 - product.discount_offer / 100)
-                        : currentPrice) / 3).toFixed(2)}
-                  </span> */}
-                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-  Make 3 Payments Of £{(() => {
-    const discount = getVariantDiscount(currentVariant);
-    const discountedPrice = discount > 0 ? currentPrice * (1 - discount / 100) : currentPrice;
-    return (discountedPrice / 3).toFixed(2);
-  })()}
-</span>
-                </div>
-              </div>
+              <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+                Make 3 Payments Of £{(currentDiscountedPrice / 3).toFixed(2)}
+              </span>
             </div>
 
             {/* Description */}
@@ -1361,43 +1206,37 @@ const discountedPrice = discount > 0
               </p>
             </div>
 
-            {/* Add to Cart - Desktop */}
+            {/* Add to Cart — Desktop */}
             <div className="hidden space-y-4 md:block">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={currentStock === 0}
-                  variant="primary"
-                  size="xl"
-                  rounded="full"
-                  className={cn(
-                    "md:size-xxl relative w-full flex-1 items-center justify-start py-4",
-                    currentStock === 0 || !currentVariant
-                      ? "cursor-not-allowed opacity-50"
-                      : ""
-                  )}
-                  icon={
-                    <Image
-                      src="/arrow-right.png"
-                      alt="arrow-right"
-                      width={24}
-                      height={24}
-                      className={cn(
-                        "absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full bg-[#fff] object-contain p-1 md:h-10 md:w-10 md:p-2",
-                        currentStock === 0 || !currentVariant
-                          ? "opacity-50"
-                          : "text-blue"
-                      )}
-                    />
-                  }
-                >
-                  {currentStock === 0
-                    ? "Out of Stock"
-                    : !currentVariant
-                      ? "Select Variant"
-                      : "Add To Cart"}
-                </Button>
-              </div>
+              <Button
+                onClick={handleAddToCart}
+                disabled={currentStock === 0}
+                variant="primary"
+                size="xl"
+                rounded="full"
+                className={cn(
+                  "md:size-xxl relative w-full flex-1 items-center justify-start py-4",
+                  currentStock === 0 || !currentVariant ? "cursor-not-allowed opacity-50" : "",
+                )}
+                icon={
+                  <Image
+                    src="/arrow-right.png"
+                    alt="arrow-right"
+                    width={24}
+                    height={24}
+                    className={cn(
+                      "absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full bg-[#fff] object-contain p-1 md:h-10 md:w-10 md:p-2",
+                      currentStock === 0 || !currentVariant ? "opacity-50" : "text-blue",
+                    )}
+                  />
+                }
+              >
+                {currentStock === 0
+                  ? "Out of Stock"
+                  : !currentVariant
+                    ? "Select Variant"
+                    : "Add To Cart"}
+              </Button>
             </div>
 
             <div className="relative right-1/2 left-1/2 -mr-[50vw] mb-5 -ml-[50vw] w-screen sm:hidden">
@@ -1409,13 +1248,10 @@ const discountedPrice = discount > 0
               />
             </div>
 
-            {/* Mobile: Options Sheet / Desktop: Dropdowns */}
+            {/* Delivery / Payment accordion */}
             {isMobile ? (
               <div className="space-y-3">
-                <Sheet
-                  open={showMobileOptionsSheet}
-                  onOpenChange={setShowMobileOptionsSheet}
-                >
+                <Sheet open={showMobileOptionsSheet} onOpenChange={setShowMobileOptionsSheet}>
                   <SheetTrigger asChild>
                     <button className="flex w-full items-center justify-between rounded-lg border border-gray-200 p-4 text-left hover:bg-gray-50">
                       <span className="font-medium">Delivery</span>
@@ -1443,30 +1279,28 @@ const discountedPrice = discount > 0
                           <div className="flex-1">
                             <h3 className="font-medium">{product.name}</h3>
                             <p className="text-sm text-gray-600">
-                              £{currentPrice.toFixed(2)}
+                              £{currentDiscountedPrice.toFixed(2)}
+                              {currentHasDiscount && (
+                                <span className="ml-2 text-xs text-gray-400 line-through">
+                                  £{currentOriginalPrice.toFixed(2)}
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>
-
                         <ScrollArea className="scrollbar-hide h-[400px]">
                           <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="delivery">
-                              <AccordionTrigger className="font-normal">
-                                Delivery
-                              </AccordionTrigger>
+                              <AccordionTrigger className="font-normal">Delivery</AccordionTrigger>
                               <AccordionContent>
-                                <div className="text-sm text-[#999]">
-                                  {getDeliveryDetails()}
-                                </div>
+                                <div className="text-sm text-[#999]">{getDeliveryDetails()}</div>
                               </AccordionContent>
                             </AccordionItem>
                             <AccordionItem value="payment">
                               <AccordionTrigger>Payment</AccordionTrigger>
                               <AccordionContent>
                                 <div className="text-sm text-[#999]">
-                                  We accept all major credit/debit cards,
-                                  Klarna, and PayPal. Pay in 3 with Klarna
-                                  available at checkout.
+                                  We accept all major credit/debit cards, Klarna, and PayPal. Pay in 3 with Klarna available at checkout.
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
@@ -1474,8 +1308,7 @@ const discountedPrice = discount > 0
                               <AccordionTrigger>Warranty</AccordionTrigger>
                               <AccordionContent>
                                 <div className="text-sm text-[#999]">
-                                  {product?.warranty_info ||
-                                    "All sofas come with a 10-year frame warranty and 2-year fabric warranty."}
+                                  {product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty."}
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
@@ -1483,9 +1316,7 @@ const discountedPrice = discount > 0
                               <AccordionTrigger>Availability</AccordionTrigger>
                               <AccordionContent>
                                 <div className="text-sm text-[#999]">
-                                  Most products are in stock for fast delivery.
-                                  Stock status is shown above. Contact us for
-                                  special orders.
+                                  Most products are in stock for fast delivery. Contact us for special orders.
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
@@ -1513,51 +1344,21 @@ const discountedPrice = discount > 0
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="delivery">
-                    <AccordionTrigger className="font-normal">
-                      Delivery
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="text-sm text-[#999]">
-                        {getDeliveryDetails()}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="payment">
-                    <AccordionTrigger>Payment</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="text-sm text-[#999]">
-                        We accept all major credit/debit cards, Klarna, and
-                        PayPal. Pay in 3 with Klarna available at checkout.
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="warranty">
-                    <AccordionTrigger>Warranty</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="text-sm text-[#999]">
-                        {product?.warranty_info ||
-                          "All sofas come with a 10-year frame warranty and 2-year fabric warranty."}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="availability">
-                    <AccordionTrigger>Availability</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="text-sm text-[#999]">
-                        Most products are in stock for fast delivery. Stock
-                        status is shown above. Contact us for special orders.
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                {[
+                  { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
+                  { value: "payment", label: "Payment", content: "We accept all major credit/debit cards, Klarna, and PayPal. Pay in 3 with Klarna available at checkout." },
+                  { value: "warranty", label: "Warranty", content: product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty." },
+                  { value: "availability", label: "Availability", content: "Most products are in stock for fast delivery. Stock status is shown above. Contact us for special orders." },
+                ].map(({ value, label, content }) => (
+                  <Accordion key={value} type="single" collapsible className="w-full">
+                    <AccordionItem value={value}>
+                      <AccordionTrigger className="font-normal">{label}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="text-sm text-[#999]">{content}</div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                ))}
               </div>
             )}
 
@@ -1565,7 +1366,7 @@ const discountedPrice = discount > 0
           </div>
         </div>
 
-        {/* Marquee Strip */}
+        {/* Marquee — desktop */}
         <div className="relative right-1/2 left-1/2 -mr-[50vw] mb-5 -ml-[50vw] hidden w-screen sm:block">
           <MarqueeStrip
             items={marqueeItems}
@@ -1580,26 +1381,18 @@ const discountedPrice = discount > 0
           <div
             className={cn(
               "rounded-full shadow-md sm:mt-0",
-              {
-                "fixed right-4 bottom-0 left-4 z-100 mb-4 bg-white": featuresInView,
-              },
-              { "mt-5 mb-8 w-full md:mt-12 md:mb-8": !featuresInView }
+              { "fixed right-4 bottom-0 left-4 z-100 mb-4 bg-white": featuresInView },
+              { "mt-5 mb-8 w-full md:mt-12 md:mb-8": !featuresInView },
             )}
           >
             <div className="flex items-center justify-center">
               {isMobile ? (
-                <Carousel
-                  opts={{ align: "start", loop: false }}
-                  className="w-full p-2"
-                >
+                <Carousel opts={{ align: "start", loop: false }} className="w-full p-2">
                   <CarouselContent className="justify-center">
                     {tabList.map((tab) => (
                       <CarouselItem key={tab.key} className="basis-auto">
                         <button
-                          onClick={() => {
-                            setSelectedTab(tab.key);
-                            handleScrollToSection(tab.section);
-                          }}
+                          onClick={() => { setSelectedTab(tab.key); handleScrollToSection(tab.section); }}
                           className={`min-w-fit shrink-0 rounded-full border px-2 py-2 text-xs font-medium whitespace-nowrap transition-all ${
                             selectedTab === tab.key
                               ? "bg-blue border-blue text-white"
@@ -1617,10 +1410,7 @@ const discountedPrice = discount > 0
                   {tabList.map((tab) => (
                     <button
                       key={tab.key}
-                      onClick={() => {
-                        setSelectedTab(tab.key);
-                        handleScrollToSection(tab.section);
-                      }}
+                      onClick={() => { setSelectedTab(tab.key); handleScrollToSection(tab.section); }}
                       className={`min-w-fit shrink-0 rounded-full px-2 py-2 text-xs font-medium whitespace-nowrap transition-all md:px-3 md:py-4 md:text-sm ${
                         selectedTab === tab.key
                           ? "bg-blue text-white md:w-[20%]"
@@ -1635,19 +1425,15 @@ const discountedPrice = discount > 0
             </div>
           </div>
 
-          {/* Delivery Section */}
+          {/* Delivery section */}
           <section className="py-6 md:py-8">
             <div className="space-y-3 md:space-y-4">
-              <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">
-                DELIVERY
-              </h1>
-              <p className="text-sm leading-relaxed text-[#999] md:text-base">
-                {getDeliveryDetails()}
-              </p>
+              <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">DELIVERY</h1>
+              <p className="text-sm leading-relaxed text-[#999] md:text-base">{getDeliveryDetails()}</p>
             </div>
           </section>
 
-          {/* Dimensions Section */}
+          {/* Dimensions section */}
           <section id="dimensions" className="bg-light-blue/50 md:py-12 lg:py-16">
             <div className="px-2 sm:px-[32px]">
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
@@ -1661,10 +1447,7 @@ const discountedPrice = discount > 0
                   <div className="mt-6 md:mt-8">
                     <div className="relative w-full max-w-[500px] md:max-w-[600px]">
                       <Image
-                        src={
-                          displayImages[displayImages.length - 1]?.url ||
-                          "/dimensions-diagram.png"
-                        }
+                        src={displayImages[displayImages.length - 1]?.url || "/dimensions-diagram.png"}
                         alt="Product Dimensions Diagram"
                         width={500}
                         height={350}
@@ -1701,21 +1484,11 @@ const discountedPrice = discount > 0
                           { key: "bed_width", label: "Bed Width", letter: "G" },
                           { key: "bed_length", label: "Bed Length", letter: "H" },
                         ];
-
                         dimensions = dimensionMap
-                          .filter(
-                            (dim) =>
-                              apiDimensions[dim.key as keyof typeof apiDimensions]
-                          )
+                          .filter((dim) => apiDimensions[dim.key as keyof typeof apiDimensions])
                           .map((dim) => {
-                            const dimensionData =
-                              apiDimensions[dim.key as keyof typeof apiDimensions];
-                            return {
-                              label: dim.label,
-                              cm: dimensionData?.cm || 0,
-                              inches: dimensionData?.inches || 0,
-                              letter: dim.letter,
-                            };
+                            const d = apiDimensions[dim.key as keyof typeof apiDimensions];
+                            return { label: dim.label, cm: d?.cm || 0, inches: d?.inches || 0, letter: dim.letter };
                           });
                       }
 
@@ -1733,13 +1506,8 @@ const discountedPrice = discount > 0
                       }
 
                       return dimensions.map((item, index) => {
-                        const cmValue =
-                          typeof item.cm === "string"
-                            ? parseFloat(item.cm)
-                            : item.cm;
-                        const inchesValue =
-                          item.inches || (cmValue / 2.54).toFixed(2);
-
+                        const cmValue = typeof item.cm === "string" ? parseFloat(item.cm) : item.cm;
+                        const inchesValue = item.inches || (cmValue / 2.54).toFixed(2);
                         return (
                           <div
                             key={index}
@@ -1749,18 +1517,12 @@ const discountedPrice = discount > 0
                           >
                             <div className="flex justify-center">
                               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8396a6] text-xs font-bold text-white md:h-8 md:w-8 md:text-sm">
-                                {item.letter || String.fromCharCode(65 + index)}
+                                {item.letter}
                               </div>
                             </div>
-                            <div className="text-center text-xs font-medium text-gray-700 md:text-sm">
-                              {item.label}
-                            </div>
-                            <div className="text-center text-xs font-medium text-gray-900 md:text-sm">
-                              {item.cm}
-                            </div>
-                            <div className="text-center text-xs font-medium text-gray-900 md:text-sm">
-                              {inchesValue}
-                            </div>
+                            <div className="text-center text-xs font-medium text-gray-700 md:text-sm">{item.label}</div>
+                            <div className="text-center text-xs font-medium text-gray-900 md:text-sm">{item.cm}</div>
+                            <div className="text-center text-xs font-medium text-gray-900 md:text-sm">{inchesValue}</div>
                           </div>
                         );
                       });
@@ -1771,19 +1533,17 @@ const discountedPrice = discount > 0
             </div>
           </section>
 
-          {/* Materials Section */}
+          {/* Materials section */}
           <div className="px-2 sm:px-[32px]">
             <section id="material" className="py-8 md:py-16">
-              <div className="">
-                <h1 className="mb-3 text-[36px] leading-tight md:mb-4 md:text-[56px] lg:text-[72px]">
-                  MATERIALS & CARE
-                </h1>
-                <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
-                  {materialInfo?.care_instructions || product?.care_instructions || ""}
-                </p>
-
-                <div className="space-y-6 md:space-y-8">
-                  {/* MATERIAL COMPOSITION */}
+              <h1 className="mb-3 text-[36px] leading-tight md:mb-4 md:text-[56px] lg:text-[72px]">
+                MATERIALS & CARE
+              </h1>
+              <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
+                {materialInfo?.care_instructions || product?.care_instructions || ""}
+              </p>
+              <div className="space-y-6 md:space-y-8">
+                {compositionItems.length > 0 && (
                   <div>
                     <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
                       MATERIAL COMPOSITION:
@@ -1797,8 +1557,8 @@ const discountedPrice = discount > 0
                       ))}
                     </div>
                   </div>
-
-                  {/* MATERIAL CONSTRUCTION */}
+                )}
+                {constructionItems.length > 0 && (
                   <div>
                     <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
                       MATERIAL CONSTRUCTION:
@@ -1812,7 +1572,7 @@ const discountedPrice = discount > 0
                       ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </section>
           </div>
@@ -1843,180 +1603,108 @@ const discountedPrice = discount > 0
                 </Link>
               </div>
 
-              {/* Mobile Related Products */}
               {relatedProducts && relatedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:hidden md:gap-8 lg:grid-cols-3">
-                  {relatedProducts
-                    .filter((p) => p.variants && p.variants.length > 0)
-                    .slice(0, 4)
-                    .map((relatedProduct, index) => {
-                      const firstVariant = relatedProduct.variants?.[0];
-                      const basePrice = relatedProduct.base_price;
-                      const discountOffer = Number(relatedProduct.discount_offer) || 0;
-                      const currentPrice = firstVariant?.price || basePrice;
-                      const finalPrice =
-                        discountOffer > 0
-                          ? Math.round(currentPrice * (1 - discountOffer / 100) * 100) / 100
-                          : currentPrice;
-                      const hasDiscount = discountOffer > 0;
-                      const discountPercentage = hasDiscount ? `${discountOffer}% off` : undefined;
-                      const assembleCharges = firstVariant?.assemble_charges || 0;
-                      const deliverInfo = firstVariant?.delivery_time_days || "3 To 4 Days Delivery";
+                <>
+                  {/* Mobile: 4 cards */}
+                  <div className="grid grid-cols-2 gap-6 md:hidden">
+                    {relatedProducts
+                      .filter((p) => p.variants && p.variants.length > 0)
+                      .slice(0, 4)
+                      .map((rp, index) => {
+                        const {
+                          firstVariant, finalPrice, originalPrice,
+                          hasDiscount, discountLabel, assembleCharges,
+                          deliverInfo, productImage,
+                        } = getRelatedProductPricing(rp);
+                        return (
+                          <ProductCard
+                            key={rp.id}
+                            variant={index % 2 === 0 ? "layout1" : "layout2"}
+                            id={rp.id}
+                            name={rp.name || "Product"}
+                            price={finalPrice}
+                            originalPrice={originalPrice}
+                            discount={discountLabel}
+                            imageSrc={productImage}
+                            rating={4.9}
+                            paymentOption={
+                              hasPaymentOptions(selectedVariantData)
+                                ? {
+                                    service: selectedVariantData.payment_options[0].provider || "Klarna",
+                                    installments: selectedVariantData.payment_options[0].installments || 3,
+                                    amount: selectedVariantData.payment_options[0].amount || Math.round((finalPrice / 3) * 100) / 100,
+                                  }
+                                : { service: "Klarna", installments: 3, amount: Math.round((finalPrice / 3) * 100) / 100 }
+                            }
+                            isSale={hasDiscount}
+                            deliveryInfo={deliverInfo}
+                            assemble_charges={assembleCharges}
+                            variantId={firstVariant?.id}
+                          />
+                        );
+                      })}
+                  </div>
 
-                      const productImage = (() => {
-                        try {
-                          const sortedImages = [...(relatedProduct.images || [])]
-                          .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                          const imageUrl =
-                          sortedImages.find((img) => img.type === "main")?.url ||
-                          sortedImages[0]?.url;
-
-                          if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/")))
-                            return imageUrl;
-                            return "/hero-img.png";
-                          } catch {
-                            return "/hero-img.png";
-                          }
-                          })();
-
-                      return (
-                        <ProductCard
-                          key={relatedProduct.id}
-                          variant={index % 2 === 0 ? "layout1" : "layout2"}
-                          id={relatedProduct.id}
-                          name={relatedProduct.name || "SUNSET TURKISH SOFA"}
-                          price={finalPrice}
-                          originalPrice={hasDiscount ? basePrice : undefined}
-                          discount={discountPercentage}
-                          imageSrc={productImage}
-                          rating={4.9}
-                          paymentOption={
-                            hasPaymentOptions(selectedVariantData)
-                              ? {
-                                  service: selectedVariantData.payment_options[0].provider || "Klarna",
-                                  installments: selectedVariantData.payment_options[0].installments || 3,
-                                  amount:
-                                    selectedVariantData.payment_options[0].amount ||
-                                    Math.round((finalPrice / 3) * 100) / 100,
-                                }
-                              : {
-                                  service: "Klarna",
-                                  installments: 3,
-                                  amount: Math.round((finalPrice / 3) * 100) / 100,
-                                }
-                          }
-                          isSale={hasDiscount}
-                          deliveryInfo={deliverInfo}
-                          assemble_charges={assembleCharges}
-                          variantId={firstVariant?.id}
-                        />
-                      );
-                    })}
-                </div>
+                  {/* Desktop: 3 cards */}
+                  <div className="hidden grid-cols-3 gap-6 md:grid md:gap-8">
+                    {relatedProducts
+                      .filter((p) => p.variants && p.variants.length > 0)
+                      .slice(0, 3)
+                      .map((rp, index) => {
+                        const {
+                          firstVariant, finalPrice, originalPrice,
+                          hasDiscount, discountLabel, assembleCharges,
+                          deliverInfo, productImage,
+                        } = getRelatedProductPricing(rp);
+                        return (
+                          <ProductCard
+                            key={rp.id}
+                            variant={index % 2 === 0 ? "layout1" : "layout2"}
+                            id={rp.id}
+                            name={rp.name || "Product"}
+                            price={finalPrice}
+                            originalPrice={originalPrice}
+                            discount={discountLabel}
+                            imageSrc={productImage}
+                            rating={4.9}
+                            paymentOption={
+                              hasPaymentOptions(selectedVariantData)
+                                ? {
+                                    service: selectedVariantData.payment_options[0].provider || "Klarna",
+                                    installments: selectedVariantData.payment_options[0].installments || 3,
+                                    amount: selectedVariantData.payment_options[0].amount || Math.round((finalPrice / 3) * 100) / 100,
+                                  }
+                                : { service: "Klarna", installments: 3, amount: Math.round((finalPrice / 3) * 100) / 100 }
+                            }
+                            isSale={hasDiscount}
+                            deliveryInfo={deliverInfo}
+                            assemble_charges={assembleCharges}
+                            variantId={firstVariant?.id}
+                          />
+                        );
+                      })}
+                  </div>
+                </>
               ) : (
                 <div className="py-8 text-center">
-                  <p className="font-open-sans text-gray-600">
-                    No related products available at the moment.
-                  </p>
-                </div>
-              )}
-
-              {/* Desktop Related Products */}
-              {relatedProducts && relatedProducts.length > 0 ? (
-                <div className="hidden grid-cols-2 gap-6 sm:grid-cols-2 md:grid md:gap-8 lg:grid-cols-3">
-                  {relatedProducts
-                    .filter((p) => p.variants && p.variants.length > 0)
-                    .slice(0, 3)
-                    .map((relatedProduct, index) => {
-                      const firstVariant = relatedProduct.variants?.[0];
-                      const basePrice = relatedProduct.base_price;
-                      const discountOffer = Number(relatedProduct.discount_offer) || 0;
-                      const currentPrice = firstVariant?.price || basePrice;
-                      const finalPrice =
-                        discountOffer > 0
-                          ? Math.round(currentPrice * (1 - discountOffer / 100) * 100) / 100
-                          : currentPrice;
-                      const hasDiscount = discountOffer > 0;
-                      const discountPercentage = hasDiscount ? `${discountOffer}% off` : undefined;
-                      const assembleCharges = firstVariant?.assemble_charges || 0;
-                      const deliverInfo = firstVariant?.delivery_time_days || "3 To 4 Days Delivery";
-
-                      const productImage = (() => {
-                        try {
-                          const sortedImages = [...(relatedProduct.images || [])]
-                          .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                          const imageUrl =
-                          sortedImages.find((img) => img.type === "main")?.url ||
-                          sortedImages[0]?.url;
-
-                          if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("/")))
-                            return imageUrl;
-                            return "/hero-img.png";
-                        } catch {
-                          return "/hero-img.png";
-                        }   
-                      })();
-
-                      return (
-                        <ProductCard
-                          key={relatedProduct.id}
-                          variant={index % 2 === 0 ? "layout1" : "layout2"}
-                          id={relatedProduct.id}
-                          name={relatedProduct.name || "SUNSET TURKISH SOFA"}
-                          price={finalPrice}
-                          originalPrice={hasDiscount ? basePrice : undefined}
-                          discount={discountPercentage}
-                          imageSrc={productImage}
-                          rating={4.9}
-                          paymentOption={
-                            hasPaymentOptions(selectedVariantData)
-                              ? {
-                                  service: selectedVariantData.payment_options[0].provider || "Klarna",
-                                  installments: selectedVariantData.payment_options[0].installments || 3,
-                                  amount:
-                                    selectedVariantData.payment_options[0].amount ||
-                                    Math.round((finalPrice / 3) * 100) / 100,
-                                }
-                              : {
-                                  service: "Klarna",
-                                  installments: 3,
-                                  amount: Math.round((finalPrice / 3) * 100) / 100,
-                                }
-                          }
-                          isSale={hasDiscount}
-                          deliveryInfo={deliverInfo}
-                          assemble_charges={assembleCharges}
-                          variantId={firstVariant?.id}
-                        />
-                      );
-                    })}
-                </div>
-              ) : (
-                <div className="py-8 text-center">
-                  <p className="font-open-sans text-gray-600">
-                    No related products available at the moment.
-                  </p>
+                  <p className="text-gray-600">No related products available at the moment.</p>
                 </div>
               )}
             </div>
           </section>
 
-          {/* Testimonials */}
-          <section id="reviews" className="">
+          {/* Reviews */}
+          <section id="reviews">
             <Testimonials showBackground={false} />
           </section>
         </div>
       </div>
 
-      {/* View in Room Modal */}
+      {/* View In Room */}
       <ViewInRoom
         isOpen={showViewInRoom}
         onClose={() => setShowViewInRoom(false)}
-        productImage={
-          displayImages[currentImageIndex]?.url || "/placeholder.svg"
-        }
+        productImage={displayImages[currentImageIndex]?.url || "/placeholder.svg"}
         productName={product.name}
         currentImageIndex={currentImageIndex}
         images={displayImages.map((img, index) => ({
@@ -2027,13 +1715,8 @@ const discountedPrice = discount > 0
       />
 
       <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
