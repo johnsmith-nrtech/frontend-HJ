@@ -80,7 +80,7 @@ export interface Product {
   updated_at: string;
   images?: ProductImage[];
   variants?: ProductVariant[];
-  category?: Category;
+category?: Category;
 }
 
 export interface ProductVariant {

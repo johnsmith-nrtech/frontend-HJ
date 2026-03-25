@@ -108,38 +108,37 @@ interface ProductDetailsProps {
 }
 
 // ─────────────────────────────────────────────────────────────────
-//  DISCOUNT HELPERS
+//  PRICING HELPERS
 //
-//  getVariantDiscount  → returns a % (0-100)
-//  Priority: compare_price > discount_percentage > product.discount_offer
-//
-//  getDiscountedPrice  → applies the % to the base price
-//  getOriginalPrice    → the "was" price to show struck-through
-//    - when compare_price exists → compare_price is the "was" price
-//    - otherwise                 → base price (variant.price) is the "was" price
+//  Rules:
+//    • compare_price  → always shown as the crossed-out "was" price
+//    • discount_percentage (variant) OR discount_offer (product)
+//      → applied to variant.price to produce the final sale price
+//    • If ONLY compare_price is set (no explicit %)
+//      → variant.price IS already the sale price; no further math
 // ─────────────────────────────────────────────────────────────────
 
+// Returns the discount % to display in the badge.
+// Priority: variant.discount_percentage → productDiscountOffer → compare_price-derived %
 const getVariantDiscount = (
   variant: any,
   productDiscountOffer?: number,
 ): number => {
-  if (variant) {
-    if (variant.compare_price && variant.compare_price > variant.price) {
-      return Math.round(
-        ((variant.compare_price - variant.price) / variant.compare_price) * 100,
-      );
-    }
-    if (variant.discount_percentage && Number(variant.discount_percentage) > 0) {
-      return Number(variant.discount_percentage);
-    }
+  if (variant?.discount_percentage && Number(variant.discount_percentage) > 0) {
+    return Number(variant.discount_percentage);
   }
   if (productDiscountOffer && Number(productDiscountOffer) > 0) {
     return Number(productDiscountOffer);
   }
+  if (variant?.compare_price && variant.compare_price > variant.price) {
+    return Math.round(
+      ((variant.compare_price - variant.price) / variant.compare_price) * 100,
+    );
+  }
   return 0;
 };
 
-// Returns the "was" / original price to show as strikethrough
+// Returns the "was" / original price to show as strikethrough.
 const getOriginalPrice = (variant: any, fallbackPrice: number): number => {
   if (variant?.compare_price && variant.compare_price > variant.price) {
     return variant.compare_price;
@@ -147,15 +146,20 @@ const getOriginalPrice = (variant: any, fallbackPrice: number): number => {
   return fallbackPrice;
 };
 
-// Returns the final displayed sale price
+// Returns the final displayed sale price.
+// When an explicit % exists (variant or product level) → apply % to basePrice.
+// When ONLY compare_price is set → variant.price IS the sale price already.
 const getDiscountedPrice = (
   basePrice: number,
   discountPct: number,
   variant?: any,
+  productDiscountOffer?: number,
 ): number => {
   if (discountPct <= 0) return basePrice;
-  // If compare_price is the source, the variant.price IS already the sale price
-  if (variant?.compare_price && variant.compare_price > variant.price) {
+  const hasExplicitPct =
+    (variant?.discount_percentage && Number(variant.discount_percentage) > 0) ||
+    (productDiscountOffer && Number(productDiscountOffer) > 0);
+  if (!hasExplicitPct && variant?.compare_price && variant.compare_price > variant.price) {
     return variant.price;
   }
   return parseFloat((basePrice * (1 - discountPct / 100)).toFixed(2));
@@ -242,8 +246,12 @@ function getRelatedProductPricing(relatedProduct: any) {
   );
 
   const hasDiscount = discountPct > 0;
-  const finalPrice = getDiscountedPrice(basePrice, discountPct, firstVariant);
-  // "was" price: compare_price if available, else base variant price
+  const finalPrice = getDiscountedPrice(
+    basePrice,
+    discountPct,
+    firstVariant,
+    relatedProduct.discount_offer,
+  );
   const originalPrice = hasDiscount
     ? getOriginalPrice(firstVariant, basePrice)
     : undefined;
@@ -411,13 +419,15 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   React.useEffect(() => {
     if (allVariants && allVariants.length > 0 && !selectedVariant) {
-      const sorted = [...allVariants].sort(
-        (a, b) =>
-          new Date((a as ExtendedProductVariant).created_at || 0).getTime() -
-          new Date((b as ExtendedProductVariant).created_at || 0).getTime(),
-      );
-      const first = sorted[0];
-      if (first) setSelectedVariant(first.id);
+      const best =
+        allVariants.find((v) => v.featured) ||
+        [...allVariants].sort(
+          (a, b) =>
+            new Date((a as ExtendedProductVariant).created_at || 0).getTime() -
+            new Date((b as ExtendedProductVariant).created_at || 0).getTime(),
+        )[0];
+
+      if (best) setSelectedVariant(best.id);
     }
   }, [allVariants, selectedVariant]);
 
@@ -435,8 +445,15 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   const getCurrentVariant = React.useCallback(() => {
     if (!allVariants || allVariants.length === 0) return null;
-    if (!selectedColor && !selectedSize && !selectedMaterial)
+
+    if (!selectedColor && !selectedSize && !selectedMaterial) {
+      if (selectedVariant) {
+        const byId = allVariants.find((v) => v.id === selectedVariant);
+        if (byId) return byId;
+      }
       return allVariants.find((v) => v.stock > 0) || allVariants[0];
+    }
+
     const found = allVariants.find(
       (v) =>
         (!selectedColor || v.color === selectedColor) &&
@@ -449,7 +466,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     if (found && !found.delivery_time_days)
       found.delivery_time_days = "3 To 4 Days Delivery";
     return found ?? null;
-  }, [allVariants, selectedColor, selectedSize, selectedMaterial]);
+  }, [allVariants, selectedColor, selectedSize, selectedMaterial, selectedVariant]);
 
   const currentVariant = getCurrentVariant();
   const selectedVariantData = currentVariant;
@@ -458,11 +475,18 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const currentStock = currentVariant?.stock || 0;
 
   // ── derived discount values for the CURRENT variant ───────────
-  const currentDiscount = getVariantDiscount(currentVariant, product?.discount_offer);
+  // Cast to any so compare_price / discount_percentage are always accessible
+  const variantWithExtras = currentVariant as any;
+  const currentDiscount = getVariantDiscount(variantWithExtras, product?.discount_offer);
   const currentHasDiscount = currentDiscount > 0;
-  const currentDiscountedPrice = getDiscountedPrice(currentPrice, currentDiscount, currentVariant);
+  const currentDiscountedPrice = getDiscountedPrice(
+    currentPrice,
+    currentDiscount,
+    variantWithExtras,
+    product?.discount_offer,
+  );
   const currentOriginalPrice = currentHasDiscount
-    ? getOriginalPrice(currentVariant, currentPrice)
+    ? getOriginalPrice(variantWithExtras, currentPrice)
     : currentPrice;
 
   // ── images ─────────────────────────────────────────────────────
@@ -558,7 +582,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
         await toggleItem(currentVariantId, {
           name: `${product.name}${variantDescription}`,
-          price: currentDiscountedPrice, // ← use discounted price
+          price: currentDiscountedPrice,
           image: displayImages[0]?.url || product.images?.[0]?.url,
           variant_id: currentVariantId,
         });
