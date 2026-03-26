@@ -105,25 +105,24 @@ interface CartState {
 const resolveDisplayPrice = (variant: ApiCartItem["variant"]): number => {
   const basePrice = variant.price;
 
-  // Priority 1: compare_price
-  if (variant.compare_price && variant.compare_price > basePrice) {
-    const discountPct =
-      ((variant.compare_price - basePrice) / variant.compare_price) * 100;
-    const salePrice = basePrice - (basePrice * discountPct) / 100;
-    return Math.round(salePrice * 100) / 100;
-  }
-
-  // Priority 2: discount_percentage directly on variant
+  // Priority 1: explicit discount_percentage on variant
   if (variant.discount_percentage && Number(variant.discount_percentage) > 0) {
-    const salePrice = basePrice * (1 - Number(variant.discount_percentage) / 100);
+    const pct = Number(variant.discount_percentage);
+    const salePrice = basePrice - (basePrice * pct) / 100;
     return Math.round(salePrice * 100) / 100;
   }
 
-  // Priority 3: product-level discount_offer (admin bulk discount)
+  // Priority 2: product-level discount_offer
   const productDiscountOffer = (variant as any).product?.discount_offer;
   if (productDiscountOffer && Number(productDiscountOffer) > 0) {
-    const salePrice = basePrice * (1 - Number(productDiscountOffer) / 100);
+    const salePrice = basePrice - (basePrice * Number(productDiscountOffer)) / 100;
     return Math.round(salePrice * 100) / 100;
+  }
+
+  // Priority 3: compare_price only (no explicit % set)
+  // variant.price IS the sale price already
+  if (variant.compare_price && variant.compare_price > basePrice) {
+    return basePrice;
   }
 
   return basePrice;

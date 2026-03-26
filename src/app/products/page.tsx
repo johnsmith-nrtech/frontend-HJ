@@ -89,21 +89,20 @@ const getDiscountPct = (
   return 0;
 };
 
-/**
- * Returns the final sale price to show and pass to cart.
- * Matches resolveDisplayPrice in cart-store exactly.
- */
 const getSalePrice = (variant: any, discountPct: number): number => {
   if (discountPct <= 0) return variant.price;
+  // If ONLY compare_price is set (no explicit discount_percentage),
+  // variant.price IS already the sale price — never apply % math again.
+  const hasExplicitPct =
+    variant?.discount_percentage && Number(variant.discount_percentage) > 0;
+  if (!hasExplicitPct && variant?.compare_price && variant.compare_price > variant.price) {
+    return variant.price;
+  }
   const sale = variant.price - (variant.price * discountPct) / 100;
   return Math.round(sale * 100) / 100;
 };
 
-/**
- * Returns the "was" price to show struck-through.
- * For compare_price: the compare_price itself is the "was" price.
- * For discount_percentage / discount_offer: the base variant.price is the "was" price.
- */
+
 const getOriginalPrice = (variant: any, discountPct: number): number | undefined => {
   if (discountPct <= 0) return undefined;
   if (variant?.compare_price && variant.compare_price > variant.price) {
