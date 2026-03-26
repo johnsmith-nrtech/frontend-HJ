@@ -120,7 +120,6 @@ const resolveDisplayPrice = (variant: ApiCartItem["variant"]): number => {
   }
 
   // Priority 3: compare_price only (no explicit % set)
-  // variant.price IS the sale price already
   if (variant.compare_price && variant.compare_price > basePrice) {
     return basePrice;
   }
