@@ -20,13 +20,32 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCreateZone } from "@/hooks/use-zones";
 
+// Helper function to format zip code with hyphen
+const formatZipCode = (value: string): string => {
+  // Remove all non-alphanumeric characters
+  let cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  
+  // Limit to 6 characters
+  cleaned = cleaned.slice(0, 6);
+  
+  // Add hyphen after the first 3 characters if length > 3
+  if (cleaned.length > 3) {
+    cleaned = cleaned.slice(0, 3) + "-" + cleaned.slice(3);
+  }
+  
+  return cleaned;
+};
+
+
 // ✅ Validation Schema
 const formSchema = z.object({
   zone_name: z.string().min(1, "Zone name is required"),
   zip_codes: z
     .array(
       z.object({
-        code: z.string().min(1, "Zip code cannot be empty"),
+        code: z.string()
+          .min(7, "Zip code must be 6 characters (e.g., 555-555)")
+          .regex(/^[A-Z0-9]{3}-[A-Z0-9]{3}$/, "Format must be AAA-AAA"),
       })
     )
     .min(1, "At least one zip code is required"),
@@ -148,12 +167,22 @@ export default function AddZonePage() {
                       render={({ field: zipField }) => (
                         <FormItem>
                           <div className="flex items-center gap-2">
-                            <FormControl>
+                            {/* <FormControl>
                               <Input
                                 placeholder={`Zip code ${index + 1}`}
                                 {...zipField}
                               />
-                            </FormControl>
+                            </FormControl> */}
+                            <FormControl>
+  <Input
+    placeholder={`Zip code ${index + 1}`}
+    {...zipField}
+    onChange={(e) => {
+      const formatted = formatZipCode(e.target.value);
+      zipField.onChange(formatted);
+    }}
+  />
+</FormControl>
                             {fields.length > 1 && (
                               <Button
                                 type="button"

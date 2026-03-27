@@ -175,7 +175,7 @@ export const CheckoutDetailsTab = ({
                     value={formData.zipCode}
                     onChange={(e) => {
                       let v = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "").replace(/ /g, "").slice(0, 7);
-                      if (v.length > 4) v = v.slice(0, v.length - 3) + " " + v.slice(v.length - 3);
+                      if (v.length > 4) v = v.slice(0, v.length - 3) + "-" + v.slice(v.length - 3);
                       handleInputChange("zipCode", v);
                     }}
                   />

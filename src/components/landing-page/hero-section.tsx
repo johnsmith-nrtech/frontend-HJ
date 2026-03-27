@@ -46,11 +46,14 @@ const HeroSection = () => {
         {/* Light blue background for right side extending from navbar */}
         <div className="absolute inset-0 hidden w-full overflow-hidden lg:block">
           <div className="relative mx-auto h-full px-4">
-            <div className="bg-light-blue absolute right-0 mt-[-70px] h-full w-[50%]"></div>
+            <div className="bg-light-blue absolute right-0 mt-[-150px] h-full w-[50%]"></div>
           </div>
         </div>
 
-        <div className="relative lg:min-h-[500px] overflow-hidden sm:min-h-[500px] md:min-h-[650px] lg:mb-[-4rem] 2xl:min-h-[1000px]">
+        {/* <div className="relative lg:min-h-[500px] overflow-hidden sm:min-h-[1400px] md:min-h-[650px] 
+        lg:mb-[-4rem] 2xl:min-h-[1000px]"> */}
+        <div className="relative h-[50vh] overflow-hidden sm:h-[30vh] md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
+        2xl:min-h-[1000px]">
           {/* Hero Image - Background for entire section */}
           <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px] flex items-center justify-center">
             {heroSettings?.width && heroSettings?.height ? (
@@ -119,22 +122,31 @@ const HeroSection = () => {
           </div>
         </div>
         {/* Mobile Button - Show only on small screens */}
-        <div className="mt-[-3rem] block py-4 sm:mt-[-3rem] sm:py-4 md:mt-[-3rem] lg:hidden">
+        <div className="block py-4 sm:mt-[-3rem] sm:py-4 md:mt-[-3rem] lg:hidden">
           <Button
             onClick={handleCustomOrderClick}
             variant="main"
             size="xl"
             rounded="full"
             className="bg-blue relative !w-[220px] items-center justify-start"
+            // icon={
+            //   <Image
+            //     src="/arrow-right.png"
+            //     alt="arrow-right"
+            //     width={20}
+            //     height={20}
+            //     className="text-blue absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 rounded-full bg-[#fff] object-contain p-2 md:h-[40px] md:w-[40px]"
+            //   />
+            // }
             icon={
-              <Image
-                src="/arrow-right.png"
-                alt="arrow-right"
-                width={20}
-                height={20}
-                className="text-blue absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 rounded-full bg-[#fff] object-contain p-2 md:h-[40px] md:w-[40px]"
-              />
-            }
+  <Image
+    src="/arrow-right-blue.png"  // Use a blue version of the arrow
+    alt="arrow-right"
+    width={20}
+    height={20}
+    className="absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 object-contain p-2 sm:h-[40px] sm:w-[40px]"
+  />
+}
           >
             Make Custom Order
           </Button>
