@@ -1,6 +1,8 @@
 "use client";
 
-import Head from "next/head";
+import Script from "next/script";
+
+
 import FeaturedProducts from "@/components/landing-page/feature-products";
 // import TopSellingProducts from "@/components/landing-page/top-selling-products";
 import HeroSection from "@/components/landing-page/hero-section";
@@ -17,8 +19,7 @@ import ShopOurBestSeller from "@/components/landing-page/shop-our-best-seller";
 const LandingPage = () => {
   return (
     <>
-      <Head>
-        <script
+        <Script
           type="text/javascript"
           dangerouslySetInnerHTML={{
             __html: `
@@ -30,7 +31,7 @@ const LandingPage = () => {
             `,
           }}
         />
-      </Head>
+      
 
       <div className="flex min-h-screen flex-col">
         <main className="flex-1">
