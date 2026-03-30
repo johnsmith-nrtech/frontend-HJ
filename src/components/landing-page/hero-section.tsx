@@ -46,16 +46,15 @@ const HeroSection = () => {
         {/* Light blue background for right side extending from navbar */}
         <div className="absolute inset-0 hidden w-full overflow-hidden lg:block">
           <div className="relative mx-auto h-full px-4">
-            <div className="bg-light-blue absolute right-0 mt-[-150px] h-full w-[50%]"></div>
+            <div className="bg-light-blue absolute right-0 h-full w-[50%] overflow-hidden"></div>
           </div>
         </div>
 
-        {/* <div className="relative lg:min-h-[500px] overflow-hidden sm:min-h-[1400px] md:min-h-[650px] 
-        lg:mb-[-4rem] 2xl:min-h-[1000px]"> */}
-        <div className="relative h-[50vh] overflow-hidden sm:h-[30vh] md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
-        2xl:min-h-[1000px]">
+        <div className="relative h-[50vh] overflow-hidden md:min-h-[650px] lg:min-h-[500px] 
+        lg:mb-[-4rem] 2xl:min-h-[1000px]">
           {/* Hero Image - Background for entire section */}
-          <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 2xl:ml-[21px] flex items-center justify-center">
+          <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 
+          2xl:ml-[21px] flex items-center justify-center">
             {heroSettings?.width && heroSettings?.height ? (
               <Image
                 src={imageSrc}
