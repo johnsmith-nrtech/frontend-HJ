@@ -128,24 +128,15 @@ const HeroSection = () => {
             size="xl"
             rounded="full"
             className="bg-blue relative !w-[220px] items-center justify-start"
-            // icon={
-            //   <Image
-            //     src="/arrow-right.png"
-            //     alt="arrow-right"
-            //     width={20}
-            //     height={20}
-            //     className="text-blue absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 rounded-full bg-[#fff] object-contain p-2 md:h-[40px] md:w-[40px]"
-            //   />
-            // }
             icon={
-  <Image
-    src="/arrow-right-blue.png"  // Use a blue version of the arrow
-    alt="arrow-right"
-    width={20}
-    height={20}
-    className="absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 object-contain p-2 sm:h-[40px] sm:w-[40px]"
-  />
-}
+              <Image
+                src="/arrow-right.png"
+                alt="arrow-right"
+                width={20}
+                height={20}
+                className="absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 object-contain p-2 sm:h-[40px] sm:w-[40px]"
+              />
+            }
           >
             Make Custom Order
           </Button>
