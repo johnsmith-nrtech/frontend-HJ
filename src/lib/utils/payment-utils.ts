@@ -13,50 +13,122 @@ interface PaymentError {
 /**
  * Auto-submit payment form to redirect customer to NatWest's payment page
  */
+// export function redirectToPayment(
+//   paymentResponse: CreatePaymentResponse
+// ): void {
+//   console.log("🚀 Starting payment redirect...");
+//   console.log("Payment response:", JSON.stringify(paymentResponse, null, 2));
+
+//   const { payment_form } = paymentResponse;
+
+//   if (!payment_form) {
+//     console.error("❌ No payment_form in response");
+//     console.error("Available keys in response:", Object.keys(paymentResponse));
+//     throw new Error("Invalid payment response: missing payment_form");
+//   }
+
+//   console.log("Payment form:", JSON.stringify(payment_form, null, 2));
+
+//   if (!payment_form.action_url) {
+//     console.error("❌ No action_url in payment_form");
+//     console.error("Available keys in payment_form:", Object.keys(payment_form));
+//     console.error("payment_form.action_url value:", payment_form.action_url);
+//     throw new Error("Invalid payment response: missing action_url");
+//   }
+
+//   console.log("📝 Creating form with action:", payment_form.action_url);
+
+//   // Validate action URL before creating form
+//   if (
+//     !payment_form.action_url ||
+//     payment_form.action_url === "null" ||
+//     payment_form.action_url === null
+//   ) {
+//     console.error("❌ Invalid action URL:", payment_form.action_url);
+//     throw new Error(`Invalid action URL: ${payment_form.action_url}`);
+//   }
+
+//   // Create a form element
+//   const form = document.createElement("form");
+//   form.method = payment_form.method;
+//   form.action = payment_form.action_url;
+//   form.style.display = "none";
+
+//   console.log("🔧 Adding form fields...");
+
+//   // Add all the fields as hidden inputs
+//   Object.entries(payment_form.fields).forEach(([name, value]) => {
+//     if (value !== undefined && value !== null && value !== "null" && value !== "") {
+//       const input = document.createElement("input");
+//       input.type = "hidden";
+//       input.name = name;
+//       input.value = String(value);
+//       form.appendChild(input);
+//       console.log(`✅ Added field: ${name} = ${value}`);
+//     } else {
+//       console.log(`⚠️ Skipped field: ${name} (value: ${value})`);
+//     }
+//   });
+
+//   console.log("📤 Submitting form to:", form.action);
+//   console.log("📋 Form method:", form.method);
+//   console.log("🏷️ Form fields count:", form.children.length);
+
+//   // Log the complete form HTML (truncated for readability)
+//   const formHTML = form.outerHTML;
+//   console.log(
+//     "📄 Form HTML preview:",
+//     formHTML.substring(0, 500) + (formHTML.length > 500 ? "..." : "")
+//   );
+
+//   // Append form to body and submit
+//   form.submit();
+//   console.log("📎 Form appended to body");
+
+//   // Auto-submit after delay
+//   setTimeout(() => {
+//     try {
+//       console.log("🚀 Attempting form submission...");
+//       console.log("🔍 Final form action before submit:", form.action);
+//       console.log("🔍 Final form method before submit:", form.method);
+
+//       form.submit();
+//       console.log("✅ Form submitted successfully");
+//     } catch (error) {
+//       console.error("❌ Form submission failed:", error);
+//       console.error("❌ Form details at time of error:", {
+//         action: form.action,
+//         method: form.method,
+//         fieldsCount: form.children.length,
+//       });
+//       throw error;
+//     }
+//   }, 100);
+// }
+
+
 export function redirectToPayment(
   paymentResponse: CreatePaymentResponse
 ): void {
   console.log("🚀 Starting payment redirect...");
-  console.log("Payment response:", JSON.stringify(paymentResponse, null, 2));
 
   const { payment_form } = paymentResponse;
 
   if (!payment_form) {
-    console.error("❌ No payment_form in response");
-    console.error("Available keys in response:", Object.keys(paymentResponse));
     throw new Error("Invalid payment response: missing payment_form");
   }
 
-  console.log("Payment form:", JSON.stringify(payment_form, null, 2));
-
-  if (!payment_form.action_url) {
-    console.error("❌ No action_url in payment_form");
-    console.error("Available keys in payment_form:", Object.keys(payment_form));
-    console.error("payment_form.action_url value:", payment_form.action_url);
-    throw new Error("Invalid payment response: missing action_url");
+  if (!payment_form.action_url || payment_form.action_url === "null") {
+    throw new Error(`Invalid action URL: ${payment_form.action_url}`);
   }
 
   console.log("📝 Creating form with action:", payment_form.action_url);
 
-  // Validate action URL before creating form
-  if (
-    !payment_form.action_url ||
-    payment_form.action_url === "null" ||
-    payment_form.action_url === null
-  ) {
-    console.error("❌ Invalid action URL:", payment_form.action_url);
-    throw new Error(`Invalid action URL: ${payment_form.action_url}`);
-  }
-
-  // Create a form element
   const form = document.createElement("form");
   form.method = payment_form.method;
   form.action = payment_form.action_url;
   form.style.display = "none";
 
-  console.log("🔧 Adding form fields...");
-
-  // Add all the fields as hidden inputs
   Object.entries(payment_form.fields).forEach(([name, value]) => {
     if (value !== undefined && value !== null && value !== "null" && value !== "") {
       const input = document.createElement("input");
@@ -65,46 +137,20 @@ export function redirectToPayment(
       input.value = String(value);
       form.appendChild(input);
       console.log(`✅ Added field: ${name} = ${value}`);
-    } else {
-      console.log(`⚠️ Skipped field: ${name} (value: ${value})`);
     }
   });
 
-  console.log("📤 Submitting form to:", form.action);
-  console.log("📋 Form method:", form.method);
-  console.log("🏷️ Form fields count:", form.children.length);
+  console.log("🏷️ Total fields:", form.children.length);
 
-  // Log the complete form HTML (truncated for readability)
-  const formHTML = form.outerHTML;
-  console.log(
-    "📄 Form HTML preview:",
-    formHTML.substring(0, 500) + (formHTML.length > 500 ? "..." : "")
-  );
-
-  // Append form to body and submit
+  // MUST append to DOM first, THEN submit
   document.body.appendChild(form);
   console.log("📎 Form appended to body");
 
-  // Auto-submit after delay
-  setTimeout(() => {
-    try {
-      console.log("🚀 Attempting form submission...");
-      console.log("🔍 Final form action before submit:", form.action);
-      console.log("🔍 Final form method before submit:", form.method);
-
-      form.submit();
-      console.log("✅ Form submitted successfully");
-    } catch (error) {
-      console.error("❌ Form submission failed:", error);
-      console.error("❌ Form details at time of error:", {
-        action: form.action,
-        method: form.method,
-        fieldsCount: form.children.length,
-      });
-      throw error;
-    }
-  }, 100);
+  form.submit();
+  console.log("🚀 Form submitted");
 }
+
+
 
 /**
  * Handle payment errors and provide user-friendly messages

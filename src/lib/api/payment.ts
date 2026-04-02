@@ -40,11 +40,13 @@ export interface CreatePaymentRequest {
   // ✅ ADD THESE TWO FIELDS
   coupon_code?: string;
   discount_amount?: number;
+  wallet_amount_used?: number;
+  referral_credit_used?: number;
 }
 
 // Payment response interfaces
 export interface PaymentFormFields {
-  // Tyl Required Fields
+  // Worldpay Required Fields
   storename: string;
   txntype: string;
   timezone: string;
@@ -54,6 +56,7 @@ export interface PaymentFormFields {
   chargetotal: string;
   currency: string;
   checkoutoption: string;
+  language?: string;
   responseSuccessURL: string;
   responseFailURL: string;
   transactionNotificationURL: string;
@@ -61,7 +64,7 @@ export interface PaymentFormFields {
   // Customer Information
   bname: string;
   email: string;
-  phone: string;
+  phone?: string;
 
   // Billing Address
   baddr1: string;
@@ -69,7 +72,7 @@ export interface PaymentFormFields {
   bcity: string;
   bstate?: string;
   bcountry: string;
-  bzip: string;
+  bzip?: string;
 
   // Order Information
   oid: string;

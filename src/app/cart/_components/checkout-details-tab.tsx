@@ -174,8 +174,8 @@ export const CheckoutDetailsTab = ({
                   <FormInputWithLabel label="ZIP CODE (Format: AAA-AAA)" placeholder="AAA-AAA"
                     value={formData.zipCode}
                     onChange={(e) => {
-                      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, "").replace(/ /g, "").slice(0, 7);
-                      if (v.length > 4) v = v.slice(0, v.length - 3) + "-" + v.slice(v.length - 3);
+                      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+                      if (v.length > 3) v = v.slice(0, 3) + "-" + v.slice(3);
                       handleInputChange("zipCode", v);
                     }}
                   />

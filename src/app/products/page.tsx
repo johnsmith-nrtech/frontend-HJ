@@ -89,27 +89,27 @@ const getDiscountPct = (
   return 0;
 };
 
+
 const getSalePrice = (variant: any, discountPct: number): number => {
   if (discountPct <= 0) return variant.price;
-  // If ONLY compare_price is set (no explicit discount_percentage),
-  // variant.price IS already the sale price — never apply % math again.
-  const hasExplicitPct =
-    variant?.discount_percentage && Number(variant.discount_percentage) > 0;
-  if (!hasExplicitPct && variant?.compare_price && variant.compare_price > variant.price) {
-    return variant.price;
+  // If compare_price is set, apply the calculated % on variant.price
+  if (variant?.compare_price && variant.compare_price > variant.price) {
+    return Math.round((variant.price - (variant.price * discountPct / 100)) * 100) / 100;
   }
+  // discount_percentage case
   const sale = variant.price - (variant.price * discountPct) / 100;
   return Math.round(sale * 100) / 100;
 };
 
-
 const getOriginalPrice = (variant: any, discountPct: number): number | undefined => {
   if (discountPct <= 0) return undefined;
   if (variant?.compare_price && variant.compare_price > variant.price) {
-    return variant.compare_price;
+    return variant.compare_price; // struck-through price stays as compare_price
   }
   return variant.price;
 };
+
+
 
 // ─────────────────────────────────────────────────────────────────
 //  HELPER: pick the default variant to display for a product
