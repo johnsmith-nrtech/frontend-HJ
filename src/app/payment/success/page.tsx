@@ -213,6 +213,12 @@ export default function PaymentSuccessPage() {
   const hasProcessedRef = useRef(false);
 
   useEffect(() => {
+    // Break out of any iframe (e.g. Worldpay 3DS)
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      window.top!.location.href = window.location.href;
+      return;
+    }
+
     const handlePaymentSuccess = async () => {
       // Prevent multiple executions
       if (hasProcessedRef.current) {
