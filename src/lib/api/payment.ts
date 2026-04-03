@@ -88,8 +88,8 @@ export interface CreatePaymentResponse {
   success: true;
   order_id: string;
   total_amount: number;
-  currency: string; // "GBP"
-  payment_form: PaymentForm;
+  currency: string;
+  payment_url: string;
 }
 
 // COD response interface
@@ -208,20 +208,14 @@ export class PaymentApiService {
 
       const result = await response.json();
 
-      // Validate the response structure
-      if (!result.payment_form) {
-        console.error("❌ API response missing payment_form");
-        throw new Error("Invalid API response: missing payment_form");
+      if (!result.payment_url) {
+        console.error('❌ API response missing payment_url');
+        throw new Error('Invalid API response: missing payment_url');
       }
 
-      if (!result.payment_form.action_url) {
-        console.error("❌ API response missing action_url in payment_form");
-        throw new Error("Invalid API response: missing action_url");
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Payment creation error:", error);
+        return result;
+      } catch (error) {
+        console.error("❌ Payment creation error:", error);
 
       // If it's a network error or the backend is not running
       if (error instanceof TypeError && error.message.includes("fetch")) {
