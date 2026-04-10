@@ -637,6 +637,24 @@ export default function AddProductPage() {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={form.control}
+                      name="warranty_info"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Warranty Information</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="e.g., 2 year manufacturer warranty included"
+                              className="min-h-24 resize-y"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   <FormField
