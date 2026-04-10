@@ -112,6 +112,7 @@ const convertApiVariantToManagerVariant = (
     tags: apiVariant.tags,
     images: convertedImages,
     material_info: apiVariant.material_info ?? undefined,
+    warranty_info: apiVariant.warranty_info ?? undefined,
   };
 };
 
@@ -484,7 +485,7 @@ export default function EditProductPage() {
                       )}
                     />
 
-                    <FormField
+                    {/* <FormField
                       control={form.control}
                       name="warranty_info"
                       render={({ field }) => (
@@ -503,7 +504,7 @@ export default function EditProductPage() {
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
+                    /> */}
                   </div>
 
                   <div className="space-y-4">

@@ -1332,7 +1332,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                               <AccordionTrigger>Warranty</AccordionTrigger>
                               <AccordionContent>
                                 <div className="text-sm text-[#999]">
-                                  {product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty."}
+                                  {variantWithExtras?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty."}
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
@@ -1371,7 +1371,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                 {[
                   { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
                   { value: "payment", label: "Payment", content: "We accept all major credit/debit cards, Klarna, and PayPal. Pay in 3 with Klarna available at checkout." },
-                  { value: "warranty", label: "Warranty", content: product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty." },
+                  { value: "warranty", label: "Warranty", content: variantWithExtras?.warranty_info || product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty." },
                   { value: "availability", label: "Availability", content: "Most products are in stock for fast delivery. Stock status is shown above. Contact us for special orders." },
                 ].map(({ value, label, content }) => (
                   <Accordion key={value} type="single" collapsible className="w-full">

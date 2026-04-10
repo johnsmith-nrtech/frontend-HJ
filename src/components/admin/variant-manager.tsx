@@ -44,6 +44,7 @@ export interface ProductVariant {
   brand?: string;
   featured?: boolean;
   tags?: string;
+  warranty_info?: string;
   images?: VariantImage[];
   material_info?: {
     care_instructions?: string;
@@ -102,6 +103,7 @@ const emptyVariant: ProductVariant = {
   brand: "",
   featured: false,
   tags: "",
+  warranty_info: "",
   images: [],
   material_info: emptyMaterialInfo,
 };
@@ -201,6 +203,8 @@ export function VariantManager({
 
         // Always include material_info — never skip it
         updateData.material_info = newVariant.material_info || emptyMaterialInfo;
+        // Always include warranty_info
+        updateData.warranty_info = newVariant.warranty_info || undefined;
 
         await updateVariantMutation.mutateAsync({
           variantId: existingVariant.id,
@@ -315,6 +319,8 @@ export function VariantManager({
           // Always include material_info — never skip it
           updateData.material_info = newVariant.material_info || emptyMaterialInfo;
           hasUpdates = true;
+          // Always include warranty_info
+          updateData.warranty_info = newVariant.warranty_info || undefined;
 
           if (hasUpdates) {
             await updateVariantMutation.mutateAsync({
@@ -365,6 +371,7 @@ export function VariantManager({
       material: variant.material || "",
       brand: variant.brand || "",
       tags: variant.tags || "",
+      warranty_info: variant.warranty_info || "",
       featured: variant.featured || false,
       images: variant.images || [],
       dimensions: variant.dimensions || emptyDimensions,
@@ -933,6 +940,24 @@ export function VariantManager({
                 />
                 <label className="text-sm font-medium">Featured Variant</label>
               </div>
+
+              {/* Warranty Info */}
+              <div>
+                <label className="text-sm font-medium">Warranty Information</label>
+                <textarea
+                  placeholder="e.g., 2 year manufacturer warranty included"
+                  value={newVariant.warranty_info || ""}
+                  onChange={(e) =>
+                    setNewVariant({ ...newVariant, warranty_info: e.target.value })
+                  }
+                  disabled={disabled}
+                  rows={3}
+                  className="border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Warranty details specific to this variant (optional).
+                </p>
+              </div>
             </TabsContent>
 
             <TabsContent value="images" className="space-y-4">
@@ -1083,6 +1108,11 @@ export function VariantManager({
                           {variant.tags && (
                             <div className="col-span-2">
                               <span className="font-medium">Tags:</span> {variant.tags}
+                            </div>
+                          )}
+                          {variant.warranty_info && (
+                            <div className="col-span-2">
+                              <span className="font-medium">Warranty:</span> {variant.warranty_info}
                             </div>
                           )}
                         </div>

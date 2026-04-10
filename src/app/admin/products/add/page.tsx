@@ -317,7 +317,7 @@ export default function AddProductPage() {
             : undefined,
 
         // Product care & assembly
-        warranty_info: values.warranty_info || undefined,
+        // warranty_info: values.warranty_info || undefined,
         care_instructions: values.care_instructions || undefined,
         assembly_required: values.assembly_required || false,
         assembly_instructions: values.assembly_instructions || undefined,
@@ -344,6 +344,7 @@ export default function AddProductPage() {
         brand: values.brand || undefined,
         featured: Boolean(values.featured),
         related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
+        warranty_info: values.warranty_info || undefined,
         material_info: {
         care_instructions: values.default_care_instructions || undefined,
         scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
@@ -637,24 +638,6 @@ export default function AddProductPage() {
                         </FormItem>
                       )}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="warranty_info"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Warranty Information</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="e.g., 2 year manufacturer warranty included"
-                              className="min-h-24 resize-y"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   <FormField
@@ -809,26 +792,6 @@ export default function AddProductPage() {
                   <CardTitle>Product Care & Assembly</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="warranty_info"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Warranty Information</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="e.g., 2 year manufacturer warranty included"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Warranty details for the product.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="care_instructions"
@@ -1159,6 +1122,29 @@ export default function AddProductPage() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Warranty Info for default variant */}
+<FormField
+  control={form.control}
+  name="warranty_info"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Warranty Information</FormLabel>
+      <FormControl>
+        <Textarea
+          placeholder="e.g., 2 year manufacturer warranty included"
+          className="min-h-24 resize-y"
+          {...field}
+        />
+      </FormControl>
+      <FormDescription>
+        Warranty details for this variant (optional).
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                   {/* Material Composition & Construction */}
                   <div className="space-y-3 border-t pt-4">
                     <h4 className="text-sm font-medium">Material Composition & Construction</h4>
