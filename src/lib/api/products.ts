@@ -130,6 +130,7 @@ export interface ProductVariant {
     back_cushion_info?: string;
     feet_info?: string;
   };
+  warranty_info?: string;
 }
 
 export interface ProductImage {
@@ -673,6 +674,7 @@ export async function updateProductVariant(
     material?: string;
     brand?: string;
     featured?: boolean;
+    warranty_info?: string;
   }
 ): Promise<ProductVariant> {
   const response = await ApiService.fetchWithAuth(

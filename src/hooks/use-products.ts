@@ -309,6 +309,7 @@ export function useUpdateProductVariant() {
         material?: string;
         brand?: string;
         featured?: boolean;
+        warranty_info?: string;
       };
     }) => updateProductVariant(variantId, data),
     onSuccess: (_, variables) => {
