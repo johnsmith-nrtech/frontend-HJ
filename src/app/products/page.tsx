@@ -120,13 +120,13 @@ const getOriginalPrice = (variant: any, discountPct: number): number | undefined
 const pickBestVariant = (variants: any[]): any | null => {
   if (!variants || variants.length === 0) return null;
 
-  const featured = variants.find((v) => v.featured);
-  if (featured) return featured;
-
-  return [...variants].sort(
+  // Sort by created_at ascending (oldest first = default)
+  const sorted = [...variants].sort(
     (a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-  )[0];
+  );
+
+  return sorted[0];
 };
 
 // ─────────────────────────────────────────────────────────────────
