@@ -154,13 +154,13 @@ export default function AdminSidebar() {
           <>
             <div className="flex items-center">
               <Image
-                src="/favicon.ico"
+                src="/logo.png"
                 alt="Sofa Deal Logo"
-                width={40}
-                height={40}
+                width={150}
+                height={60}
                 className="mr-2"
               />
-              <span className="text-xl font-bold">Sofa Deal</span>
+              {/* <span className="text-xl font-bold">Sofa Deal</span> */}
             </div>
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}

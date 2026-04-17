@@ -315,11 +315,7 @@ export function useCheckoutForm() {
       });
 
       const data = await res.json();
-
-      // TEMP DEBUG LOGS
-console.log('🎟️ Coupon API response:', data);
-console.log('discount_type:', data.discount_type, '| discount_value:', data.discount_value);
-console.log('totalPrice at time of apply:', totalPrice);
+      
 
       if (!res.ok) {
         throw new Error(data.message || "Invalid or expired coupon");
