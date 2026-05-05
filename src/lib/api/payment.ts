@@ -90,6 +90,7 @@ export interface CreatePaymentResponse {
   total_amount: number;
   currency: string;
   payment_url: string;
+  payment_fields?: Record<string, string>;
 }
 
 // COD response interface

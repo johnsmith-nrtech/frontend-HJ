@@ -18,15 +18,36 @@ export function redirectToPayment(
 ): void {
   console.log("🚀 Starting payment redirect...");
 
-  const { payment_url } = paymentResponse;
+  const { payment_url, payment_fields } = paymentResponse;
 
   if (!payment_url) {
     throw new Error("Invalid payment response: missing payment_url");
   }
 
-  console.log("🔗 Redirecting to Worldpay:", payment_url.substring(0, 60) + "...");
+  // If payment_fields are provided, POST them as a form (Cardstream requires POST)
+  if (payment_fields && Object.keys(payment_fields).length > 0) {
+    console.log("🔗 Submitting POST form to Cardstream:", payment_url);
 
-  // Simply redirect — Worldpay hosts the payment page
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = payment_url;
+    form.style.display = 'none';
+
+    Object.entries(payment_fields).forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    return;
+  }
+
+  // Fallback: GET redirect (old Worldpay behaviour)
+  console.log("🔗 Redirecting via GET:", payment_url.substring(0, 60) + "...");
   window.location.href = payment_url;
 }
 
