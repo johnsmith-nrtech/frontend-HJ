@@ -69,7 +69,7 @@ const PaymentMethodStep = ({
       rounded="full"
       className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg"
     >
-      Pay with Card
+      Pay by Card
     </Button>
 
     <Button
@@ -79,7 +79,7 @@ const PaymentMethodStep = ({
       rounded="full"
       className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg"
     >
-      Pay in Installments
+      Spread the Payment
     </Button>
 
     <button

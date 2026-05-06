@@ -107,10 +107,10 @@ const getStatusBadge = (status: OrderStatus) => {
       label: "Cancelled",
     },
     loan_approved: {
-  icon: CheckCircle2,
-  className: "border-0 bg-purple-100 text-purple-800 hover:bg-purple-100",
-  label: "Loan Approved",
-},
+      icon: CheckCircle2,
+      className: "border-0 bg-purple-100 text-purple-800 hover:bg-purple-100",
+      label: "Loan Approved",
+    },
   };
 
   const config = statusConfig[status];
@@ -156,12 +156,12 @@ const getAllowedStatusTransitions = (
       return ["shipped", "cancelled"];
     case "shipped":
       return ["delivered", "cancelled"];
-    case "loan_approved":
-      return ["paid", "cancelled"];
     case "delivered":
       return ["cancelled"];
     case "cancelled":
-      return []; // Cannot transition from cancelled
+      return [];
+    case "loan_approved":
+      return ["paid", "cancelled"];
     default:
       return [];
   }

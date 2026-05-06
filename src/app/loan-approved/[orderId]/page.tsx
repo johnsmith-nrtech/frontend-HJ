@@ -20,57 +20,104 @@ export default function LoanApprovedPage() {
   const [depositPct, setDepositPct] = useState(10);
   const [installmentTerm, setInstallmentTerm] = useState(6);
 
+
 useEffect(() => {
   const savedUrl = localStorage.getItem("installment_payment_url");
   if (savedUrl) setPaymentUrl(savedUrl);
 
   const fetchOrder = async () => {
-    try {
-      const res = await ApiService.fetchWithAuth(`/orders/${orderId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setOrder(data);
+  try {
+    const res = await ApiService.fetchWithAuth(`/orders/${orderId}`);
+    if (res.ok) {
+      const data = await res.json();
 
-        // Always prioritize DB values — most reliable across devices
-        if (data.deposit_amount) {
+      if (data.status !== 'loan_approved') {
+        setOrder(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrder(data);
+
+        // Calculate total first
+        const calculatedTotal = data.total_amount +
+          (data.floor?.charges || 0) +
+          (data.zone?.delivery_charges || 0) -
+          (data.discount_amount || 0);
+
+        // Priority: DB values → localStorage → Calculate from percentage
+        if (data.deposit_amount && data.deposit_amount > 0) {
           setDepositAmount(data.deposit_amount);
         } else {
-          // Fallback to localStorage if DB empty
           const savedDeposit = localStorage.getItem("installment_deposit");
-          if (savedDeposit) setDepositAmount(parseFloat(savedDeposit));
+          if (savedDeposit) {
+            setDepositAmount(parseFloat(savedDeposit));
+          } else {
+            // Calculate deposit from percentage (default to 10%)
+            const pctToUse = data.deposit_percentage || 10;
+            const calculatedDeposit = (calculatedTotal * pctToUse) / 100;
+            setDepositAmount(calculatedDeposit);
+          }
         }
 
+        // Set deposit percentage
         if (data.deposit_percentage) {
-            setDepositPct(data.deposit_percentage);
+          setDepositPct(data.deposit_percentage);
         } else {
-            const savedDepositPct = localStorage.getItem("installment_deposit_pct");
-            if (savedDepositPct) setDepositPct(parseInt(savedDepositPct));
+          const savedDepositPct = localStorage.getItem("installment_deposit_pct");
+          if (savedDepositPct) {
+            setDepositPct(parseInt(savedDepositPct));
+          } else {
+            setDepositPct(10); // Default to 10%
+          }
         }
-            if (data.installment_term) setInstallmentTerm(data.installment_term);
+
+        // Set installment term
+        if (data.installment_term) {
+          setInstallmentTerm(data.installment_term);
+        } else {
+          setInstallmentTerm(6); // Default to 6 months
         }
-        } catch (err) {
-            console.error("Failed to fetch order:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+      }
+    } catch (err) {
+      console.error("Failed to fetch order:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   fetchOrder();
 }, [orderId]);
 
-  const handlePayDeposit = () => {
-    if (!paymentUrl) return;
-    localStorage.removeItem("installment_payment_url");
-    localStorage.removeItem("installment_deposit");
-    localStorage.removeItem("installment_deposit_pct");
-    window.location.href = paymentUrl;
-  };
+    const handlePayDeposit = () => {
+        if (!paymentUrl) {
+            // No payment URL — send back to cart to regenerate
+            window.location.href = "https://ideal4finance.com/loan-apply/aleena?r=ob";
+            return;
+        }
+        localStorage.removeItem("installment_payment_url");
+        localStorage.removeItem("installment_deposit");
+        localStorage.removeItem("installment_deposit_pct");
+        window.location.href = paymentUrl;
+    };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Loading your order...</p>
-      </div>
+        <div className="flex min-h-screen items-center justify-center">
+            <p className="text-gray-500">Loading your order...</p>
+        </div>
+    );
+  }
+
+  if (!order) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <div className="text-center p-10 rounded-xl border border-yellow-200 bg-yellow-50 max-w-md">
+                <h1 className="text-2xl font-bold text-yellow-800 mb-3">Loan Not Approved Yet</h1>
+                <p className="text-yellow-700 text-sm">Your loan application is still being reviewed. You will receive an email once it is approved.</p>
+                <a href="/" className="mt-6 inline-block text-blue-600 underline text-sm">Return to Home</a>
+            </div>
+        </div>
     );
   }
 
@@ -127,39 +174,25 @@ useEffect(() => {
             <div className="border border-gray-200 rounded-xl p-5 space-y-3 text-sm">
               <SummaryRow label={`Deposit (${depositPct}%)`} value={`£${fmt(depositAmount)}`} />
               <SummaryRow label="Credit Amount" value={`£${fmt(creditAmount)}`} />
-              <SummaryRow label="Representative APR" value="0%" />
-              <SummaryRow label="Interest" value="£0.00" />
+              {/* <SummaryRow label="Representative APR" value="0%" /> */}
+              {/* <SummaryRow label="Interest" value="£0.00" /> */}
               <SummaryRow label="Monthly Payments" value={`£${fmt(monthlyPayment)}`} />
               <SummaryRow label="Installment Term" value={`${installmentTerm} Months`} />
               <div className="border-t pt-3">
                 <SummaryRow label="Total Amount Payable" value={`£${fmt(total)}`} bold />
               </div>
 
-              {paymentUrl ? (
-                <>
-                  <div className="pt-2">
-                    <button
-                      onClick={handlePayDeposit}
-                      className="w-full cursor-pointer rounded-full bg-green-600 px-8 py-4 font-semibold text-white shadow-md hover:bg-green-700 active:scale-[0.98] transition-all"
-                    >
-                      Pay Deposit — £{fmt(depositAmount)}
-                    </button>
-                  </div>
-                  <p className="text-xs text-center text-gray-400 pt-1">
-                    You will be redirected to our secure payment page.
-                  </p>
-                </>
-              ) : (
-                <div className="pt-2 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
-                  <p className="text-sm text-yellow-800 text-center">
-                    Payment session expired. Please contact us at{" "}
-                    <a href="tel:+447306127481" className="font-medium underline">
-                      +44 7306 127481
-                    </a>{" "}
-                    to complete your deposit payment.
-                  </p>
-                </div>
-              )}
+              <div className="pt-2">
+                <button
+                    onClick={handlePayDeposit}
+                    className="w-full cursor-pointer rounded-full bg-green-600 px-8 py-4 font-semibold text-white shadow-md hover:bg-green-700 active:scale-[0.98] transition-all"
+                >
+                    Pay Deposit — £{fmt(depositAmount)}
+                </button>
+              </div>
+              <p className="text-xs text-center text-gray-400 pt-1">
+                You will be redirected to our secure payment page.
+              </p>
             </div>
           </div>
         </div>

@@ -101,7 +101,7 @@ const handleProceed = async () => {
           {/* Intro */}
           <div className="rounded-xl px-6">
             <h2 className="mb-3 text-2xl font-bold text-gray-900">
-              Apply for interest free credit
+              Apply for interest free credit (ARP 0%)
             </h2>
             <p className="text-sm leading-relaxed text-gray-600">
               Spread the cost with up to 48 months interest free with no deposit and choose
@@ -220,27 +220,6 @@ const handleProceed = async () => {
               </div>
             </div>
 
-
-            {/* <button
-              onClick={handleProceed}
-              className="mt-6 w-full cursor-pointer rounded-full bg-[#3d1a6e] px-8 py-4 font-semibold text-white shadow-md transition-all hover:bg-[#2e1356] active:scale-[0.98]"
-            >
-              Continue with Installments →
-            </button> */}
-            {/* {paymentUrl && (
-              <>
-                <hr className="my-4 border-gray-200" />
-                <p className="mb-3 text-center text-sm text-gray-500">
-                  Loan approved ? Pay your deposit now.
-                </p>
-                <button
-                  onClick={handlePayDeposit}
-                  className="w-full rounded-full bg-green-600 px-8 py-4 font-semibold text-white shadow-md hover:bg-green-700"
-                >
-                  Pay Deposit — £{fmt(savedDeposit)}
-                </button>
-              </>
-            )} */}
           </div>
         </div>
       </div>

@@ -299,7 +299,7 @@ const handleAddToCart = async () => {
             src={imageSrc}
             alt={name}
             fill
-            className="object-contain transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
 
           {/* Discount Badge - Top Left */}
