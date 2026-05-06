@@ -176,6 +176,13 @@ export default function OrdersPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
 
+  const [isLoanDialogOpen, setIsLoanDialogOpen] = useState(false);
+  const [loanOrderId, setLoanOrderId] = useState<string>("");
+  const [loanOrderData, setLoanOrderData] = useState<Order | null>(null);
+  const [actualDepositPct, setActualDepositPct] = useState(10);
+  const [actualTerm, setActualTerm] = useState(6);
+  const [isSendingLoanEmail, setIsSendingLoanEmail] = useState(false);
+
   const limit = 10;
 
   // Build query parameters - start with minimal params to avoid UUID validation issues
@@ -200,8 +207,20 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (
     orderId: string,
-    newStatus: OrderStatus
+    newStatus: OrderStatus,
+    order?: Order
   ) => {
+    if (newStatus === "loan_approved") {
+      // Open the loan approval popup instead of directly updating
+      const targetOrder = order || data?.items.find((o) => o.id === orderId) || null;
+      setLoanOrderId(orderId);
+      setLoanOrderData(targetOrder);
+      // Pre-fill with customer's applied values if available
+      setActualDepositPct(targetOrder?.deposit_percentage || 10);
+      setActualTerm(targetOrder?.installment_term || 6);
+      setIsLoanDialogOpen(true);
+      return;
+    }
     try {
       await updateOrderStatus.mutateAsync({
         id: orderId,
@@ -247,6 +266,54 @@ export default function OrdersPage() {
       toast.success("Orders exported successfully");
     } catch {
       toast.error("Failed to export orders");
+    }
+  };
+
+  const handleSendLoanEmail = async () => {
+    if (!loanOrderId) return;
+    setIsSendingLoanEmail(true);
+    try {
+      // 1. Update status to loan_approved
+      await updateOrderStatus.mutateAsync({
+        id: loanOrderId,
+        data: { status: "loan_approved" },
+      });
+
+      // Calculate actual deposit amount from grand total
+      const order = loanOrderData;
+      const grandTotal = order
+        ? (order.total_amount || 0) +
+          (order.floor?.charges || 0) +
+          (order.zone?.delivery_charges || 0) -
+          (order.discount_amount || 0)
+        : 0;
+      const depositAmount = (grandTotal * actualDepositPct) / 100;
+
+      // 2. Send email with admin's chosen terms
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/admin/${loanOrderId}/send-loan-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${document.cookie.match(/access_token=([^;]+)/)?.[1] || ""}`,
+          },
+          body: JSON.stringify({
+            deposit_percentage: actualDepositPct,
+            deposit_amount: depositAmount,
+            installment_term: actualTerm,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to send email");
+
+      setIsLoanDialogOpen(false);
+      toast.success("Loan approved and email sent to customer!");
+    } catch {
+      toast.error("Failed to process loan approval");
+    } finally {
+      setIsSendingLoanEmail(false);
     }
   };
 
@@ -563,7 +630,8 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
                                             onClick={() =>
                                               handleStatusChange(
                                                 order.id,
-                                                status
+                                                status,
+                                                order
                                               )
                                             }
                                           >
@@ -1668,7 +1736,7 @@ const hasItemDiscount = originalPrice > discountedPrice;
                           return (
                             <DropdownMenuItem
                               key={status}
-                              onClick={() => handleStatusChange(selectedOrder.id, status)}
+                              onClick={() => handleStatusChange(selectedOrder.id, status, selectedOrder)}
                             >
                               <IconComponent className="mr-2 h-4 w-4" />
                               {config.label}
@@ -1731,6 +1799,130 @@ const hasItemDiscount = originalPrice > discountedPrice;
               className="order-1 w-full sm:order-2 sm:w-auto"
             >
               {cancelOrderWithReason.isPending ? "Cancelling..." : "Cancel Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Loan Approval Dialog */}
+      <Dialog open={isLoanDialogOpen} onOpenChange={setIsLoanDialogOpen}>
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Loan Approval</DialogTitle>
+            <DialogDescription>
+              Review the customer&apos;s applied terms and set the actual terms before sending the approval email.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 py-2">
+            {/* Left — Customer Applied (read-only) */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+                Customer Applied
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs text-gray-500">Deposit %</Label>
+                  <div className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700">
+                    {loanOrderData?.deposit_percentage != null
+                      ? `${loanOrderData.deposit_percentage}%`
+                      : "Not set"}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Deposit Amount</Label>
+                  <div className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700">
+                    {loanOrderData?.deposit_amount != null && loanOrderData.deposit_amount > 0
+                      ? `£${loanOrderData.deposit_amount.toFixed(2)}`
+                      : "Not set"}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Tenure</Label>
+                  <div className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700">
+                    {loanOrderData?.installment_term != null
+                      ? `${loanOrderData.installment_term} Months`
+                      : "Not set"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right — Actual Demand (editable) */}
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-blue-600">
+                Actual Demand
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2 block text-xs text-gray-600">Deposit Percentage</Label>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[10, 20, 30, 40, 50].map((pct) => (
+                      <button
+                        key={pct}
+                        onClick={() => setActualDepositPct(pct)}
+                        className={`rounded-lg border-2 py-2 text-xs font-bold transition-all ${
+                          actualDepositPct === pct
+                            ? "border-blue-600 bg-blue-600 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="mb-2 block text-xs text-gray-600">Deposit Amount</Label>
+                  <div className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700">
+                    {(() => {
+                      const order = loanOrderData;
+                      const grandTotal = order
+                        ? (order.total_amount || 0) +
+                          (order.floor?.charges || 0) +
+                          (order.zone?.delivery_charges || 0) -
+                          (order.discount_amount || 0)
+                        : 0;
+                      return `£${((grandTotal * actualDepositPct) / 100).toFixed(2)}`;
+                    })()}
+                  </div>
+                </div>
+                <div>
+                  <Label className="mb-2 block text-xs text-gray-600">Tenure</Label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[6, 12, 24, 36].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setActualTerm(t)}
+                        className={`rounded-lg border-2 py-2 text-xs font-bold transition-all ${
+                          actualTerm === t
+                            ? "border-blue-600 bg-blue-600 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {t}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setIsLoanDialogOpen(false)}
+              disabled={isSendingLoanEmail}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendLoanEmail}
+              disabled={isSendingLoanEmail}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isSendingLoanEmail ? "Sending..." : "Send Email & Approve Loan"}
             </Button>
           </DialogFooter>
         </DialogContent>
