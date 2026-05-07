@@ -135,7 +135,7 @@ export function OrderCard({ order }: { order: Order }) {
                 return (
                   <div
                     key={item.id}
-                    className="flex min-w-0 sm:flex-shrink-0 items-center gap-2"
+                    className="flex min-w-0 sm:shrink-0 items-center gap-2"
                   >
                     <div className="relative size-16">
                       {item.image_url ? (
@@ -417,7 +417,7 @@ const OrderDetailsModal: React.FC<{ order: Order }> = ({ order }) => {
                       key={item.id}
                       className="flex items-center gap-4 rounded-lg border p-4"
                     >
-                      <div className="relative h-16 w-16 flex-shrink-0">
+                      <div className="relative h-16 w-16 shrink-0">
                         {item.image_url ? (
                           <Image
                             src={item.image_url}
