@@ -113,7 +113,11 @@ const getStatusBadge = (status: OrderStatus) => {
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] ?? {
+    icon: Package,
+    className: "border-0 bg-gray-100 text-gray-800 hover:bg-gray-100",
+    label: 'pending',
+  };
   const IconComponent = config.icon;
 
   return (
@@ -627,7 +631,7 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
                                             icon: CheckCircle2,
                                             label: "Loan Approved"
                                           },
-                                        }[status];
+                                        }[status] ?? { icon: Package, label: status };
 
                                         const IconComponent = config.icon;
 
@@ -1735,7 +1739,7 @@ const hasItemDiscount = originalPrice > discountedPrice;
                             delivered: { icon: CheckCircle2, label: "Delivered" },
                             cancelled: { icon: XCircle, label: "Cancelled" },
                             loan_approved: { icon: CheckCircle2, label: "Loan Approved" },
-                          }[status];
+                          }[status] ?? { icon: Package, label: status };
 
                           const IconComponent = config.icon;
 
