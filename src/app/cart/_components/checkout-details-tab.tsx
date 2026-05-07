@@ -269,7 +269,7 @@ const handlePayInInstallments = () => {
             </div>
 
             {/* ── Payment Method Step (replaces button when clicked) ── */}
-            {showPaymentChoice ? (
+            {/* {showPaymentChoice ? (
               <PaymentMethodStep
                 grandTotal={grandTotal}
                 onPayWithCard={handlePayWithCard}
@@ -277,6 +277,20 @@ const handlePayInInstallments = () => {
                 onBack={() => setShowPaymentChoice(false)}
               />
             ) : (
+              <div className="flex gap-4 text-center">
+                <Button
+                  onClick={handlePlaceOrderClick}
+                  disabled={isProcessing}
+                  variant="primary"
+                  size="xl"
+                  rounded="full"
+                  className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isProcessing ? "Processing Payment..." : "Place Order"}
+                </Button>
+              </div>
+            )} */}
+            {!showPaymentChoice && (
               <div className="flex gap-4 text-center">
                 <Button
                   onClick={handlePlaceOrderClick}
@@ -420,8 +434,39 @@ const handlePayInInstallments = () => {
                 )}
               </div>
             </div>
+            {/* ✅ Payment buttons appear below card after Place Order clicked */}
+            {showPaymentChoice && (
+              <div className="mt-4 flex flex-col gap-3">
+                <Button
+                  onClick={handlePayWithCard}
+                  disabled={isProcessing}
+                  variant="primary"
+                  size="xl"
+                  rounded="full"
+                  className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isProcessing ? "Processing..." : "Pay by Card"}
+                </Button>
+                <Button
+                  onClick={handlePayInInstallments}
+                  disabled={isProcessing}
+                  variant="primary"
+                  size="xl"
+                  rounded="full"
+                  className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Spread the Cost
+                </Button>
+                <button
+                  onClick={() => setShowPaymentChoice(false)}
+                  className="mt-1 flex w-full items-center justify-center gap-1 text-sm text-gray-400 hover:text-gray-600"
+                >
+                  <ChevronLeft size={14} />
+                  Back to details
+                </button>
+              </div>
+            )}
           </div>
-
         </div>
       )}
     </div>
