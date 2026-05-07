@@ -445,7 +445,7 @@ const handlePayInInstallments = () => {
                   rounded="full"
                   className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isProcessing ? "Processing..." : "Pay by Card"}
+                  {isProcessing ? "Processing..." : "Pay in Full by Card"}
                 </Button>
                 <Button
                   onClick={handlePayInInstallments}
