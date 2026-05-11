@@ -38,6 +38,7 @@ interface CheckoutDetailsTabProps {
   walletBalance: number;
   walletDiscount: number;
   useWallet: boolean;
+  showInstallmentsButton?: boolean;
   setUseWallet: (val: boolean) => void;
   onPlaceOrder: (installmentMeta?: {
     grandTotal: number;
@@ -106,6 +107,7 @@ export const CheckoutDetailsTab = ({
   walletDiscount,
   useWallet,
   setUseWallet,
+  showInstallmentsButton = true,
 }: CheckoutDetailsTabProps) => {
   const { user } = useAuth();
   const { assemblyTotal, subtotal, getCartTotal } = useCart();
@@ -435,7 +437,7 @@ const handlePayInInstallments = () => {
               </div>
             </div>
             {/* Payment buttons appear below card after Place Order clicked */}
-            {showPaymentChoice && (
+            {/* {showPaymentChoice && (
               <div className="mt-4 flex flex-col gap-3">
                 <Button
                   onClick={handlePayWithCard}
@@ -465,7 +467,42 @@ const handlePayInInstallments = () => {
                   Back to details
                 </button>
               </div>
-            )}
+            )} */}
+            {showPaymentChoice && (
+  <div className="mt-4 flex flex-col gap-3">
+    <Button
+      onClick={handlePayWithCard}
+      disabled={isProcessing}
+      variant="primary"
+      size="xl"
+      rounded="full"
+      className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {isProcessing ? "Processing..." : "Pay in Full by Card"}
+    </Button>
+
+    {showInstallmentsButton && (
+      <Button
+        onClick={handlePayInInstallments}
+        disabled={isProcessing}
+        variant="primary"
+        size="xl"
+        rounded="full"
+        className="bg-blue hover:bg-blue/90 relative mx-auto flex h-12! w-full items-center justify-center px-8 py-4 font-semibold text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Spread the Cost
+      </Button>
+    )}
+
+    <button
+      onClick={() => setShowPaymentChoice(false)}
+      className="mt-1 cursor-pointer flex w-full items-center justify-center gap-1 text-sm text-gray-400 hover:text-gray-600"
+    >
+      <ChevronLeft size={14} />
+      Back to details
+    </button>
+  </div>
+)}
           </div>
         </div>
       )}

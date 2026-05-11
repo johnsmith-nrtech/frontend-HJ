@@ -58,6 +58,7 @@ function CartPageContent() {
     walletDiscount,
     useWallet,
     setUseWallet,
+    showInstallmentsButton,
   } = useCheckoutForm();
 
   useEffect(() => {
@@ -154,6 +155,7 @@ function CartPageContent() {
           useWallet={useWallet}
           setUseWallet={setUseWallet}
           onPlaceOrder={handlePlaceOrder}
+          showInstallmentsButton={showInstallmentsButton}
           couponProps={{
             couponCode,
             setCouponCode,

@@ -27,6 +27,7 @@ export interface LocalCartItem {
   created_at: string;
   updated_at: string;
   bundleVariants?: string[];
+  show_installments?: boolean;
   variant?: {
     color?: string;
     size?: string;
@@ -149,6 +150,7 @@ const convertApiItemToLocal = (apiItem: ApiCartItem): LocalCartItem => {
     image:
       variant.variant_images?.[0]?.url ||
       variant.product.images?.[0]?.url,
+    show_installments: (variant.product as any).show_installments ?? true,
     variant: {
       color: variant.color,
       size: variant.size,
@@ -199,6 +201,7 @@ export const useCartStore = create<CartState>()(
           color: item.color,
           stock: item.stock,
           assemble_charges: item.assemble_charges,
+          show_installments: item.show_installments,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };

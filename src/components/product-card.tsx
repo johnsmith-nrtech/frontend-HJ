@@ -83,6 +83,7 @@ const handleAddToCart = async () => {
       stock,
       assembly_required: false,
       assemble_charges: assemble_charges,
+      show_installments: showInstallments
     });
     toast.success(`${name} added to cart!`);
   } catch (error) {

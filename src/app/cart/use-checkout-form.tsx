@@ -162,6 +162,11 @@ export function useCheckoutForm() {
     fetchBalances();
   }, [user]);
 
+  const showInstallmentsButton = React.useMemo(
+    () => items.every((item) => item.show_installments !== false),
+    [items]
+  );
+
   // Save formData to localStorage whenever it changes
   React.useEffect(() => {
     localStorage.setItem("checkoutFormData", JSON.stringify(formData));
@@ -531,5 +536,6 @@ const handlePlaceOrder = async (installmentMeta?: {
     // Old referral credit (% system)
     referralCredit,
     referralDiscount,
+    showInstallmentsButton
   };
 }
