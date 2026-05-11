@@ -1219,14 +1219,22 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                 Make 3 Payments Of £{(currentDiscountedPrice / 3).toFixed(2)}
               </span>
             </div> */}
-{/* Installment line — 36 months */}
-{(product.show_installments ?? true) && (
-  <div className="mt-3">
-    <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-      From £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
-    </span>
-  </div>
-)}
+            {(product.show_installments ?? true) && (
+              <div className="mt-3">
+                <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
+                  Finance from £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
+                </span>
+                <div className="mt-1">
+                  <Link
+                    href={`/finance-calculator?total=${currentDiscountedPrice.toFixed(2)}&show_installments=true`}
+                    className="text-sm"
+                  >
+                    <span className="text-black">Try our </span>
+                    <span className="text-purple-800 underline">finance calculator</span>
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-1">
