@@ -1237,7 +1237,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                   className="group flex items-center gap-2"
                 >
                   <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px] group-hover:underline">
-                    Finance from £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
+                    Finance from £{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month over 36 months
                   </span>
                 </div>
     

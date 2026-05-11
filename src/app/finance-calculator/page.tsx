@@ -6,8 +6,8 @@ import { X } from "lucide-react";
 const DEPOSIT_OPTIONS = [10, 20, 30, 40, 50];
 const TERM_OPTIONS = [6, 12, 24, 36];
 
-const fmt = (n: number) =>
-  n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const round2 = (n: number): number => Math.floor(n * 100 + 0.5) / 100;
+const display = (n: number): string => round2(n).toFixed(2);
 
 interface FinanceCalculatorModalProps {
   isOpen: boolean;
@@ -25,13 +25,13 @@ export default function FinanceCalculatorModal({
   showInstallments = true,
 }: FinanceCalculatorModalProps) {
   const [depositPct, setDepositPct] = useState(10);
-  const [term, setTerm] = useState(6);
+  const [term, setTerm] = useState(36);
 
   const total = productTotal;
 
-  const depositAmount = useMemo(() => (total * depositPct) / 100, [total, depositPct]);
-  const creditAmount = useMemo(() => total - depositAmount, [total, depositAmount]);
-  const monthlyPayment = useMemo(() => (term > 0 ? creditAmount / term : 0), [creditAmount, term]);
+  const depositAmount = useMemo(() => round2((total * depositPct) / 100), [total, depositPct]);
+  const creditAmount = useMemo(() => round2(total - depositAmount), [total, depositAmount]);
+  const monthlyPayment = useMemo(() => term > 0 ? parseFloat(((total * (1 - depositPct / 100)) / term).toFixed(2)) : 0, [total, depositPct, term]);
 
   if (!isOpen) return null;
 
@@ -58,9 +58,9 @@ export default function FinanceCalculatorModal({
   }
 
   return (
- <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
-  <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-  <div className="relative mx-auto max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative mx-auto max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-white shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
           <div>
@@ -101,7 +101,7 @@ export default function FinanceCalculatorModal({
               </h2>
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {DEPOSIT_OPTIONS.map((pct) => {
-                  const amt = (total * pct) / 100;
+                  const amt = round2((total * pct) / 100);
                   const active = depositPct === pct;
                   return (
                     <button
@@ -113,7 +113,7 @@ export default function FinanceCalculatorModal({
                           : "border-gray-200 bg-white text-gray-700 hover:border-[#3d1a6e] hover:bg-purple-50"
                       }`}
                     >
-                      <span className="text-sm font-bold">£{fmt(amt)}</span>
+                      <span className="text-sm font-bold">£{display(amt)}</span>
                       <span className={`text-xs ${active ? "text-purple-200" : "text-gray-400"}`}>
                         {pct}% Deposit
                       </span>
@@ -131,7 +131,7 @@ export default function FinanceCalculatorModal({
               <p className="mb-5 text-sm text-gray-500">Choose your preferred repayment term</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {TERM_OPTIONS.map((t) => {
-                  const monthly = creditAmount / t;
+                  const monthly = parseFloat(((total * (1 - depositPct / 100)) / t).toFixed(2));
                   const active = term === t;
                   return (
                     <button
@@ -145,7 +145,7 @@ export default function FinanceCalculatorModal({
                     >
                       <span className="text-sm font-bold">{t} months</span>
                       <span className={`text-xs ${active ? "text-purple-200" : "text-gray-400"}`}>
-                        £{fmt(monthly)} p/m
+                        £{display(monthly)} p/m
                       </span>
                     </button>
                   );
@@ -159,20 +159,20 @@ export default function FinanceCalculatorModal({
             <div className="border border-gray-200 bg-white p-6">
               <h2 className="mb-5 text-lg font-bold text-gray-900">Order summary</h2>
               <div className="space-y-3 text-sm">
-                <SummaryRow label="Product Total" value={`£${fmt(total)}`} />
+                <SummaryRow label="Product Total" value={`£${display(total)}`} />
                 <div className="border-t border-gray-200 pt-3">
-                  <SummaryRow label="Order total" value={`£${fmt(total)}`} bold />
+                  <SummaryRow label="Order total" value={`£${display(total)}`} bold />
                 </div>
               </div>
               <hr className="my-4 border-gray-100" />
               <div className="space-y-3 text-sm">
-                <SummaryRow label="Deposit" value={`£${fmt(depositAmount)}`} />
-                <SummaryRow label="Credit Amount" value={`£${fmt(creditAmount)}`} />
+                <SummaryRow label="Deposit" value={`£${display(depositAmount)}`} />
+                <SummaryRow label="Credit Amount" value={`£${display(creditAmount)}`} />
                 <SummaryRow label="Representative APR" value="0%" />
-                <SummaryRow label="Monthly Payments" value={`£${fmt(monthlyPayment)}`} />
+                <SummaryRow label="Monthly Payments" value={`£${display(monthlyPayment)}`} />
                 <SummaryRow label="Loan Term" value={`${term} Months`} />
                 <div className="border-t border-gray-200 pt-3">
-                  <SummaryRow label="Total Amount Payable" value={`£${fmt(total)}`} bold />
+                  <SummaryRow label="Total Amount Payable" value={`£${display(total)}`} bold />
                 </div>
               </div>
             </div>

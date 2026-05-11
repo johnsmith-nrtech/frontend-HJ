@@ -134,7 +134,7 @@ const handleAddToCart = async () => {
       )} */}
 
       <div className="text-xs text-gray-600">
-        {showInstallments ? `Finance from £${(price / 36).toFixed(2)}/month over 36 months` : '\u00A0'}
+        {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : '\u00A0'}
       </div>
 
       {/* 4. Add to Cart Button */}
@@ -159,7 +159,7 @@ const handleAddToCart = async () => {
   const Layout1Content = () => (
     <>
       <div style={{ height: '32px', display: 'flex', alignItems: 'center', borderBottom: showInstallments ? '2px solid #2563eb' : '2px solid transparent' }} className="text-[12px] lg:text-[14px] text-gray-500">
-        {showInstallments ? `Finance from £${(price / 36).toFixed(2)}/month over 36 months` : ''}
+        {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : ''}
       </div>
       
       <div className="flex items-center justify-between">
@@ -186,7 +186,7 @@ const handleAddToCart = async () => {
   const Layout2Content = () => (
     <>
       <div style={{ height: '32px', display: 'flex', alignItems: 'center', borderBottom: showInstallments ? '2px solid #2563eb' : '2px solid transparent' }} className="text-[12px] lg:text-[14px] text-gray-500">
-        {showInstallments ? `Finance from £${(price / 36).toFixed(2)}/month over 36 months` : ''}
+        {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : ''}
       </div>
       
       <div className="flex items-center justify-between">
