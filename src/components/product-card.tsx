@@ -158,11 +158,10 @@ const handleAddToCart = async () => {
   // Desktop Layout Components (original)
   const Layout1Content = () => (
     <>
-
       <div style={{ height: '32px', display: 'flex', alignItems: 'center', borderBottom: showInstallments ? '2px solid #2563eb' : '2px solid transparent' }} className="text-[12px] lg:text-[14px] text-gray-500">
         {showInstallments ? `Finance from £${(price / 36).toFixed(2)}/month over 36 months` : ''}
       </div>
-
+      
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <span className="text-[#999999] lg:text-[20px]">
@@ -186,11 +185,10 @@ const handleAddToCart = async () => {
 
   const Layout2Content = () => (
     <>
-
       <div style={{ height: '32px', display: 'flex', alignItems: 'center', borderBottom: showInstallments ? '2px solid #2563eb' : '2px solid transparent' }} className="text-[12px] lg:text-[14px] text-gray-500">
         {showInstallments ? `Finance from £${(price / 36).toFixed(2)}/month over 36 months` : ''}
       </div>
-
+      
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <span className="text-[#999999] lg:text-[20px]">
@@ -254,6 +252,7 @@ const handleAddToCart = async () => {
       </Button>
     </div>
   );
+
 
   return (
     <div className={`overflow-hidden bg-transparent ${className}`}>
