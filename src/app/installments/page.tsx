@@ -74,7 +74,7 @@ function InstallmentsContent() {
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* ── Top bar ── */}
-      <div className="px-6 py-4">
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center gap-4">
           <button
             onClick={() => router.push("/cart?step=3")}
@@ -209,7 +209,6 @@ function InstallmentsContent() {
               <SummaryRow label="Deposit" value={`£${fmt(depositAmount)}`} />
               <SummaryRow label="Credit Amount" value={`£${fmt(creditAmount)}`} />
               <SummaryRow label="Representative APR" value="0%" />
-              <SummaryRow label="Interest" value="£0.00" />
               <SummaryRow label="Monthly Payments" value={`£${fmt(monthlyPayment)}`} />
               <SummaryRow label="Loan Term" value={`${term} Months`} />
               <div className="border-t border-gray-200 pt-3">

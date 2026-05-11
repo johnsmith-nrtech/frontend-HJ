@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useProduct, useRelatedProducts } from "@/hooks/use-products";
 import { useCartAnimationStore, useCartStore } from "@/lib/store/cart-store";
 import { useWishlistStore } from "@/lib/store/wishlist-store";
+import FinanceCalculatorModal from "@/app/finance-calculator/page";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/button-custom";
 import { MarqueeStrip } from "@/components/marquee-strip";
@@ -319,6 +320,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const [showViewInRoom, setShowViewInRoom] = useState(false);
   const [selectedTab, setSelectedTab] = useState("images");
   const [showMobileOptionsSheet, setShowMobileOptionsSheet] = useState(false);
+  const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [showVariantError, setShowVariantError] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
@@ -1220,13 +1222,40 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </span>
             </div> */}
 {/* Installment line — 36 months */}
-{(product.show_installments ?? true) && (
+{/* {(product.show_installments ?? true) && (
   <div className="mt-3">
     <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
       From £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
     </span>
   </div>
-)}
+)} */}
+{/* Installment line — 36 months - CLICKABLE MODAL TRIGGER */}
+{/* Finance Calculator Section */}
+            {(product.show_installments ?? true) && (
+              <div className="mt-3 space-y-2">
+                <div
+                  className="group flex items-center gap-2"
+                >
+                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px] group-hover:underline">
+                    Finance from £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
+                  </span>
+                </div>
+    
+                {/* NEW: Try our finance calculator link */}
+                <div>
+                  <button
+                    // onClick={() => setShowFinanceModal(true)}
+                    className="flex items-center gap-1 text-sm md:text-base"
+                  >
+                    Try our <span 
+                    onClick={() => setShowFinanceModal(true)} 
+                    className="text-purple-800 cursor-pointer underline">
+                      finance calculator
+                      </span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-1">
@@ -1754,6 +1783,14 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
+      {/* Finance Calculator Modal */}
+      <FinanceCalculatorModal
+        isOpen={showFinanceModal}
+        onClose={() => setShowFinanceModal(false)}
+        productTotal={currentDiscountedPrice}
+        productName={product.name}
+        showInstallments={product.show_installments ?? true}
+      />
     </div>
   );
 }
