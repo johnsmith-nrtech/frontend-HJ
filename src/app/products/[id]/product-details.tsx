@@ -1215,47 +1215,33 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               <p className="text-xs text-gray-500">SKU: {currentVariant.sku || "N/A"}</p>
             )}
 
-            {/* Klarna instalment line */}
-            {/* <div className="mt-3">
-              <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-                Make 3 Payments Of £{(currentDiscountedPrice / 3).toFixed(2)}
-              </span>
-            </div> */}
-{/* Installment line — 36 months */}
-{/* {(product.show_installments ?? true) && (
-  <div className="mt-3">
-    <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px]">
-      From £{(currentDiscountedPrice / 36).toFixed(2)}/month over 36 months
-    </span>
-  </div>
-)} */}
-{/* Installment line — 36 months - CLICKABLE MODAL TRIGGER */}
-{/* Finance Calculator Section */}
+
+            {/* Finance Calculator Section */}
             {(product.show_installments ?? true) && (
-              <div className="mt-3 space-y-2">
-                <div
-                  className="group flex items-center gap-2"
-                >
-                  <span className="text-[16px] text-[#999] md:text-[18px] lg:text-[20px] group-hover:underline">
+              <div 
+                className="mt-3 rounded-xl px-4 py-3 space-y-1"
+                style={{ backgroundColor: '#e5e7eb' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[16px] md:text-[18px] lg:text-md">
                     Finance from £{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month over 36 months
                   </span>
                 </div>
-    
-                {/* NEW: Try our finance calculator link */}
+
                 <div>
-                  <button
-                    // onClick={() => setShowFinanceModal(true)}
-                    className="flex items-center gap-1 text-sm md:text-base"
-                  >
-                    Try our <span 
-                    onClick={() => setShowFinanceModal(true)} 
-                    className="text-purple-800 cursor-pointer underline">
+                  <button className="flex items-center gap-1 text-sm md:text-base">
+                    Try our{" "}
+                    <span
+                      onClick={() => setShowFinanceModal(true)}
+                      className="text-purple-800 cursor-pointer underline"
+                    >
                       finance calculator
-                      </span>
+                    </span>
                   </button>
                 </div>
               </div>
             )}
+
 
             {/* Description */}
             <div className="space-y-1">
@@ -1405,10 +1391,10 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {[
+                {/* {[
                   { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
                   { value: "payment", label: "Payment", content: "We accept all major credit/debit cards including Visa, Master and American Express." },
-                  { value: "warranty", label: "Warranty", content: variantWithExtras?.warranty_info || product?.warranty_info || "All sofas come with a 10-year frame warranty and 2-year fabric warranty." },
+                  { value: "warranty", label: "Warranty", content: variantWithExtras?.warranty_info || product?.warranty_info || "Warranty not provided Please contact our support team." },
                   { value: "availability", label: "Availability", content: "Most products are in stock for fast delivery. Stock status is shown above. Contact us for special orders." },
                 ].map(({ value, label, content }) => (
                   <Accordion key={value} type="single" collapsible className="w-full">
@@ -1416,6 +1402,33 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                       <AccordionTrigger className="font-normal">{label}</AccordionTrigger>
                       <AccordionContent>
                         <div className="text-sm text-[#999]">{content}</div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                ))} */}
+                {[
+                  { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
+                  { value: "payment", label: "Payment", content: "We accept all major credit/debit cards including Visa, Master and American Express." },
+                  { value: "warranty", label: "Warranty", content: variantWithExtras?.warranty_info || product?.warranty_info || null },
+                  { value: "availability", label: "Availability", content: "Most products are in stock for fast delivery. Stock status is shown above. Contact us for special orders." },
+                ].map(({ value, label, content }) => (
+                  <Accordion key={value} type="single" collapsible className="w-full">
+                    <AccordionItem value={value}>
+                      <AccordionTrigger className="font-normal">{label}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="text-sm text-[#999]">
+                          {value === "warranty" && !content ? (
+                            <>
+                              Warranty not provided. Please{" "}
+                              <Link href="/contact-us" className="text-purple-600 underline cursor-pointer">
+                                contact
+                              </Link>{" "}
+                              our support team.
+                            </>
+                            ) : (
+                              content
+                          )}
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>

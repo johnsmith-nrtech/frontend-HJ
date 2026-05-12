@@ -152,10 +152,16 @@ const buildPageProduct = (
     name: product.name ?? "Product",
     finalPrice,
     originalPrice,
-    deliveryInfo:
-      selectedVariant?.delivery_time_days ??
-      product.delivery_info?.text ??
-      "3 To 4 Days Delivery",
+    deliveryInfo: (() => {
+      const raw = selectedVariant?.delivery_time_days ||
+      product.delivery_info?.text ||
+      "3-5 days";
+      return raw
+      .replace(/\s*delivery\s*/gi, "")
+      .replace(/\s+to\s+/gi, "-")
+      .replace(/\bdays\b/gi, "days")
+      .trim();
+    })(),
     category: product.category?.name,
     type: product.category?.name,
     rating: 4.9,

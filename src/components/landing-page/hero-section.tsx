@@ -19,12 +19,11 @@ const HeroSection = () => {
 
   // Marquee items data
   const marqueeItems = [
-    { text: "10-Years Guarantee", icon: "/sofa-icon.png" },
-    { text: "100-Night Trial", icon: "/sofa-icon.png" },
-    { text: "Easy Return", icon: "/sofa-icon.png" },
-    { text: "Free Delivery", icon: "/sofa-icon.png" },
-    { text: "10-Years Guarantee", icon: "/sofa-icon.png" },
-  ];
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+];
 
   // Handle custom order button click
   const handleCustomOrderClick = () => {

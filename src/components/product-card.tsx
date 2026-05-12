@@ -45,7 +45,7 @@ export function ProductCard({
   imageSrc = "/placeholder.svg",
   rating = 4.9,
   discount,
-  deliveryInfo,
+  deliveryInfo = "3-5 days", 
   paymentOption,
   variant = "layout1",
   className = "",
@@ -109,7 +109,7 @@ const handleAddToCart = async () => {
         </h3>
       </Link>
       {/* 2. Prices */}
-      <div className="space-y-1">
+      {/* <div className="space-y-1">
         <div className="flex items-baseline gap-2">
           <span className="text-xl font-bold text-[#222222]">
             £{formatPrice(price)}
@@ -127,15 +127,45 @@ const handleAddToCart = async () => {
         )}
       </div>
 
-      {/* {showInstallments && (
-        <div className="text-xs text-gray-600">
-          From £{(price / 36).toFixed(2)}/month over 36 months
-        </div>
-      )} */}
-
       <div className="text-xs text-gray-600">
         {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : '\u00A0'}
+      </div> */}
+      <div style={{ minHeight: '90px', display: 'flex', alignItems: 'flex-start' }}>
+  {/* Left: price */}
+  <div style={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
+    <span className="font-bold text-blue-700 text-[18px] mt-8">
+      £{formatPrice(price)}
+    </span>
+    {showInstallments && (
+      <span className="line-clamp-1 inline-block rounded-xl bg-[#3293a8] px-2 py-1 text-xs 
+      font-medium text-white w-fit mt-1">
+        {deliveryInfo}
+      </span>
+    )}
+  </div>
+
+  {/* Right side */}
+  {showInstallments ? (
+    <>
+      <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <span className="text-xs text-gray-400">36 monthly payments of</span>
+        <span className="text-[18px] font-bold text-blue-700">
+          £{((price * 0.90) / 36).toFixed(2)}
+        </span>
+        <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
       </div>
+    </>
+  ) : (
+    <div style={{ width: '50%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+      {!showInstallments && (
+        <span className="line-clamp-1 inline-block mt-8 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit">
+          {deliveryInfo}
+        </span>
+      )}
+    </div>
+  )}
+</div>
 
       {/* 4. Add to Cart Button */}
       <button
@@ -225,57 +255,38 @@ const handleAddToCart = async () => {
       </div>
     </div>
 
-    {/* <div style={{ height: '32px', display: 'flex', alignItems: 'center', borderBottom: showInstallments ? '2px solid #2563eb' : '2px solid transparent' }} className="text-[12px] lg:text-[14px] text-gray-500">
-      {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : ''}
-    </div>
-
-    <div className="flex items-center justify-between">
-      <div className="flex items-baseline gap-2">
-        <span className="text-[#999999] lg:text-[20px]">
+    <div style={{ minHeight: '70px', display: 'flex', alignItems: 'flex-start' }}>
+      {/* Left: price + delivery */}
+      <div style={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
+        <span className="font-bold text-blue-700 text-[20px] mt-4">
           £{formatPrice(price)}
         </span>
-        {originalPrice && originalPrice > price && (
-          <span className="text-[10px] text-gray-500 line-through lg:text-sm">
-            £{formatPrice(originalPrice)}
-          </span>
-        )}
-      </div>
-      {deliveryInfo && (
-        <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-4 py-2 text-xs font-medium text-white">
-          {deliveryInfo}
-        </span>
-      )}
-    </div> */}
-    <div className="flex items-center justify-between gap-2" style={{ height: '40px' }}>
-      {/* Left: price */}
-      <div className={`flex items-center gap-2 ${!showInstallments ? 'w-full justify-between' : 'flex-shrink-0'}`}>
-        <div className="flex items-baseline gap-1">
-          <span className="font-bold lg:text-[20px]">
-            £{formatPrice(price)}
-          </span>
-          {originalPrice && originalPrice > price && (
-            <span className="text-[10px] text-gray-500 line-through lg:text-sm">
-              £{formatPrice(originalPrice)}
-            </span>
-          )}
-        </div>
-        {deliveryInfo && (
-          <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-4 py-2 text-xs font-medium text-white">
+        {showInstallments && (
+          <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
             {deliveryInfo}
           </span>
         )}
       </div>
 
-
-      {/* Vertical Divider */}
-      {showInstallments && (
-        <div style={{ width: '2px', height: '100%', backgroundColor: '#2563eb', flexShrink: 0 }} />
-      )}
-
-      {/* Right: installment line */}
-      {showInstallments && (
-        <div className="text-[14px] text-gray-500 font-semibold flex-1">
-          {`Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months`}
+      {/* Right side: divider + installments OR delivery badge justify-between */}
+      {showInstallments ? (
+        <>
+          <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 10px' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <span className="text-xs text-gray-400">36 monthly payments of</span>
+              <span className="text-[20px] font-bold text-blue-700">
+                £{((price * 0.90) / 36).toFixed(2)}
+              </span>
+              <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+          </div>
+        </>
+        ) : (
+          <div style={{ width: '50%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+            {!showInstallments && (
+              <span className="line-clamp-1 inline-block mt-5 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit">
+                {deliveryInfo}
+              </span>
+            )}
         </div>
       )}
     </div>
@@ -356,7 +367,7 @@ const handleAddToCart = async () => {
                 }}
                 size="sm"
                 variant="ghost"
-                className="rounded-full bg-white/80 p-2 hover:bg-white"
+                className="rounded-full bg-white"
               />
             </div>
           </div>

@@ -65,6 +65,7 @@ export const ShoppingCartTab = ({
 
   const isAuthenticated = checkAuthStatus();
   const cartTotal = getCartTotal();
+  const hasInstallments = items.some((item) => item.show_installments === true);
 
   const finalTotal = React.useMemo(() => {
     return Math.max(
@@ -166,97 +167,119 @@ export const ShoppingCartTab = ({
 
         {/* RIGHT: Cart Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-light-blue rounded-lg px-2 py-6 shadow-lg sm:p-6">
-            <h3 className="mb-6 text-center text-3xl text-gray-800 uppercase sm:text-start sm:text-[34px]">
+          <div className="bg-light-blue rounded-lg px-4 py-8 shadow-lg sm:p-8 text-center">
+            {/* Title */}
+            <h3 className="mb-4 text-center text-3xl text-gray-800 uppercase sm:text-[34px]">
               Cart Summary
             </h3>
 
-            <div className="space-y-3">
-              <SummaryLineItem label="Products Total" value={subtotal} />
+            {/* Products Total line */}
+            <div className="mb-2 text-lg text-gray-500">Total Price</div>
 
-              {assemblyTotal > 0 && (
-                <SummaryLineItem label="Assembly Charges" value={assemblyTotal} />
-              )}
-
-              {appliedCoupon && discountAmount > 0 && (
-                <SummaryLineItem
-                  label={`${appliedCoupon.is_referral ? "Referral" : "Coupon"} (${appliedCoupon.code})`}
-                  value={-discountAmount}
-                />
-              )}
-
-              {referralCredit > 0 && referralDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-green-700">
-                    Referral Credit ({referralCredit}% off)
-                  </span>
-                  <span className="font-medium text-green-700">
-                    -£{referralDiscount.toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              {useWallet && walletDiscount > 0 && (
-                <SummaryLineItem label="Wallet Credit" value={-walletDiscount} />
-              )}
-
-              <SummaryTotalLineItem label="Total" value={finalTotal} />
+            {/* Big Total Price */}
+            <div className="mb-1 text-4xl font-extrabold text-gray-900">
+              £{finalTotal.toFixed(2)}
             </div>
 
-            {/* ✅ Wallet Checkbox — inside Cart Summary box */}
-            {walletBalance > 0 && (
-              <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3">
-                <div className="flex items-center cursor-pointer gap-3">
-                  <Checkbox
-                    id="use-wallet-cart"
-                    checked={useWallet}
-                    className="cursor-pointer"
-                    onCheckedChange={(checked) => setUseWallet(checked as boolean)}
-                  />
-                  <Label
-                    htmlFor="use-wallet-cart"
-                    className="flex flex-1 items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Wallet size={15} className="text-green-600" />
-                      <span className="text-sm font-semibold text-green-800">
-                        Use Wallet Credit
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-green-700">
-                      £{walletBalance.toFixed(2)}
-                    </span>
-                  </Label>
-                </div>
-                {useWallet && walletDiscount > 0 && (
-                  <p className="mt-2 pl-7 text-xs text-green-600">
-                    £{walletDiscount.toFixed(2)} will be deducted from your order
-                  </p>
-                )}
+            {/* Installment line — only if any item has show_installments */}
+            {hasInstallments && (
+              <div className="mt-2 text-sm text-gray-500">
+                or
+              </div>
+            )}
+            {hasInstallments && (
+              <div className="mt-1 text-3xl font-extrabold text-gray-800">
+                £{((finalTotal * 0.90) / 36).toFixed(2)}{" "}
+                <span className="text-base font-normal text-gray-500">a month</span>
+              </div>
+            )}
+            {hasInstallments && (
+              <div className="mt-1 text-xs text-gray-400">
+                Based on 36 months free credit with 10% deposit required. 0% APR.
               </div>
             )}
 
-            <Button
-              onClick={onNext}
-              variant="primary"
-              size="xl"
-              rounded="full"
-              disabled={items.length === 0}
-              className="relative mt-8 h-12! w-full items-center text-left! shadow-lg sm:text-xl!"
-              icon={
-                <Image
-                  src="/arrow-right.png"
-                  alt="arrow-right"
-                  width={24}
-                  height={24}
-                  className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full bg-white p-2 sm:h-10 sm:w-10"
-                />
-              }
-            >
-              Checkout
-            </Button>
+            {/* Assembly if any */}
+            {assemblyTotal > 0 && (
+              <div className="mt-2 text-sm text-gray-600">
+                + £{assemblyTotal.toFixed(2)} Assembly
+              </div>
+            )}
+
+            {/* Coupon discount */}
+            {appliedCoupon && discountAmount > 0 && (
+              <div className="mt-2 text-sm text-green-600">
+                -{appliedCoupon.is_referral ? "Referral" : "Coupon"} ({appliedCoupon.code}): -£{discountAmount.toFixed(2)}
+              </div>
+            )}
+
+            {/* Referral Credit */}
+            {referralCredit > 0 && referralDiscount > 0 && (
+              <div className="mt-2 text-sm text-green-600">
+                Referral Credit ({referralCredit}% off): -£{referralDiscount.toFixed(2)}
+              </div>
+            )}
+
+            {/* Wallet discount */}
+            {useWallet && walletDiscount > 0 && (
+              <div className="mt-2 text-sm text-green-600">
+                Wallet Credit: -£{walletDiscount.toFixed(2)}
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="my-4 border-t border-gray-300" />
+
+              {/* Wallet Checkbox */}
+              {walletBalance > 0 && (
+                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-left">
+                  <div className="flex items-center cursor-pointer gap-3">
+                    <Checkbox
+                      id="use-wallet-cart"
+                      checked={useWallet}
+                      className="cursor-pointer"
+                      onCheckedChange={(checked) => setUseWallet(checked as boolean)}
+                    />
+                    <Label htmlFor="use-wallet-cart" className="flex flex-1 items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Wallet size={15} className="text-green-600" />
+                        <span className="text-sm font-semibold text-green-800">Use Wallet Credit</span>
+                      </div>
+                      <span className="text-sm font-semibold text-green-700">
+                        £{walletBalance.toFixed(2)}
+                      </span>
+                    </Label>
+                  </div>
+                  {useWallet && walletDiscount > 0 && (
+                    <p className="mt-2 pl-7 text-xs text-green-600">
+                      £{walletDiscount.toFixed(2)} will be deducted from your order
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Checkout Button */}
+              <Button
+                onClick={onNext}
+                variant="primary"
+                size="md"
+                rounded="full"
+                disabled={items.length === 0}
+                className="relative mt-2 h-12! w-full items-center text-left! shadow-lg text-[18px]"
+                icon={
+                  <Image
+                    src="/arrow-right.png"
+                    alt="arrow-right"
+                    width={24}
+                    height={24}
+                    className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full bg-white p-2 sm:h-10 sm:w-10"
+                  />
+                }
+              >
+                Continue to Checkout
+              </Button>
+            </div>
           </div>
-        </div>
 
       </div>
     </div>

@@ -81,22 +81,27 @@ export function WishlistButton({
       size={size}
       onClick={handleToggleWishlist}
       disabled={isDisabled}
-      className={cn(
-        "cursor-pointer transition-colors hover:bg-transparent",
-        isInList && "text-blue hover:text-blue",
-        className
-      )}
+      // className={cn(
+      //   "cursor-pointer transition-colors hover:bg-transparent !p-1.5",
+      //   isInList && "text-blue hover:text-blue",
+      //   className
+      // )}
+className={cn(
+  "cursor-pointer transition-colors hover:bg-white !p-0 !h-10 !w-10 flex items-center justify-center",
+  isInList && "text-blue hover:text-blue",
+  className
+)}
     >
       {isLoading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <Image
-          src={isInList ? "/fav-filled.png" : "/fav.png"}
-          alt={isInList ? "Remove from wishlist" : "Add to wishlist"}
-          width={40}
-          height={40}
-          className="h-6 w-6 transition-all md:h-10 md:w-10"
-        />
+<Image
+  src={isInList ? "/fav-filled.png" : "/fav.png"}
+  alt={isInList ? "Remove from wishlist" : "Add to wishlist"}
+  width={30}
+  height={30}
+  className="h-5 w-5 transition-all"
+/>
       )}
       {showText && (
         <span className="ml-2">
