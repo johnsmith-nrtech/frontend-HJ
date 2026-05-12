@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(newSession);
       setUser(response.user);
 
-      // ✅ Sync guest cart items to server immediately after login
+      // Sync guest cart items to server immediately after login
       await syncCartWithServerAfterLogin();
 
       // Refresh queries when auth state changes
