@@ -209,50 +209,6 @@ const handleAddToCart = async () => {
   //   </>
   // );
 
-  // const DesktopLayout = () => (
-  //   <div className="space-y-3">
-  //     {/* Product Name and Rating Row */}
-  //     <div className="flex items-center justify-between">
-  //       <Link href={`/products/${id}`}>
-  //         <h3 className="font-bebas text-dark-gray hover:text-blue line-clamp-1 text-xl uppercase transition-colors md:text-[34px]">
-  //           {name}
-  //         </h3>
-  //       </Link>
-  //       <div className="flex items-center gap-1">
-  //         <span className="text-sm text-gray-600">{rating}</span>
-  //         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-  //       </div>
-  //     </div>
-  //     {/* Render layout based on variant */}
-  //     {variant === "layout1" ? <Layout1Content /> : <Layout2Content />}
-  //     {/* Add to Cart Button */}
-  //     <Button
-  //       onClick={handleAddToCart}
-  //       disabled={isAddingToCart}
-  //       variant="primary"
-  //       size="sm"
-  //       rounded="full"
-  //       className="bg-blue font-open-sans hover:bg-blue/80 relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full px-4 font-medium text-white transition-colors ease-in-out disabled:cursor-not-allowed disabled:opacity-50"
-  //     >
-  //       <span>{isAddingToCart ? "Adding..." : "Add To Cart"}</span>
-
-  //       <div className="absolute top-1/2 right-2 -translate-y-1/2">
-  //         {isAddingToCart ? (
-  //           <Loader2 className="h-[30px] w-[30px] animate-spin rounded-full bg-white p-2 md:h-[40px] md:w-[40px]" />
-  //         ) : (
-  //           <Image
-  //             src="/arrow-right.png"
-  //             alt="arrow-right"
-  //             width={20}
-  //             height={20}
-  //             className="h-[30px] w-[30px] rounded-full bg-white object-contain p-2 md:h-[40px] md:w-[40px]"
-  //           />
-  //         )}
-  //       </div>
-  //     </Button>
-  //   </div>
-  // );
-
 
   const DesktopLayout = () => (
   <div className="space-y-3">
