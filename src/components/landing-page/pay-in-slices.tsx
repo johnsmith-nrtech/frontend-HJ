@@ -31,15 +31,21 @@ const PayInSlicesSection = () => {
           <div className="relative z-10 mt-12 flex h-full items-center justify-center md:mt-0">
             <div className="px-6 text-center md:px-12">
               <h1 className="text-3xl lg:text-[85px]">PAY IN SLICES</h1>
-              {/* <p className="font-open-sans text-gray mx-auto mb-6 max-w-xl text-sm md:text-base">
-                Don’t need to pay at once, it&apos;s according to your choice
-                and convenience. With our Pay in Slices option, bring home your
-                dream sofa today and spread the cost with ease.
-              </p> */}
-              <div className="text-bold">
+              {/* <div className="text-bold">
                 <p>0% APR</p>
                 <p>Get 3 Years Free Credit</p>
                 <p>10% Deposit Only. No Interest - At All 0% APR, After Approval</p>
+              </div> */}
+              <div className="mt-4 mb-6 space-y-1.5">
+                <p className="font-open-sans text-sm md:text-base font-semibold text-gray-700 tracking-widest uppercase">
+                  0% APR
+                </p>
+                <p className="font-open-sans text-base md:text-lg font-light text-gray-600">
+                  Get 3 Years Free Credit
+                </p>
+                <p className="font-open-sans text-xs md:text-sm text-gray-500 leading-relaxed">
+                  10% Deposit Only &nbsp;·&nbsp; No Interest &nbsp;·&nbsp; 0% APR, After Approval
+                </p>
               </div>
 
               <div className="flex w-full mt-6 justify-center px-4 sm:px-0">
