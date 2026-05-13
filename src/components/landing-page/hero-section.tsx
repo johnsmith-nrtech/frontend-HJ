@@ -23,7 +23,7 @@ const HeroSection = () => {
     { text: "10% Deposit Only", icon: "/sofa-icon.png" },
     { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
     { text: "10% Deposit Only", icon: "/sofa-icon.png" },
-];
+  ];
 
   // Handle custom order button click
   const handleCustomOrderClick = () => {

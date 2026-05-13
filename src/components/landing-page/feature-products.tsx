@@ -213,7 +213,7 @@ const FeaturedProducts = () => {
                 <div
                   key={product.id}
                   // Each card takes exactly 1/3 of container minus gaps
-                  className="w-[calc(33.333%-11px)] shrink-0 min-w-[260px]"
+                  className="w-[calc(33.333%-11px)] shrink-0 min-w-[260px] box-border"
                 >
                   <ProductCard
                     variant={index % 2 === 0 ? "layout1" : "layout2"}

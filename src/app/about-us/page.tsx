@@ -8,11 +8,10 @@ import Image from "next/image";
 export default function AboutUsPage() {
   // Marquee items data
   const marqueeItems = [
-    { text: "10-YEARS GUARANTEE", icon: "/sofa-icon.png" },
-    { text: "100-NIGHT TRIAL", icon: "/sofa-icon.png" },
-    { text: "EASY RETURN", icon: "/sofa-icon.png" },
-    { text: "FREE DELIVERY", icon: "/sofa-icon.png" },
-    { text: "10-YEARS GUARANTEE", icon: "/sofa-icon.png" },
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
   ];
 
   return (

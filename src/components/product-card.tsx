@@ -130,42 +130,44 @@ const handleAddToCart = async () => {
       <div className="text-xs text-gray-600">
         {showInstallments ? `Finance from £${((price * 0.90) / 36).toFixed(2)}/month over 36 months` : '\u00A0'}
       </div> */}
-      <div style={{ minHeight: '90px', display: 'flex', alignItems: 'flex-start' }}>
-  {/* Left: price */}
-  <div style={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
-    <span className="font-bold text-blue-700 text-[18px] mt-8">
-      £{formatPrice(price)}
-    </span>
-    {showInstallments && (
-      <span className="line-clamp-1 inline-block rounded-xl bg-[#3293a8] px-2 py-1 text-xs 
-      font-medium text-white w-fit mt-1">
-        {deliveryInfo}
-      </span>
-    )}
-  </div>
 
-  {/* Right side */}
-  {showInstallments ? (
-    <>
-      <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <span className="text-xs text-gray-400">36 monthly payments of</span>
-        <span className="text-[18px] font-bold text-blue-700">
-          £{((price * 0.90) / 36).toFixed(2)}
-        </span>
-        <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+
+      <div style={{ minHeight: '90px', display: 'flex', alignItems: 'flex-start' }}>
+        {/* Left: price */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <span className="font-bold text-blue-700 text-[18px] mt-8">
+            £{formatPrice(price)}
+          </span>
+          {showInstallments && (
+            <span className="line-clamp-1 inline-block rounded-xl bg-[#3293a8] px-2 py-1 text-xs 
+            font-medium text-white w-fit mt-1">
+              {deliveryInfo}
+            </span>
+          )}
+        </div>
+
+        {/* Right side */}
+        {showInstallments ? (
+          <>
+            <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <span className="text-xs text-gray-400">36 monthly payments of</span>
+              <span className="text-[18px] font-bold text-blue-700">
+                £{((price * 0.90) / 36).toFixed(2)}
+              </span>
+              <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+            </div>
+          </>
+          ) : (
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+            {!showInstallments && (
+              <span className="line-clamp-1 inline-block mt-8 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit">
+                {deliveryInfo}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-    </>
-  ) : (
-    <div style={{ width: '50%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-      {!showInstallments && (
-        <span className="line-clamp-1 inline-block mt-8 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit">
-          {deliveryInfo}
-        </span>
-      )}
-    </div>
-  )}
-</div>
 
       {/* 4. Add to Cart Button */}
       <button
@@ -241,82 +243,82 @@ const handleAddToCart = async () => {
 
 
   const DesktopLayout = () => (
-  <div className="space-y-3">
-    {/* Product Name and Rating Row */}
-    <div className="flex items-center justify-between">
-      <Link href={`/products/${id}`}>
-        <h3 className="font-bebas text-dark-gray hover:text-blue line-clamp-1 text-xl uppercase transition-colors md:text-[34px]">
-          {name}
-        </h3>
-      </Link>
-      <div className="flex items-center gap-1">
-        <span className="text-sm text-gray-600">{rating}</span>
-        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+    <div className="space-y-3">
+      {/* Product Name and Rating Row */}
+      <div className="flex items-center justify-between">
+        <Link href={`/products/${id}`}>
+          <h3 className="font-bebas text-dark-gray hover:text-blue line-clamp-1 text-xl uppercase transition-colors md:text-[34px]">
+            {name}
+          </h3>
+        </Link>
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-gray-600">{rating}</span>
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+        </div>
       </div>
-    </div>
 
-    <div style={{ minHeight: '70px', display: 'flex', alignItems: 'flex-start' }}>
-      {/* Left: price + delivery */}
-      <div style={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
-        <span className="font-bold text-blue-700 text-[20px] mt-4">
-          £{formatPrice(price)}
-        </span>
-        {showInstallments && (
-          <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-            {deliveryInfo}
+      <div style={{ minHeight: '70px', display: 'flex', alignItems: 'flex-start' }}>
+        {/* Left: price + delivery */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <span className="font-bold text-blue-700 text-[20px] mt-4">
+            £{formatPrice(price)}
           </span>
-        )}
-      </div>
+          {showInstallments && (
+            <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+              {deliveryInfo}
+            </span>
+          )}
+        </div>
 
-      {/* Right side: divider + installments OR delivery badge justify-between */}
-      {showInstallments ? (
-        <>
-          <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 10px' }} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <span className="text-xs text-gray-400">36 monthly payments of</span>
-              <span className="text-[20px] font-bold text-blue-700">
-                £{((price * 0.90) / 36).toFixed(2)}
-              </span>
-              <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
-          </div>
+        {/* Right side: divider + installments OR delivery badge justify-between */}
+        {showInstallments ? (
+          <>
+            <div style={{ width: '1px', borderLeft: '3px solid #2563eb', alignSelf: 'stretch', flexShrink: 0, margin: '0 10px' }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <span className="text-xs text-gray-400">36 monthly payments of</span>
+                <span className="text-[20px] font-bold text-blue-700">
+                  £{((price * 0.90) / 36).toFixed(2)}
+                </span>
+                <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+            </div>
         </>
         ) : (
-          <div style={{ width: '50%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
             {!showInstallments && (
               <span className="line-clamp-1 inline-block mt-5 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit">
                 {deliveryInfo}
               </span>
             )}
-        </div>
-      )}
-    </div>
-
-    {/* Add to Cart Button */}
-    <Button
-      onClick={handleAddToCart}
-      disabled={isAddingToCart}
-      variant="primary"
-      size="sm"
-      rounded="full"
-      className="bg-blue font-open-sans hover:bg-blue/80 relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full px-4 font-medium text-white transition-colors ease-in-out disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <span>{isAddingToCart ? "Adding..." : "Add To Cart"}</span>
-      <div className="absolute top-1/2 right-2 -translate-y-1/2">
-        {isAddingToCart ? (
-          <Loader2 className="h-[30px] w-[30px] animate-spin rounded-full bg-white p-2 md:h-[40px] md:w-[40px]" />
-        ) : (
-          <Image
-            src="/arrow-right.png"
-            alt="arrow-right"
-            width={20}
-            height={20}
-            className="h-[30px] w-[30px] rounded-full bg-white object-contain p-2 md:h-[40px] md:w-[40px]"
-          />
+          </div>
         )}
       </div>
-    </Button>
-  </div>
-);
+
+      {/* Add to Cart Button */}
+      <Button
+        onClick={handleAddToCart}
+        disabled={isAddingToCart}
+        variant="primary"
+        size="sm"
+        rounded="full"
+        className="bg-blue font-open-sans hover:bg-blue/80 relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full px-4 font-medium text-white transition-colors ease-in-out disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span>{isAddingToCart ? "Adding..." : "Add To Cart"}</span>
+        <div className="absolute top-1/2 right-2 -translate-y-1/2">
+          {isAddingToCart ? (
+            <Loader2 className="h-[30px] w-[30px] animate-spin rounded-full bg-white p-2 md:h-[40px] md:w-[40px]" />
+          ) : (
+            <Image
+              src="/arrow-right.png"
+              alt="arrow-right"
+              width={20}
+              height={20}
+              className="h-[30px] w-[30px] rounded-full bg-white object-contain p-2 md:h-[40px] md:w-[40px]"
+            />
+          )}
+        </div>
+      </Button>
+    </div>
+  );
 
 
   return (

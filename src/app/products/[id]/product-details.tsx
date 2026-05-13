@@ -216,12 +216,12 @@ interface DimensionItem {
 //  CONSTANTS
 // ─────────────────────────────────────────────────────────────────
 
-const marqueeItems = [
-  { text: "10-YEARS GUARANTEE", icon: "/sofa-icon.png" },
-  { text: "100-NIGHT TRAIL", icon: "/sofa-icon.png" },
-  { text: "EASY RETURN", icon: "/sofa-icon.png" },
-  { text: "FREE DELIVERY", icon: "/sofa-icon.png" },
-];
+  const marqueeItems = [
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
+    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+  ];
 
 const tabList = [
   { key: "images", label: "Images", section: "style" },
@@ -1244,14 +1244,14 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
 
             {/* Description */}
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <h3 className="text-[18px] text-[#222222] md:text-[22px] lg:text-[25px]">
                 DESCRIPTION:
               </h3>
               <p className="text-sm leading-relaxed text-[#999] md:text-base">
                 {product.description}
               </p>
-            </div>
+            </div> */}
 
             {/* Add to Cart — Desktop */}
             <div className="hidden space-y-4 md:block">
