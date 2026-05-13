@@ -16,7 +16,7 @@ const PayInSlicesSection = () => {
   ];
 
   const navigateToProductsPage = () => {
-    router.push("/klarna-terms");
+    router.push("/eligibility-criteria");
   };
   return (
     <section className="w-full py-4 md:py-8">

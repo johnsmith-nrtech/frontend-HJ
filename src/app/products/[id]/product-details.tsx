@@ -1246,7 +1246,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
                 <div>
                   <p
-                    onClick={() => router.push('/klarna-terms')}
+                    onClick={() => router.push('/eligibility-criteria')}
                     className="text-sm text-purple-800 md:text-base mt-6 font-bold underline flex items-center gap-2 cursor-pointer"
                   >
                     <WalletCards className="w-5 h-5" color="#7C079C" /> Check your financial eligibility
