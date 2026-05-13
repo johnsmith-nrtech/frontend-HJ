@@ -17,7 +17,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ChevronRight, Package, ChevronLeft } from "lucide-react";
+import { ChevronRight, Package, ChevronLeft, BadgePoundSterling, Calculator } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
@@ -1223,14 +1223,14 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
                 style={{ backgroundColor: '#e5e7eb' }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[16px] md:text-[18px] lg:text-md">
-                    Finance from £{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month over 36 months
+                  <span className="text-[16px] md:text-[18px] lg:text-md flex items-center gap-3">
+                    <BadgePoundSterling className="w-5 h-5" color="#F5B727" /> Finance from £{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month over 36 months
                   </span>
                 </div>
 
                 <div>
-                  <button className="flex items-center gap-1 text-sm md:text-base">
-                    Try our{" "}
+                  <button className="flex items-center gap-3 text-sm md:text-base">
+                    <Calculator className="w-5 h-5" color="#7C079C" /> Try our{" "}
                     <span
                       onClick={() => setShowFinanceModal(true)}
                       className="text-purple-800 cursor-pointer underline"
