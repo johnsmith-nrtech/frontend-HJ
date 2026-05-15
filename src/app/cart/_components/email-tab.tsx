@@ -282,39 +282,39 @@ export const EmailTab = ({
                 </div>
               )}
 
-              {/* Price Summary */}
+
               <div className="mt-4 space-y-2">
                 <SummaryLineItem label="Products Total" value={subtotal} />
-
                 {assemblyTotal > 0 && (
                   <SummaryLineItem value={assemblyTotal} label="Assembly Charges" />
                 )}
-
                 {appliedCoupon && discountAmount > 0 && (
-                  <SummaryLineItem
-                    label={`Discount (${appliedCoupon.code})`}
-                    value={-discountAmount}
-                  />
+                  <SummaryLineItem label={`Discount (${appliedCoupon.code})`} value={-discountAmount} />
                 )}
-
                 {useWallet && walletDiscount > 0 && (
                   <SummaryLineItem label="Wallet Credit" value={-walletDiscount} />
                 )}
-                
-                <div className="flex flex-col items-center border-t border-gray-300 pt-2 text-lg font-bold sm:flex-row sm:justify-between">
-                  <span className="flex flex-col">
-                    <span>Total</span>
-                    {items.every((item) => item.show_installments !== false) && (
-                      <span className="text-lg font-bold">
-                        (£{(parseFloat(((finalTotal * 0.90) / 36).toFixed(10))).toFixed(2)}/month - 10% deposit)
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-extrabold text-2xl sm:text-lg sm:font-bold">
-                    £{finalTotal.toFixed(2)}
-                  </span>
+
+                {/* Total block — matches step 1 style */}
+                <div className="border-t border-gray-300 pt-4 text-center">
+                  <div className="text-lg text-gray-500">Total Price</div>
+                  <div className="text-4xl font-bold text-gray-900">£{finalTotal.toFixed(2)}</div>
+                  {items.every((item) => item.show_installments !== false) && (
+                    <>
+                      <div className="mt-2 text-sm text-gray-500">or</div>
+                      <div className="mt-1 text-3xl font-bold text-gray-800">
+                        £{((finalTotal * 0.90) / 36).toFixed(2)}{" "}
+                        <span className="text-base font-normal text-gray-500">a month</span>
+                      </div>
+                      <div className="mt-1 px-8 text-xs text-gray-400">
+                        Based on 36 months free credit with 10% deposit required. 0% APR.
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
+
+
             </div>
           </div>
         </div>
