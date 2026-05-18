@@ -1480,7 +1480,7 @@ export default function AddProductPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Payment Options</CardTitle>
                 </CardHeader>
@@ -1554,7 +1554,7 @@ export default function AddProductPage() {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+              </Card> */}
             </TabsContent>
 
             {/* Images Tab */}

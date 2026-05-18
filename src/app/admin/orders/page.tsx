@@ -1361,25 +1361,21 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
                             <div className="block sm:hidden">
                               <div className="divide-y divide-gray-200">
                                 {selectedOrder.items.map((item) => {
-                                  // const discountPct = item.variant?.discount_percentage ?? 0;
-                                  // const discountedPrice = item.unit_price;
-                                  // const originalPrice = discountPct > 0
-                                  //   ? Math.round((discountedPrice / (1 - discountPct / 100)) * 100) / 100
-                                  //   : discountedPrice;
-                                  // const hasItemDiscount = discountPct > 0;
                                   const originalPrice = item.original_price ?? item.unit_price;
-const discountedPrice = item.unit_price;
-const hasItemDiscount = originalPrice > discountedPrice;
+                                  const discountedPrice = item.unit_price;
+                                  const hasItemDiscount = originalPrice > discountedPrice;
                                   return (
                                     <div key={item.id} className="p-4">
                                       <div className="flex items-start space-x-3">
                                         {item.image_url && (
-                                          <Image
-                                            src={item.image_url}
-                                            alt={item.variant?.product?.name || "Product"}
-                                            fill
-                                            className="h-16 w-16 flex-shrink-0 rounded-lg border object-cover"
-                                          />
+                                          <div className="relative h-16 w-16 flex-shrink-0">
+                                            <Image
+                                              src={item.image_url}
+                                              alt={item.variant?.product?.name || "Product"}
+                                              fill
+                                              className="rounded-lg border object-cover"
+                                            />
+                                          </div>
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-start justify-between">
@@ -1452,26 +1448,22 @@ const hasItemDiscount = originalPrice > discountedPrice;
                                 </TableHeader>
                                 <TableBody>
                                   {selectedOrder.items.map((item) => {
-                                    // const discountPct = item.variant?.discount_percentage ?? 0;
-                                    // const discountedPrice = item.unit_price;
-                                    // const originalPrice = discountPct > 0
-                                    //   ? Math.round((discountedPrice / (1 - discountPct / 100)) * 100) / 100
-                                    //   : discountedPrice;
-                                    // const hasItemDiscount = discountPct > 0;
                                     const originalPrice = item.original_price ?? item.unit_price;
-const discountedPrice = item.unit_price;
-const hasItemDiscount = originalPrice > discountedPrice;
+                                    const discountedPrice = item.unit_price;
+                                    const hasItemDiscount = originalPrice > discountedPrice;
                                     return (
                                       <TableRow key={item.id}>
                                         <TableCell>
                                           <div className="flex items-center space-x-4">
                                             {item.image_url && (
-                                              <Image
-                                                fill
-                                                src={item.image_url}
-                                                alt={item.variant?.product?.name || "Product"}
-                                                className="h-16 w-16 rounded-lg border object-cover"
-                                              />
+                                              <div className="relative h-16 w-16 flex-shrink-0">
+                                                <Image
+                                                  src={item.image_url}
+                                                  alt={item.variant?.product?.name || "Product"}
+                                                  fill
+                                                  className="rounded-lg border object-cover"
+                                                />
+                                              </div>
                                             )}
                                             <div className="flex-1">
                                               <p className="font-medium text-gray-900">
