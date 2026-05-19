@@ -860,7 +860,7 @@ export function Navbar() {
                       </Link>
                       <Link
                         href="/trackorder"
-                        className="font-open-sans text-gray hover:text-navy transition-colors hover:text-[#222222]"
+                        className="font-open-sans hover:text-navy transition-colors hover:text-[#222222]"
                       >
                         Track Order
                       </Link>
