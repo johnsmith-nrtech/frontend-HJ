@@ -179,32 +179,6 @@ function parseURLParameters(): { params: PaymentParams; errors: string[] } {
   return { params, errors };
 }
 
-// Determine if payment was successful based on parameters
-// function isPaymentSuccessful(params: PaymentParams): boolean {
-//   // Check various success indicators
-//   if (params.status) {
-//     const status = params.status.toUpperCase();
-//     if (["APPROVED", "SUCCESS", "COMPLETED"].includes(status)) {
-//       return true;
-//     }
-//     if (["DECLINED", "FAILED", "CANCELLED", "ERROR"].includes(status)) {
-//       return false;
-//     }
-//   }
-
-//   // Check approval code (usually starts with 'Y' for approved)
-//   if (params.approval_code) {
-//     return params.approval_code.toUpperCase().startsWith("Y");
-//   }
-
-//   // If we have an order ID but no explicit failure, assume success
-//   if (params.oid && !params.fail_reason && !params.processor_response_code) {
-//     return true;
-//   }
-
-//   // Default to false if we can't determine
-//   return false;
-// }
 
 function isPaymentSuccessful(params: PaymentParams): boolean {
   // Backend redirects here with orderId = success
@@ -237,175 +211,100 @@ export default function PaymentSuccessPage() {
       return;
     }
 
+
     const handlePaymentSuccess = async () => {
-      // Prevent multiple executions
-      if (hasProcessedRef.current) {
-        return;
-      }
+      if (hasProcessedRef.current) return;
       hasProcessedRef.current = true;
 
       try {
-        // Get current cart state at the time of execution
-        const currentItems = useCartStore.getState().items;
-        const currentGetCartTotal = useCartStore.getState().getCartTotal;
         const currentClearCart = useCartStore.getState().clearCart;
-
-        // Parse URL parameters with enhanced error handling
         const { params, errors: parseErrors } = parseURLParameters();
 
-        // Store debug info for potential support needs
-        setDebugInfo({
-          url: window.location.href,
-          params,
-          parseErrors,
-          timestamp: new Date().toISOString(),
-        });
+      setDebugInfo({
+        url: window.location.href,
+        params,
+        parseErrors,
+        timestamp: new Date().toISOString(),
+      });
 
-        // Check if payment was successful
-        const paymentSuccess = isPaymentSuccessful(params);
+      const paymentSuccess = isPaymentSuccessful(params);
 
-        // Handle payment failure
-        if (Object.keys(params).length > 0 && !paymentSuccess) {
-          const failureReason =
-            params.fail_reason ||
-            params.processor_response_code ||
-            `Payment ${params.status || "failed"}`;
+      if (Object.keys(params).length > 0 && !paymentSuccess) {
+        setError(`Payment failed`);
+        setLoading(false);
+        return;
+      }
 
-          console.error("❌ Payment failed:", failureReason);
-          setError(`Payment failed: ${failureReason}`);
-          setLoading(false);
-          return;
+      let currentOrderData: OrderData | null = null;
+    
+      // ADD THIS BLOCK HERE — fetch order from backend
+      if (params.oid) {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/orders/${params.oid}`
+          );
+          if (response.ok) {
+            const order = await response.json();
+            currentOrderData = {
+              orderCode: `#${order.tracking_id}`,
+              date: new Date(order.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              total: order.total_amount?.toFixed(2),
+              paymentMethod: "Credit Card",
+              items: order.items?.map((item: any) => ({
+                id: item.variant_id,
+                name: item.variant?.product?.name || "Product",
+                price: item.unit_price,
+                quantity: item.quantity,
+                image: item.image_url,
+              })) || [],
+            };
+          }
+        } catch {
+          // fallback to cart below
         }
+      }
 
-        // Try to get order data from multiple sources
-        let currentOrderData: OrderData | null = null;
-
-        // 1. If we have cart items, create order data from current cart (prioritize current cart)
+      // fallback to cart if API fetch failed
+      if (!currentOrderData) {
+        const currentItems = useCartStore.getState().items;
+        const currentGetCartTotal = useCartStore.getState().getCartTotal;
         if (currentItems.length > 0) {
-          const orderCode = params.oid
-            ? `#${params.oid}`
-            : `#${Date.now().toString().slice(-8).toUpperCase()}`;
-
           currentOrderData = {
-            orderCode,
+            orderCode: params.oid ? `#${params.oid}` : `#${Date.now().toString().slice(-8).toUpperCase()}`,
             date: new Date().toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
+              year: "numeric", month: "long", day: "numeric",
             }),
             total: currentGetCartTotal().toFixed(2),
             paymentMethod: "Credit Card",
             items: currentItems,
           };
-
-          // Store order data for future reference
-          try {
-            if (typeof window !== "undefined" && window.localStorage) {
-              localStorage.setItem(
-                "lastOrderData",
-                JSON.stringify(currentOrderData)
-              );
-              console.log("💾 Stored order data for future reference");
-            }
-          } catch (storageError) {
-            console.warn("⚠️ Could not store order data:", storageError);
-          }
         }
-        // 2. Fallback: try to get stored order data from localStorage only if no current cart
-        else {
-          try {
-            if (typeof window !== "undefined" && window.localStorage) {
-              const storedOrderData = localStorage.getItem("lastOrderData");
-              if (storedOrderData) {
-                currentOrderData = JSON.parse(storedOrderData);
-                console.log(
-                  "📦 Found stored order data (fallback):",
-                  currentOrderData
-                );
-              }
-            }
-          } catch (storageError) {
-            console.warn(
-              "⚠️ Could not retrieve stored order data:",
-              storageError
-            );
-          }
-        }
-
-        // 3. If still no order data but we have payment params, create minimal order
-        if (!currentOrderData && Object.keys(params).length > 0) {
-          const orderCode = params.oid
-            ? `#${params.oid}`
-            : `#${params.refnumber || Date.now().toString().slice(-8).toUpperCase()}`;
-
-          currentOrderData = {
-            orderCode,
-            date: new Date().toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-            total: "0.00", // Amount not available from payment params
-            paymentMethod: "Credit Card",
-            items: [], // No items available
-          };
-        }
-
-        // Set order data if we have it
-        if (currentOrderData) {
-          setOrderData(currentOrderData);
-          console.log("✅ Order data set:", currentOrderData);
-        } else {
-          console.warn("⚠️ No order data available");
-
-          // Different error messages based on context
-          if (parseErrors.length > 0) {
-            setError(
-              "Unable to process payment confirmation due to URL parsing errors. Please contact support."
-            );
-          } else if (Object.keys(params).length === 0) {
-            setError(
-              "No payment information found. If you completed a payment, please contact support with your confirmation details."
-            );
-          } else {
-            setError(
-              "Order information is not available. Your payment may have been processed. Please contact support."
-            );
-          }
-        }
-
-        // Clean up after successful payment processing
-        try {
-          clearStoredOrderId();
-          console.log("🧹 Stored order ID cleared");
-        } catch (clearError) {
-          console.error("❌ Error clearing stored order ID:", clearError);
-        }
-
-        // Clear the cart only if we have confirmation this was a successful payment
-        if (currentOrderData && (paymentSuccess || params.oid)) {
-          try {
-            currentClearCart();
-            console.log("🛒 Cart cleared successfully after payment");
-          } catch (cartError) {
-            console.error("❌ Error clearing cart:", cartError);
-          }
-        }
-
-        setLoading(false);
-        console.log("🎯 Payment processing completed");
-      } catch (err) {
-        console.error("❌ Error processing payment success:", err);
-        setError(
-          "Failed to process payment confirmation. Please contact support if you completed a payment."
-        );
-        setLoading(false);
       }
-    };
+
+      if (currentOrderData) {
+        setOrderData(currentOrderData);
+      }
+
+      clearStoredOrderId();
+    
+      // clear cart
+      try {
+        useCartStore.getState().clearCart();
+      } catch {}
+
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to process payment confirmation.");
+      setLoading(false);
+    }
+  };
 
     // Only run if we're in the browser
     if (typeof window !== "undefined") {
-      // Small delay to ensure page is fully loaded
       const timer = setTimeout(() => {
         handlePaymentSuccess();
       }, 100);
@@ -514,8 +413,12 @@ export default function PaymentSuccessPage() {
 
           {/* Product Images - Only show if we have items */}
           {orderData.items.length > 0 && (
-            <div className="mb-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
-              {orderData.items.map((item, index) => (
+            <div className="mb-12 flex flex-col items-center justify-center gap-6 sm:flex-row flex-wrap">
+              {orderData.items
+              .filter((item, index, self) =>
+                index === self.findIndex((i) => i.id === item.id))
+              .slice(0, 4)
+              .map((item, index) => (
                 <div key={`${item.id}-${index}`} className="relative">
                   <div className="h-32 w-40 rounded-xl bg-white p-2 shadow-sm">
                     <SafeImage
