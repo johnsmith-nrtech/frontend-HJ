@@ -82,7 +82,7 @@ export interface Product {
   variants?: ProductVariant[];
   category?: Category;
   show_installments?: boolean;
-  enable_loxa?: boolean;
+  show_loxa?: boolean;
 }
 
 export interface ProductVariant {
@@ -216,7 +216,7 @@ export interface ProductCreateInput {
   brand?: string;
   featured?: boolean;
   show_installments?: boolean;
-  enable_loxa?: boolean;
+  show_loxa?: boolean;
 }
 
 export interface ProductUpdateInput {
@@ -226,7 +226,7 @@ export interface ProductUpdateInput {
   base_price?: number;
   discount_offer?: number;
   show_installments?: boolean;
-  enable_loxa?: boolean;
+  show_loxa?: boolean;
 }
 
 // Featured Product interfaces for the optimized API response

@@ -36,7 +36,7 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
         {/* Info */}
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-medium text-gray-900 uppercase md:text-[27px]">
-            {item.insurance_name || item.name}
+            {item.name}
           </h3>
           <p className="mt-1 text-xs text-gray-500">
             Protection Plan
@@ -190,7 +190,7 @@ export function OrderItem2({ item }: { item: LocalCartItem }) {
           <div className="flex-1 space-y-1.5">
             <div className="flex justify-between">
               <h3 className="text-sm font-medium uppercase">
-                {item.insurance_name || item.name}
+                {item.name}
               </h3>
               <button
                 onClick={() => removeItem(item.id)}

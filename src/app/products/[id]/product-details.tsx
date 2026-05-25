@@ -584,24 +584,24 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
         },
       });
       if (selectedInsurance && selectedInsurance.price > 0) {
-  addItemLocally({
-    id: `loxa-${currentVariant.id}`,
-    variant_id: `loxa-${currentVariant.id}`,
-    name: "Protection Extension",
-    price: selectedInsurance.price,
-    quantity: 1,
-    assembly_required: false,
-    assemble_charges: 0,
-    show_installments: false,
-    'loxa-insurance-code': selectedInsurance.code,
-    'loxa-inclusive-code': selectedInsurance.inclusiveCode,
-    insurance_price: selectedInsurance.price,
-    insurance_name: "Protection Extension",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-  calculateTotals();
-}
+        addItemLocally({
+          id: `loxa-${currentVariant.id}`,
+          variant_id: `loxa-${currentVariant.id}`,
+          name: `Protection Extension for ${product.name}`,
+          price: selectedInsurance.price,
+          quantity: 1,
+          assembly_required: false,
+          assemble_charges: 0,
+          show_installments: false,
+          'loxa-insurance-code': selectedInsurance.code,
+          'loxa-inclusive-code': selectedInsurance.inclusiveCode,
+          insurance_price: selectedInsurance.price,
+          insurance_name: "Protection Extension",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        calculateTotals();
+      }
     }
   };
 
@@ -1289,7 +1289,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               productTitle={product.name}
               onInsuranceChange={setSelectedInsurance}
             /> */}
-            {(product.enable_loxa ?? true) && (
+            {(product.show_loxa ?? true) && (
               <LoxaInsuranceWidget
                 sku={currentVariant?.sku || ""}
                 price={currentDiscountedPrice}

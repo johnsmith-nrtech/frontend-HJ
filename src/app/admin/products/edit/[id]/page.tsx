@@ -63,7 +63,7 @@ const basicInfoSchema = z.object({
     })
     .optional(),
   show_installments: z.boolean().optional(),
-  enable_loxa: z.boolean().optional(),
+  show_loxa: z.boolean().optional(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -166,7 +166,7 @@ export default function EditProductPage() {
         free_shipping_threshold: 0,
       },
       show_installments: true,
-      enable_loxa: false,
+      show_loxa: true,
     },
   });
 
@@ -192,7 +192,7 @@ export default function EditProductPage() {
           free_shipping_threshold: 0,
         },
         show_installments: product.show_installments ?? true,
-        enable_loxa: product.enable_loxa ?? false,
+        show_loxa: product.show_loxa ?? true,
       });
     }
   }, [product, form]);
@@ -214,7 +214,7 @@ export default function EditProductPage() {
         delivery_info: values.delivery_info,
         related_product_ids: relatedProductIds,
         show_installments: values.show_installments ?? true,
-        enable_loxa: values.enable_loxa ?? false,
+        show_loxa: values.show_loxa ?? true,
       };
 
       // Use the mutation
@@ -418,7 +418,7 @@ export default function EditProductPage() {
 
                     <FormField
                       control={form.control}
-                      name="enable_loxa"
+                      name="show_loxa"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
                           <FormControl>

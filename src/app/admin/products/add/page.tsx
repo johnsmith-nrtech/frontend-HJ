@@ -126,7 +126,7 @@ default_back_support_info: z.string().optional(),
 default_back_cushion_info: z.string().optional(),
 default_feet_info: z.string().optional(),
 show_installments: z.boolean().optional(),
-enable_loxa: z.boolean().optional(),
+show_loxa: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -205,7 +205,7 @@ export default function AddProductPage() {
       default_back_cushion_info: "",
       default_feet_info: "",
       show_installments: true,
-      enable_loxa: false,
+      show_loxa: true,
     },
   });
 
@@ -349,19 +349,19 @@ export default function AddProductPage() {
         featured: Boolean(values.featured),
         related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
         warranty_info: values.warranty_info || undefined,
-        material_info: {
-        care_instructions: values.default_care_instructions || undefined,
-        scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
-        scatter_cushion_filling: values.default_scatter_cushion_filling || undefined,
-        frame_info: values.default_frame_info || undefined,
-        seat_base_info: values.default_seat_base_info || undefined,
-        seat_cushion_info: values.default_seat_cushion_info || undefined,
-        back_support_info: values.default_back_support_info || undefined,
-        back_cushion_info: values.default_back_cushion_info || undefined,
-        feet_info: values.default_feet_info || undefined,
         show_installments: values.show_installments ?? true,
-        enable_loxa: values.enable_loxa ?? false,
-      },
+        show_loxa: values.show_loxa ?? true,
+        material_info: {
+          care_instructions: values.default_care_instructions || undefined,
+          scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
+          scatter_cushion_filling: values.default_scatter_cushion_filling || undefined,
+          frame_info: values.default_frame_info || undefined,
+          seat_base_info: values.default_seat_base_info || undefined,
+          seat_cushion_info: values.default_seat_cushion_info || undefined,
+          back_support_info: values.default_back_support_info || undefined,
+          back_cushion_info: values.default_back_cushion_info || undefined,
+          feet_info: values.default_feet_info || undefined,
+        },
       };
 
       // Create the product
@@ -647,7 +647,7 @@ export default function AddProductPage() {
 
                     <FormField
                       control={form.control}
-                      name="enable_loxa"
+                      name="show_loxa"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
                           <FormControl>
