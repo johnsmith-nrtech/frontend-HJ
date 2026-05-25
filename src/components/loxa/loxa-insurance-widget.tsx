@@ -358,7 +358,6 @@ if (
               See details
             </button>
           </div>
-          <Shield className="h-5 w-5 text-green-500" />
         </div>
       </div>
 
@@ -390,12 +389,11 @@ if (
               <button
                 type="button"
                 onClick={() => {
-                  // Toggle: if already added → go back to base, else select extension
                   setSelectedInsurance(isAdded ? inclusiveBase : ext);
                   setIsOptedOut(false);
                 }}
                 className={cn(
-                  "ml-4 flex-shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
+                  "ml-4 shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
                   isAdded
                     ? "border-blue-500 bg-blue-500 text-white"
                     : "border-gray-300 bg-white text-gray-700 hover:border-blue-400"
