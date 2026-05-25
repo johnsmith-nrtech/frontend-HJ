@@ -415,7 +415,9 @@ const handlePayInInstallments = () => {
                 <div className="border-t border-gray-300 pt-4 text-center">
                   <div className="text-lg mb-4 text-gray-500">Total Price</div>
                   <div className="text-4xl font-bold text-gray-900">£{grandTotal.toFixed(2)}</div>
-                  {items.every((item) => item.show_installments !== false) && (
+                  {items
+                    .filter((item) => !item['loxa-insurance-code'] && !item.insurance_price)
+                    .some((item) => item.show_installments === true) && (
                     <>
                       <div className="mt-2 text-sm text-gray-500">or</div>
                       <div className="mt-1 text-3xl font-bold text-gray-800">

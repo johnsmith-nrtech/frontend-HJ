@@ -25,6 +25,43 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
     isItemLoading,
   } = useCart();
 
+  if (item['loxa-insurance-code'] || item.insurance_price) {
+    return (
+      <div className="relative flex flex-wrap items-center gap-4 border-b border-gray-100 py-4 sm:flex-nowrap">
+        {/* Loxa Logo */}
+        <div className="h-20 w-20 shrink-0 rounded bg-black flex items-center justify-center md:h-36 md:w-36">
+          <span className="text-white font-bold text-xl">LOXA</span>
+        </div>
+
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-medium text-gray-900 uppercase md:text-[27px]">
+            {item.insurance_name || item.name}
+          </h3>
+          <p className="mt-1 text-xs text-gray-500">
+            Protection Plan
+          </p>
+          <button
+            onClick={() => removeItem(item.id)}
+            disabled={isItemLoading(item.id)}
+            className="mt-2 flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 disabled:opacity-50"
+          >
+            <XIcon className="h-5 w-5" /> Remove
+          </button>
+        </div>
+
+        {/* Price — no quantity controls */}
+        <div className="mt-4 flex w-full items-center justify-end sm:mt-0 sm:w-auto">
+          <div className="min-w-20 text-right">
+            <span className="text-lg font-medium">
+              £{item.insurance_price?.toFixed(2) || item.price.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleQuantityChange = (id: string, qty: number) =>
     qty < 1 ? removeItem(id) : updateQuantity(id, qty);
 
@@ -142,6 +179,38 @@ export function OrderItem1({ item }: { item: LocalCartItem }) {
 export function OrderItem2({ item }: { item: LocalCartItem }) {
   const { updateQuantity, updateAssemblyRequired, removeItem, isItemLoading } =
     useCart();
+
+  if (item['loxa-insurance-code'] || item.insurance_price) {
+    return (
+      <div className="rounded-md border bg-white/30 p-3">
+        <div className="flex gap-3">
+          <div className="h-16 w-16 rounded-md bg-black flex items-center justify-center">
+            <span className="text-white font-bold text-sm">LOXA</span>
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <div className="flex justify-between">
+              <h3 className="text-sm font-medium uppercase">
+                {item.insurance_name || item.name}
+              </h3>
+              <button
+                onClick={() => removeItem(item.id)}
+                disabled={isItemLoading(item.id)}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">Protection Plan</p>
+            <div className="flex justify-end pt-1">
+              <p className="text-sm font-semibold">
+                £{item.insurance_price?.toFixed(2) || item.price.toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }  
 
   const handleQuantityChange = (id: string, qty: number) =>
     qty < 1 ? removeItem(id) : updateQuantity(id, qty);

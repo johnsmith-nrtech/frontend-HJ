@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 // import "@/components/ui/modern-image-gallery.css";
@@ -325,6 +326,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const [showMobileOptionsSheet, setShowMobileOptionsSheet] = useState(false);
   const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [showVariantError, setShowVariantError] = useState(false);
+  const { addItemLocally, calculateTotals } = useCartStore.getState();
   const [selectedInsurance, setSelectedInsurance] = useState<{
     code: string;
     inclusiveCode?: string;
@@ -581,6 +583,25 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           sku: currentVariant.sku,
         },
       });
+      if (selectedInsurance && selectedInsurance.price > 0) {
+  addItemLocally({
+    id: `loxa-${currentVariant.id}`,
+    variant_id: `loxa-${currentVariant.id}`,
+    name: "Protection Extension",
+    price: selectedInsurance.price,
+    quantity: 1,
+    assembly_required: false,
+    assemble_charges: 0,
+    show_installments: false,
+    'loxa-insurance-code': selectedInsurance.code,
+    'loxa-inclusive-code': selectedInsurance.inclusiveCode,
+    insurance_price: selectedInsurance.price,
+    insurance_name: "Protection Extension",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  calculateTotals();
+}
     }
   };
 

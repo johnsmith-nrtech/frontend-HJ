@@ -36,76 +36,122 @@ export function LoxaInsuranceWidget({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!sku || !price || !productTitle) {
-      setIsLoading(false);
-      return;
-    }
+  if (!sku || !price || !productTitle) {
+    setIsLoading(false);
+    return;
+  }
 
-    setIsLoading(true);
-    LoxaApi.getInsuranceInfo(sku, price, productTitle)
-      .then((data: LoxaInsuranceResponse | null) => {
-        if (data && data.insurable && data.active) {
-          setInsuranceData(data);
+  setIsLoading(true);
+  LoxaApi.getInsuranceInfo(sku, price, productTitle)
+    .then((data: LoxaInsuranceResponse | null) => {
+      if (data && data.insurable && data.active) {
+        setInsuranceData(data);
 
-          if (
-            data.integration_type === "inclusive" ||
-            data.integration_type === "hybrid_extension" ||
-            data.integration_type === "hybrid_warranty"
-          ) {
-            const base = data.insurances.find(
-              (i: LoxaInsurance) => i.is_base_insurance_product,
-            );
-            if (base) setSelectedInsurance(base);
-          }
+        if (data.integration_type === "inclusive") {
+          // Inclusive: auto-select the free base plan
+          const base = data.insurances.find(
+            (i: LoxaInsurance) => i.is_base_insurance_product,
+          );
+          if (base) setSelectedInsurance(base);
+        } else if (
+          data.integration_type === "hybrid_extension" ||
+          data.integration_type === "hybrid_warranty"
+        ) {
+          // Hybrid: select base (free) only — extension starts UN-added
+          const base = data.insurances.find(
+            (i: LoxaInsurance) => i.is_base_insurance_product,
+          );
+          if (base) setSelectedInsurance(base);
         }
-      })
-      .finally(() => setIsLoading(false));
-  }, [sku, price, productTitle]);
+        // addon: nothing auto-selected, checkbox starts unchecked
+      }
+    })
+    .finally(() => setIsLoading(false));
+}, [sku, price, productTitle]);
 
-  useEffect(() => {
-    if (!insuranceData) return;
 
-    if (isOptedOut || !selectedInsurance) {
-      onInsuranceChange(null);
-      return;
-    }
+  // ── EFFECT 1: Fetch insurance data & set default selection ──────
+useEffect(() => {
+  if (!sku || !price || !productTitle) {
+    setIsLoading(false);
+    return;
+  }
 
-    const integrationType = insuranceData.integration_type;
+  setIsLoading(true);
+  LoxaApi.getInsuranceInfo(sku, price, productTitle)
+    .then((data: LoxaInsuranceResponse | null) => {
+      if (data && data.insurable && data.active) {
+        setInsuranceData(data);
 
-    if (integrationType === "addon") {
+        if (data.integration_type === "inclusive") {
+          // Inclusive: auto-select the free base plan
+          const base = data.insurances.find(
+            (i: LoxaInsurance) => i.is_base_insurance_product,
+          );
+          if (base) setSelectedInsurance(base);
+        } else if (
+          data.integration_type === "hybrid_extension" ||
+          data.integration_type === "hybrid_warranty"
+        ) {
+          // Hybrid: select base (free) only — extension starts UN-added
+          const base = data.insurances.find(
+            (i: LoxaInsurance) => i.is_base_insurance_product,
+          );
+          if (base) setSelectedInsurance(base);
+        }
+        // addon: nothing auto-selected, checkbox starts unchecked
+      }
+    })
+    .finally(() => setIsLoading(false));
+}, [sku, price, productTitle]);
+
+
+// ── EFFECT 2: Notify parent when selection changes ──────────────
+useEffect(() => {
+  if (!insuranceData) return;
+
+  if (isOptedOut || !selectedInsurance) {
+    onInsuranceChange(null);
+    return;
+  }
+
+  const integrationType = insuranceData.integration_type;
+
+  if (integrationType === "addon") {
+    onInsuranceChange({
+      code: selectedInsurance.code,
+      price: selectedInsurance.insurance_price,
+    });
+  } else if (integrationType === "inclusive") {
+    onInsuranceChange({
+      code: selectedInsurance.code,
+      inclusiveCode: selectedInsurance.code,
+      price: 0,
+    });
+  } else if (
+    integrationType === "hybrid_extension" ||
+    integrationType === "hybrid_warranty"
+  ) {
+    const base = insuranceData.insurances.find(
+      (i: LoxaInsurance) => i.is_base_insurance_product,
+    );
+
+    if (selectedInsurance.extension && base) {
+      // Extension is added → charge for it
       onInsuranceChange({
         code: selectedInsurance.code,
+        inclusiveCode: base.code,
         price: selectedInsurance.insurance_price,
       });
-    } else if (integrationType === "inclusive") {
+    } else if (base && selectedInsurance.is_base_insurance_product) {
       onInsuranceChange({
-        code: selectedInsurance.code,
-        inclusiveCode: selectedInsurance.code,
+        code: "",
+        inclusiveCode: base.code,
         price: 0,
       });
-    } else if (
-      integrationType === "hybrid_extension" ||
-      integrationType === "hybrid_warranty"
-    ) {
-      const base = insuranceData.insurances.find(
-        (i: LoxaInsurance) => i.is_base_insurance_product,
-      );
-
-      if (selectedInsurance.extension && base) {
-        onInsuranceChange({
-          code: selectedInsurance.code,
-          inclusiveCode: base.code,
-          price: selectedInsurance.insurance_price,
-        });
-      } else if (base && selectedInsurance.is_base_insurance_product) {
-        onInsuranceChange({
-          code: "",
-          inclusiveCode: base.code,
-          price: 0,
-        });
-      }
     }
-  }, [selectedInsurance, isOptedOut, insuranceData, onInsuranceChange]);
+  }
+}, [selectedInsurance, isOptedOut, insuranceData, onInsuranceChange]);
 
   if (isLoading || !insuranceData) return null;
 
@@ -140,19 +186,22 @@ export function LoxaInsuranceWidget({
               : "border-gray-200 bg-gray-50 hover:border-gray-300",
           )}
           onClick={() => {
-            setSelectedInsurance(
-              selectedInsurance?.code === defaultAddon.code ? null : defaultAddon,
-            );
+            const anySelected = addons.some((a) => a.code === selectedInsurance?.code);
+            setSelectedInsurance(anySelected ? null : defaultAddon);
           }}
         >
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
               className="mt-1 h-4 w-4 cursor-pointer accent-blue-600"
-              checked={selectedInsurance?.code === defaultAddon.code}
+              checked={addons.some((a) => a.code === selectedInsurance?.code)}
               onChange={(e) => {
-                setSelectedInsurance(e.target.checked ? defaultAddon : null);
-              }}
+                if (!e.target.checked) {
+                setSelectedInsurance(null);
+              } else {
+                setSelectedInsurance(defaultAddon);
+              }
+            }}
               onClick={(e) => e.stopPropagation()}
             />
             <div className="flex-1">
@@ -292,117 +341,94 @@ export function LoxaInsuranceWidget({
   }
 
   // ── HYBRID ────────────────────────────────────────────────────
-  if (
-    (integrationType === "hybrid_extension" ||
-      integrationType === "hybrid_warranty") &&
-    inclusiveBase
-  ) {
-    return (
-      <div className="mt-4 space-y-2">
-        {!isOptedOut ? (
-          <div className="rounded-xl border-2 border-green-400 bg-green-50 p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="mt-0.5 h-4 w-4 text-green-600" />
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-gray-800">
-                  {inclusiveBase.insurance_term}-Year Protection Included Free
-                </span>
+if (
+  (integrationType === "hybrid_extension" || integrationType === "hybrid_warranty") &&
+  inclusiveBase
+) {
+  const isExtensionAdded = extensions.some(
+    (ext: LoxaInsurance) => selectedInsurance?.code === ext.code
+  );
+
+  return (
+    <div className="mt-4 space-y-2">
+      {/* Row 1: Free 3-Year — always shown, passive */}
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-800">
+              Free {inclusiveBase.insurance_term} Year Protection Included
+            </p>
+            <button
+              type="button"
+              className="mt-0.5 text-xs text-blue-600 underline"
+              onClick={() => openSidebar(inclusiveBase)}
+            >
+              See details
+            </button>
+          </div>
+          <Shield className="h-5 w-5 text-green-500" />
+        </div>
+      </div>
+
+      {/* Row 2: 5-Year Extension upsell */}
+      {extensions.map((ext: LoxaInsurance) => {
+        const isAdded = selectedInsurance?.code === ext.code;
+        return (
+          <div
+            key={ext.code}
+            className={cn(
+              "rounded-xl border-2 p-4 transition-all",
+              isAdded ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  Extend your protection to {ext.insurance_term} years for £
+                  {ext.insurance_price.toFixed(2)}
+                </p>
                 <button
                   type="button"
-                  className="ml-2 text-xs font-medium text-green-700 underline"
-                  onClick={() => openSidebar(inclusiveBase)}
+                  className="mt-0.5 text-xs text-blue-600 underline"
+                  onClick={() => openSidebar(ext)}
                 >
-                  Details
+                  See details
                 </button>
-                {selectedInsurance?.code !== extensions[0]?.code && (
-                  <button
-                    type="button"
-                    className="mt-2 block text-xs text-gray-400 underline"
-                    onClick={() => {
-                      setIsOptedOut(true);
-                      setSelectedInsurance(null);
-                    }}
-                  >
-                    I don&apos;t want complimentary insurance
-                  </button>
-                )}
               </div>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Free protection opted out.</span>
               <button
                 type="button"
-                className="text-xs font-medium text-blue-600 underline"
                 onClick={() => {
+                  // Toggle: if already added → go back to base, else select extension
+                  setSelectedInsurance(isAdded ? inclusiveBase : ext);
                   setIsOptedOut(false);
-                  setSelectedInsurance(inclusiveBase);
                 }}
+                className={cn(
+                  "ml-4 flex-shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
+                  isAdded
+                    ? "border-blue-500 bg-blue-500 text-white"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-blue-400"
+                )}
               >
-                Add Free Protection
+                {isAdded ? "✓ Added" : "+ Add"}
               </button>
             </div>
           </div>
-        )}
+        );
+      })}
 
-        {extensions.length > 0 && (
-          <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase text-gray-600">
-              Extend Your Protection
-            </p>
-            <div className="flex gap-2">
-              {extensions.map((ext: LoxaInsurance) => (
-                <div key={ext.code} className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedInsurance?.code === ext.code) {
-                        setSelectedInsurance(inclusiveBase);
-                      } else {
-                        setSelectedInsurance(ext);
-                        setIsOptedOut(false);
-                      }
-                    }}
-                    className={cn(
-                      "rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                      selectedInsurance?.code === ext.code
-                        ? "border-blue-500 bg-blue-500 text-white"
-                        : "border-gray-300 text-gray-600 hover:border-blue-400",
-                    )}
-                  >
-                    +{ext.insurance_term} Year — £{ext.insurance_price.toFixed(2)}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-[10px] text-gray-500 underline"
-                    onClick={() => openSidebar(ext)}
-                  >
-                    Details
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <LoxaSidebar
-          insurance={sidebarInsurance}
-          allOptions={[inclusiveBase, ...extensions]}
-          selectedCode={selectedInsurance?.code || null}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onSelect={(ins: LoxaInsurance) => {
-            setSelectedInsurance(ins);
-            setSidebarOpen(false);
-          }}
-        />
-      </div>
-    );
-  }
-
-  return null;
+      <LoxaSidebar
+        insurance={sidebarInsurance}
+        allOptions={[inclusiveBase, ...extensions]}
+        selectedCode={selectedInsurance?.code || null}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelect={(ins: LoxaInsurance) => {
+          setSelectedInsurance(ins);
+          setSidebarOpen(false);
+        }}
+      />
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -535,4 +561,5 @@ function LoxaSidebar({
       </SheetContent>
     </Sheet>
   );
+}
 }

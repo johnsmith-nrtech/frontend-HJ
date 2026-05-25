@@ -231,32 +231,37 @@ export const useCartStore = create<CartState>()(
       },
 
       removeItem: async (id) => {
-        const { items, removeItemLocally, performActionForAuthUser } = get();
+  const { items, removeItemLocally, performActionForAuthUser } = get();
 
-        const itemToRemove = items.find((item) => item.id === id);
-        if (!itemToRemove) {
-          console.warn(`Item with id ${id} not found in cart`);
-          return;
-        }
+  const itemToRemove = items.find((item) => item.id === id);
+  if (!itemToRemove) {
+    console.warn(`Item with id ${id} not found in cart`);
+    return;
+  }
 
-        if (itemToRemove.delivery_time_days === "Bundle") {
-          removeItemLocally(id);
-          return;
-        }
+  // Handle local-only items without hitting the server
+  if (
+    itemToRemove.delivery_time_days === "Bundle" ||
+    itemToRemove['loxa-insurance-code'] ||
+    itemToRemove.insurance_price
+  ) {
+    removeItemLocally(id);
+    return;
+  }
 
-        if (!get().checkAuthStatus()) {
-          removeItemLocally(id);
-          return;
-        }
+  if (!get().checkAuthStatus()) {
+    removeItemLocally(id);
+    return;
+  }
 
-        await performActionForAuthUser({
-          action: async () => {
-            await CartApiService.removeFromCart(id);
-          },
-          revertAction: () => {},
-          extraParams: { id },
-        });
-      },
+  await performActionForAuthUser({
+    action: async () => {
+      await CartApiService.removeFromCart(id);
+    },
+    revertAction: () => {},
+    extraParams: { id },
+  });
+},
 
       updateQuantity: async (id, quantity) => {
         if (quantity <= 0) {
@@ -432,27 +437,26 @@ export const useCartStore = create<CartState>()(
         try {
           const serverCart = await CartApiService.getCartItems();
 
-          // Preserve bundle items (local-only, not on server)
-          const bundleItems = get().items.filter(
-            (i) => i.delivery_time_days === "Bundle"
+          // Preserve bundle items AND Loxa insurance items (both local-only)
+          const localOnlyItems = get().items.filter(
+            (i) =>
+              i.delivery_time_days === "Bundle" ||
+              i['loxa-insurance-code'] ||
+              i.insurance_price
           );
 
-          // Convert server items — resolveDisplayPrice handles
-          // compare_price and discount_percentage correctly
           const serverItems = serverCart.items.map(convertApiItemToLocal);
 
           set({
             serverCart,
-            items: [...serverItems, ...bundleItems],
+            items: [...serverItems, ...localOnlyItems],
             lastSyncedAt: Date.now(),
           });
           calculateTotals();
         } catch (error) {
           console.error("Failed to sync cart with server:", error);
           setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to sync with server"
+            error instanceof Error ? error.message : "Failed to sync with server"
           );
         }
       },
@@ -505,25 +509,21 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const existingItemIndex = state.items.findIndex(
             (i) =>
-              i.variant_id === item.variant_id && i.color === item.color
+              i.variant_id === item.variant_id &&
+              i.color === item.color &&
+              !i['loxa-insurance-code'] &&
+              !item['loxa-insurance-code']
           );
 
           let newItems;
           if (existingItemIndex >= 0) {
             const updatedItems = [...state.items];
-            // updatedItems[existingItemIndex] = {
-            //   ...updatedItems[existingItemIndex],
-            //   quantity:
-            //     updatedItems[existingItemIndex].quantity + item.quantity,
-            //   updated_at: new Date().toISOString(),
-            // };
-            // AFTER
-updatedItems[existingItemIndex] = {
-  ...updatedItems[existingItemIndex],
-  quantity: updatedItems[existingItemIndex].quantity + item.quantity,
-  price: item.price, // ← always use the latest price (may now be discounted)
-  updated_at: new Date().toISOString(),
-};
+            updatedItems[existingItemIndex] = {
+              ...updatedItems[existingItemIndex],
+              quantity: updatedItems[existingItemIndex].quantity + item.quantity,
+              price: item.price,
+              updated_at: new Date().toISOString(),
+          };
             newItems = updatedItems;
           } else {
             newItems = [...state.items, item];

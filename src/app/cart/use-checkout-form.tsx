@@ -168,7 +168,10 @@ export function useCheckoutForm() {
   }, [user]);
 
   const showInstallmentsButton = React.useMemo(
-    () => items.every((item) => item.show_installments !== false),
+    () =>
+      items
+        .filter((item) => !item['loxa-insurance-code'] && !item.insurance_price)
+        .some((item) => item.show_installments === true),
     [items]
   );
 
