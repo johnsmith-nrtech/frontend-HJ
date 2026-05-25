@@ -200,7 +200,7 @@ useEffect(() => {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-gray-800">
-                  Extend {defaultAddon.insurance_term}-Year Protection for £
+                  Add {defaultAddon.insurance_term}-Year Protection for £
                   {defaultAddon.insurance_price.toFixed(2)}
                 </span>
               </div>
