@@ -1283,12 +1283,21 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </div>
             )}
 
-            <LoxaInsuranceWidget
+            {/* <LoxaInsuranceWidget
               sku={currentVariant?.sku || ""}
               price={currentDiscountedPrice}
               productTitle={product.name}
               onInsuranceChange={setSelectedInsurance}
-            />
+            /> */}
+            {(product.enable_loxa ?? true) && (
+  <LoxaInsuranceWidget
+    sku={currentVariant?.sku || ""}
+    price={currentDiscountedPrice}
+    productTitle={product.name}
+    onInsuranceChange={setSelectedInsurance}
+  />
+)}
+console.log("product.enable_loxa:", product.enable_loxa);
 
 
             {/* Description */}

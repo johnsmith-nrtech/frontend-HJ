@@ -126,6 +126,7 @@ default_back_support_info: z.string().optional(),
 default_back_cushion_info: z.string().optional(),
 default_feet_info: z.string().optional(),
 show_installments: z.boolean().optional(),
+enable_loxa: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -204,6 +205,7 @@ export default function AddProductPage() {
       default_back_cushion_info: "",
       default_feet_info: "",
       show_installments: true,
+      enable_loxa: false,
     },
   });
 
@@ -351,14 +353,15 @@ export default function AddProductPage() {
         care_instructions: values.default_care_instructions || undefined,
         scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
         scatter_cushion_filling: values.default_scatter_cushion_filling || undefined,
-  frame_info: values.default_frame_info || undefined,
-  seat_base_info: values.default_seat_base_info || undefined,
-  seat_cushion_info: values.default_seat_cushion_info || undefined,
-  back_support_info: values.default_back_support_info || undefined,
-  back_cushion_info: values.default_back_cushion_info || undefined,
-  feet_info: values.default_feet_info || undefined,
-  show_installments: values.show_installments ?? true,
-},
+        frame_info: values.default_frame_info || undefined,
+        seat_base_info: values.default_seat_base_info || undefined,
+        seat_cushion_info: values.default_seat_cushion_info || undefined,
+        back_support_info: values.default_back_support_info || undefined,
+        back_cushion_info: values.default_back_cushion_info || undefined,
+        feet_info: values.default_feet_info || undefined,
+        show_installments: values.show_installments ?? true,
+        enable_loxa: values.enable_loxa ?? false,
+      },
       };
 
       // Create the product
@@ -641,28 +644,52 @@ export default function AddProductPage() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
-  control={form.control}
-  name="show_installments"
-  render={({ field }) => (
-    <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-      <FormControl>
-        <Checkbox
-          checked={field.value}
-          onCheckedChange={field.onChange}
-          className="cursor-pointer"
-        />
-      </FormControl>
-      <div className="space-y-1 leading-none">
-        <FormLabel>Show Installments</FormLabel>
-        <FormDescription>
-          Whether its installments needs to be visible or not.
-        </FormDescription>
-      </div>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                      control={form.control}
+                      name="enable_loxa"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Enable Loxa Insurance</FormLabel>
+                            <FormDescription>
+                              Show Loxa protection plans on this product's page.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="show_installments"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Show Installments</FormLabel>
+                            <FormDescription>
+                              Whether its installments needs to be visible or not.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   <FormField
@@ -1479,82 +1506,6 @@ export default function AddProductPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* <Card>
-                <CardHeader>
-                  <CardTitle>Payment Options</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="klarna_enabled"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Enable Klarna Payments</FormLabel>
-                          <FormDescription>
-                            Allow customers to pay in installments using Klarna.
-                          </FormDescription>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("klarna_enabled") && (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="klarna_installments"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Number of Installments</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="3"
-                                min="1"
-                                max="12"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Number of installment payments (1-12).
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="klarna_description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Klarna Description</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., Make 3 Payments Of $266.66"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Custom description for Klarna payments (optional).
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card> */}
             </TabsContent>
 
             {/* Images Tab */}

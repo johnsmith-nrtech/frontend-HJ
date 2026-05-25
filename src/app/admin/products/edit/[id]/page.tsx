@@ -63,6 +63,7 @@ const basicInfoSchema = z.object({
     })
     .optional(),
   show_installments: z.boolean().optional(),
+  enable_loxa: z.boolean().optional(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -165,6 +166,7 @@ export default function EditProductPage() {
         free_shipping_threshold: 0,
       },
       show_installments: true,
+      enable_loxa: false,
     },
   });
 
@@ -190,6 +192,7 @@ export default function EditProductPage() {
           free_shipping_threshold: 0,
         },
         show_installments: product.show_installments ?? true,
+        enable_loxa: product.enable_loxa ?? false,
       });
     }
   }, [product, form]);
@@ -211,6 +214,7 @@ export default function EditProductPage() {
         delivery_info: values.delivery_info,
         related_product_ids: relatedProductIds,
         show_installments: values.show_installments ?? true,
+        enable_loxa: values.enable_loxa ?? false,
       };
 
       // Use the mutation
@@ -316,17 +320,6 @@ export default function EditProductPage() {
                           <FormDescription>
                             A descriptive name for the product.
                           </FormDescription>
-                          {/* <div className="space-y-2">
-  <label className="text-sm font-medium">Related Products</label>
-  <p className="text-muted-foreground text-xs">
-    Select products to show as related on this product's page.
-  </p>
-  <RelatedProductsSelector
-    value={relatedProductIds}
-    onChange={setRelatedProductIds}
-    excludeProductId={productId}
-  />
-</div> */}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -401,27 +394,50 @@ export default function EditProductPage() {
                     />
 
                     <FormField
-  control={form.control}
-  name="show_installments"
-  render={({ field }) => (
-    <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-      <FormControl>
-        <Checkbox
-          checked={field.value}
-          onCheckedChange={field.onChange}
-          className="cursor-pointer"
-        />
-      </FormControl>
-      <div className="space-y-1 leading-none">
-        <FormLabel>Show Installments</FormLabel>
-        <FormDescription>
-          Whether its installments needs to be visible or not.
-        </FormDescription>
-      </div>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                      control={form.control}
+                      name="show_installments"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Show Installments</FormLabel>
+                            <FormDescription>
+                              Whether its installments needs to be visible or not.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="enable_loxa"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Enable Loxa Insurance</FormLabel>
+                            <FormDescription>
+                              Show Loxa protection plans on this product's page.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
