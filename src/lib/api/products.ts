@@ -83,6 +83,7 @@ export interface Product {
   category?: Category;
   show_installments?: boolean;
   show_loxa?: boolean;
+  loxa_complimentary_years?: number | null;
 }
 
 export interface ProductVariant {
@@ -217,17 +218,9 @@ export interface ProductCreateInput {
   featured?: boolean;
   show_installments?: boolean;
   show_loxa?: boolean;
+  loxa_complimentary_years?: number | null;
 }
 
-// export interface ProductUpdateInput {
-//   name?: string;
-//   description?: string;
-//   category_id?: string;
-//   base_price?: number;
-//   discount_offer?: number;
-//   show_installments?: boolean;
-//   show_loxa?: boolean;
-// }
 
 export interface ProductUpdateInput {
   name?: string;
@@ -238,6 +231,7 @@ export interface ProductUpdateInput {
   is_visible?: boolean;
   show_installments?: boolean;
   show_loxa?: boolean;
+  loxa_complimentary_years?: number | null;
   warranty_info?: string;
   care_instructions?: string;
   assembly_required?: boolean;

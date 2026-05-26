@@ -1283,19 +1283,21 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </div>
             )}
 
-            {/* <LoxaInsuranceWidget
-              sku={currentVariant?.sku || ""}
-              price={currentDiscountedPrice}
-              productTitle={product.name}
-              onInsuranceChange={setSelectedInsurance}
-            /> */}
+
             {(product.show_loxa ?? true) && (
+              // <LoxaInsuranceWidget
+              //   sku={currentVariant?.sku || ""}
+              //   price={currentDiscountedPrice}
+              //   productTitle={product.name}
+              //   onInsuranceChange={setSelectedInsurance}
+              // />
               <LoxaInsuranceWidget
-                sku={currentVariant?.sku || ""}
-                price={currentDiscountedPrice}
-                productTitle={product.name}
-                onInsuranceChange={setSelectedInsurance}
-              />
+  sku={currentVariant?.sku || ""}
+  price={currentDiscountedPrice}
+  productTitle={product.name}
+  complimentaryYears={product.loxa_complimentary_years ?? null}
+  onInsuranceChange={setSelectedInsurance}
+/>
             )}
 
 

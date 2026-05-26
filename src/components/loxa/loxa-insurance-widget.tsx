@@ -15,6 +15,7 @@ interface LoxaInsuranceWidgetProps {
   sku: string;
   price: number;
   productTitle: string;
+  complimentaryYears?: number | null;
   onInsuranceChange: (insurance: {
     code: string;
     inclusiveCode?: string;
@@ -26,6 +27,7 @@ export function LoxaInsuranceWidget({
   sku,
   price,
   productTitle,
+  complimentaryYears,
   onInsuranceChange,
 }: LoxaInsuranceWidgetProps) {
   const [insuranceData, setInsuranceData] = useState<LoxaInsuranceResponse | null>(null);
@@ -260,6 +262,7 @@ useEffect(() => {
     );
   }
 
+
   // ── INCLUSIVE ─────────────────────────────────────────────────
   if (integrationType === "inclusive" && inclusiveBase) {
     return (
@@ -270,7 +273,7 @@ useEffect(() => {
               <Shield className="mt-0.5 h-4 w-4 text-green-600" />
               <div className="flex-1">
                 <span className="text-sm font-semibold text-gray-800">
-                  {inclusiveBase.insurance_term}-Year Protection Included Free
+                  {complimentaryYears ?? inclusiveBase.insurance_term}-Year Protection Included Free
                 </span>
                 <p className="mt-1 text-xs text-gray-500">
                   {inclusiveBase.insurance_content?.description}
@@ -316,9 +319,54 @@ useEffect(() => {
           </div>
         )}
 
+
+        {/* ── EXTEND UPSELL for addon type ── */}
+        {complimentaryYears && extensions.length > 0 && extensions.map((ext: LoxaInsurance) => {
+          const isAdded = selectedInsurance?.code === ext.code;
+          return (
+            <div
+              key={ext.code}
+              className={cn(
+                "rounded-xl border-2 p-4 transition-all",
+                isAdded ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">
+                    Extend your protection to {ext.insurance_term} years for £
+                    {ext.insurance_price.toFixed(2)}
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-0.5 text-xs text-blue-600 underline"
+                    onClick={() => openSidebar(ext)}
+                  >
+                    See details
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedInsurance(isAdded ? null : ext)}
+                  className={cn(
+                    "ml-4 shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
+                    isAdded
+                      ? "border-blue-500 bg-blue-500 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-blue-400"
+                  )}
+                >
+                  {isAdded ? "✓ Added" : "+ Add"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
         <LoxaSidebar
           insurance={sidebarInsurance}
-          allOptions={[inclusiveBase]}
+          allOptions={complimentaryYears && extensions.length > 0
+            ? [inclusiveBase, ...extensions]
+            : [inclusiveBase]}
           selectedCode={selectedInsurance?.code || null}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -332,6 +380,8 @@ useEffect(() => {
     );
   }
 
+
+
   // ── HYBRID ────────────────────────────────────────────────────
 if (
   (integrationType === "hybrid_extension" || integrationType === "hybrid_warranty") &&
@@ -344,11 +394,18 @@ if (
   return (
     <div className="mt-4 space-y-2">
       {/* Row 1: Free 3-Year — always shown, passive */}
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+      {/* <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-gray-800">
               Free {inclusiveBase.insurance_term} Year Protection Included
+            </p> */}
+            {/* Row 1: Free X-Year — always shown, passive */}
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-800">
+              Free {complimentaryYears ?? inclusiveBase.insurance_term} Year Protection Included
             </p>
             <button
               type="button"

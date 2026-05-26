@@ -127,6 +127,7 @@ default_back_cushion_info: z.string().optional(),
 default_feet_info: z.string().optional(),
 show_installments: z.boolean().optional(),
 show_loxa: z.boolean().optional(),
+loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -206,6 +207,7 @@ export default function AddProductPage() {
       default_feet_info: "",
       show_installments: true,
       show_loxa: true,
+      loxa_complimentary_years: undefined,
     },
   });
 
@@ -351,6 +353,7 @@ export default function AddProductPage() {
         warranty_info: values.warranty_info || undefined,
         show_installments: values.show_installments ?? true,
         show_loxa: values.show_loxa ?? true,
+        loxa_complimentary_years: values.loxa_complimentary_years || null,
         material_info: {
           care_instructions: values.default_care_instructions || undefined,
           scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
@@ -667,6 +670,36 @@ export default function AddProductPage() {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+  control={form.control}
+  name="loxa_complimentary_years"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Complimentary Insurance (years)</FormLabel>
+      <FormControl>
+        <Input
+          type="number"
+          placeholder="e.g. 2"
+          min={1}
+          max={10}
+          {...field}
+          value={field.value ?? ""}
+          onChange={(e) =>
+            field.onChange(
+              e.target.value === "" ? undefined : parseInt(e.target.value)
+            )
+          }
+          disabled={!form.watch("show_loxa")}
+        />
+      </FormControl>
+      <FormDescription>
+        Years of free protection shown to customers. Only active when Loxa is enabled.
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
                     <FormField
                       control={form.control}

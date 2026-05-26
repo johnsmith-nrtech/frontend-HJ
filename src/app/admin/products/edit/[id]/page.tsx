@@ -64,6 +64,7 @@ const basicInfoSchema = z.object({
     .optional(),
   show_installments: z.boolean().optional(),
   show_loxa: z.boolean().optional(),
+  loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional().nullable(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -167,6 +168,7 @@ export default function EditProductPage() {
       },
       show_installments: true,
       show_loxa: true,
+      loxa_complimentary_years: undefined,
     },
   });
 
@@ -193,6 +195,7 @@ export default function EditProductPage() {
         },
         show_installments: product.show_installments ?? true,
         show_loxa: product.show_loxa ?? true,
+        loxa_complimentary_years: product.loxa_complimentary_years ?? undefined,
       });
     }
   }, [product, form]);
@@ -215,6 +218,7 @@ export default function EditProductPage() {
         related_product_ids: relatedProductIds,
         show_installments: values.show_installments ?? true,
         show_loxa: values.show_loxa ?? true,
+        loxa_complimentary_years: values.loxa_complimentary_years ?? null,
       };
 
       // Use the mutation
@@ -438,6 +442,36 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+  control={form.control}
+  name="loxa_complimentary_years"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Complimentary Insurance (years)</FormLabel>
+      <FormControl>
+        <Input
+          type="number"
+          placeholder="e.g. 2"
+          min={1}
+          max={10}
+          {...field}
+          value={field.value ?? ""}
+          onChange={(e) =>
+            field.onChange(
+              e.target.value === "" ? null : parseInt(e.target.value)
+            )
+          }
+          disabled={!form.watch("show_loxa")}
+        />
+      </FormControl>
+      <FormDescription>
+        Years of free protection shown to customers. Only active when Loxa is enabled.
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
                     <FormField
                       control={form.control}
