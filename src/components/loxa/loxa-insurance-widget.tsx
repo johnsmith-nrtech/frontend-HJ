@@ -173,7 +173,8 @@ useEffect(() => {
 
   // ── ADDON ──────────────────────────────────────────────────────
   if (integrationType === "addon") {
-    const defaultAddon = addons.find((i: LoxaInsurance) => i.default_selected) || addons[0];
+    // const defaultAddon = addons.find((i: LoxaInsurance) => i.default_selected) || addons[0];
+    const defaultAddon = addons[0];
     if (!defaultAddon) return null;
 
     return (
@@ -197,15 +198,20 @@ useEffect(() => {
             }}
               onClick={(e) => e.stopPropagation()}
             />
+            <img
+              src="/loxa.png"
+              alt="Loxa"
+              className="h-5 w-5 object-contain mt-[2px]"
+            />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-gray-800">
-                  Add {defaultAddon.insurance_term}-Year Protection for £
-                  {defaultAddon.insurance_price.toFixed(2)}
+                  Add {(selectedInsurance || defaultAddon).insurance_term}-Year Protection for £
+                  {(selectedInsurance || defaultAddon).insurance_price.toFixed(2)}
                 </span>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                {defaultAddon.insurance_content?.description ||
+                  {(selectedInsurance || defaultAddon).insurance_content?.description ||
                   "Covers accidental damage and structural defects."}
               </p>
               <button
@@ -213,7 +219,8 @@ useEffect(() => {
                 className="mt-1 text-xs font-medium text-blue-600 underline cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openSidebar(defaultAddon);
+                  // openSidebar(defaultAddon);
+                  openSidebar(selectedInsurance || defaultAddon);
                 }}
               >
                 {defaultAddon.insurance_content?.learn_more || "Details"}
@@ -472,13 +479,17 @@ function LoxaSidebar({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full max-w-md overflow-y-auto">
+      <SheetContent side="right" className="w-full max-w-md overflow-y-auto [&>button]:top-8">
+        <img
+          src="/loxa.png"
+          alt="Loxa"
+          className="h-8 w-8 object-contain mb-2"
+        />
         <SheetHeader>
-          <SheetTitle className="text-left">
+          <SheetTitle className="text-left mt-4">
             {content?.header || insurance.name}
           </SheetTitle>
         </SheetHeader>
-
         <div className="mt-4 space-y-4">
           {content?.subheading && (
             <p className="text-sm text-gray-600">{content.subheading}</p>
