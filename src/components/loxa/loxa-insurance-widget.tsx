@@ -344,8 +344,6 @@ export function LoxaInsuranceWidget({
     const defaultAddon = addons[0];
     if (!defaultAddon) return null;
 
-    // const isChecked = addons.some((a) => a.code === selectedInsurance?.code);
-    // const activeAddon = (isChecked ? selectedInsurance : null) ?? defaultAddon;
     const isChecked = addons.some((a) => a.code === selectedInsurance?.code);
     const activeAddon = isChecked ? selectedInsurance ?? defaultAddon : defaultAddon;
     const displayAddon = isChecked ? activeAddon : defaultAddon;

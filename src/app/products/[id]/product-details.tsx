@@ -1285,22 +1285,6 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
 
             {(product.show_loxa ?? true) && (
-              // <LoxaInsuranceWidget
-              //   sku={currentVariant?.sku || ""}
-              //   price={currentDiscountedPrice}
-              //   productTitle={product.name}
-              //   onInsuranceChange={setSelectedInsurance}
-              // />
-
-
-              // <LoxaInsuranceWidget
-              //   sku={product.id}
-              //   price={currentDiscountedPrice}
-              //   productTitle={product.name}
-              //   loxaComplimentaryYears={product.loxa_complimentary_years ?? undefined}
-              //   onInsuranceChange={setSelectedInsurance}
-              // />
-
               <LoxaInsuranceWidget
                 sku={currentVariant?.sku || product.id}
                 price={currentDiscountedPrice}
