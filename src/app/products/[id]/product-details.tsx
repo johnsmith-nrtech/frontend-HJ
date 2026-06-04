@@ -1283,17 +1283,26 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
               </div>
             )}
 
-            {/* <LoxaInsuranceWidget
-              sku={currentVariant?.sku || ""}
-              price={currentDiscountedPrice}
-              productTitle={product.name}
-              onInsuranceChange={setSelectedInsurance}
-            /> */}
-            {(product.show_loxa ?? true) && (
+
+            {(product.show_sofadeal_coverage) ? (
+              <div className="mt-4 rounded-xl border p-4">
+                <div className="flex items-start gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Full Protection Included — Covered by SofaDeal
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      This product comes with complete insurance coverage provided by SofaDeal at no extra cost to you.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              ) : (product.show_loxa ?? true) && (
               <LoxaInsuranceWidget
                 sku={currentVariant?.sku || ""}
                 price={currentDiscountedPrice}
                 productTitle={product.name}
+                loxaComplimentaryYears={product.loxa_complimentary_years ?? undefined}
                 onInsuranceChange={setSelectedInsurance}
               />
             )}

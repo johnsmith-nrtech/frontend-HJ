@@ -116,17 +116,19 @@ const formSchema = z.object({
   featured: z.boolean().optional(),
 
   // Material Info for default variant
-default_care_instructions: z.string().optional(),
-default_scatter_cushion_cover: z.string().optional(),
-default_scatter_cushion_filling: z.string().optional(),
-default_frame_info: z.string().optional(),
-default_seat_base_info: z.string().optional(),
-default_seat_cushion_info: z.string().optional(),
-default_back_support_info: z.string().optional(),
-default_back_cushion_info: z.string().optional(),
-default_feet_info: z.string().optional(),
-show_installments: z.boolean().optional(),
-show_loxa: z.boolean().optional(),
+  default_care_instructions: z.string().optional(),
+  default_scatter_cushion_cover: z.string().optional(),
+  default_scatter_cushion_filling: z.string().optional(),
+  default_frame_info: z.string().optional(),
+  default_seat_base_info: z.string().optional(),
+  default_seat_cushion_info: z.string().optional(),
+  default_back_support_info: z.string().optional(),
+  default_back_cushion_info: z.string().optional(),
+  default_feet_info: z.string().optional(),
+  show_installments: z.boolean().optional(),
+  show_loxa: z.boolean().optional(),
+  loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional(),
+  show_sofadeal_coverage: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -206,6 +208,8 @@ export default function AddProductPage() {
       default_feet_info: "",
       show_installments: true,
       show_loxa: true,
+      loxa_complimentary_years: undefined,
+      show_sofadeal_coverage: false,
     },
   });
 
@@ -351,6 +355,8 @@ export default function AddProductPage() {
         warranty_info: values.warranty_info || undefined,
         show_installments: values.show_installments ?? true,
         show_loxa: values.show_loxa ?? true,
+        loxa_complimentary_years: values.loxa_complimentary_years || null,
+        show_sofadeal_coverage: values.show_sofadeal_coverage ?? false,
         material_info: {
           care_instructions: values.default_care_instructions || undefined,
           scatter_cushion_cover: values.default_scatter_cushion_cover || undefined,
@@ -663,6 +669,59 @@ export default function AddProductPage() {
                               Show Loxa protection plans on this product's page.
                             </FormDescription>
                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="show_sofadeal_coverage"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>SofaDeal Full Coverage</FormLabel>
+                            <FormDescription>
+                              Show full coverage message — all insurance provided by SofaDeal at no cost to customer.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="loxa_complimentary_years"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Complimentary Insurance (years)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g. 2"
+                              min={1}
+                              max={10}
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === "" ? undefined : parseInt(e.target.value)
+                                )
+                              }
+                              disabled={!form.watch("show_loxa")}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Years of free protection shown to customers. Only active when Loxa is enabled.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

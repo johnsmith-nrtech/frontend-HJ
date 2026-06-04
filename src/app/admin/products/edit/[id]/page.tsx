@@ -64,6 +64,8 @@ const basicInfoSchema = z.object({
     .optional(),
   show_installments: z.boolean().optional(),
   show_loxa: z.boolean().optional(),
+  loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional().nullable(),
+  show_sofadeal_coverage: z.boolean().optional(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -167,6 +169,8 @@ export default function EditProductPage() {
       },
       show_installments: true,
       show_loxa: true,
+      loxa_complimentary_years: undefined,
+      show_sofadeal_coverage: false,
     },
   });
 
@@ -193,6 +197,8 @@ export default function EditProductPage() {
         },
         show_installments: product.show_installments ?? true,
         show_loxa: product.show_loxa ?? true,
+        loxa_complimentary_years: product.loxa_complimentary_years ?? undefined,
+        show_sofadeal_coverage: product.show_sofadeal_coverage ?? false,
       });
     }
   }, [product, form]);
@@ -215,6 +221,8 @@ export default function EditProductPage() {
         related_product_ids: relatedProductIds,
         show_installments: values.show_installments ?? true,
         show_loxa: values.show_loxa ?? true,
+        loxa_complimentary_years: values.loxa_complimentary_years ?? null,
+        show_sofadeal_coverage: values.show_sofadeal_coverage ?? false,
       };
 
       // Use the mutation
@@ -223,7 +231,7 @@ export default function EditProductPage() {
       toast.success("Product updated successfully");
 
       // Refetch product data to get updated information
-      refetchProduct();
+      // refetchProduct();
     } catch (error) {
       console.error("Error in product update flow:", error);
       toast.error("Failed to update product");
@@ -434,6 +442,59 @@ export default function EditProductPage() {
                               Show Loxa protection plans on this product's page.
                             </FormDescription>
                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="show_sofadeal_coverage"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>SofaDeal Full Coverage</FormLabel>
+                            <FormDescription>
+                              Show full coverage message — all insurance provided by SofaDeal at no cost to customer.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="loxa_complimentary_years"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Complimentary Insurance (years)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g. 2"
+                              min={1}
+                              max={10}
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === "" ? null : parseInt(e.target.value)
+                                )
+                              }
+                              disabled={!form.watch("show_loxa")}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Years of free protection shown to customers. Only active when Loxa is enabled.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
