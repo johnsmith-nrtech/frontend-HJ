@@ -339,130 +339,129 @@ export function LoxaInsuranceWidget({
 
   // ── CASE 4: ADDON (priority 3) ───────────────────────────────────
   // Also handles inclusive as addon-like if addons exist
-  if (integrationType === "addon" || addons.length > 0) {
-    const defaultAddon = addons[0];
-    if (!defaultAddon) return null;
+if (integrationType === "addon" || addons.length > 0) {
+  const visibleAddons = addons.filter(
+    (a) => Number(a.insurance_term) > (loxaComplimentaryYears ?? 0)
+  );
 
-    const isChecked = addons.some((a) => a.code === selectedInsurance?.code);
-    const activeAddon = isChecked ? selectedInsurance ?? defaultAddon : defaultAddon;
-    const displayAddon = isChecked ? activeAddon : defaultAddon;
+  const defaultAddon = visibleAddons[0];
+  if (!defaultAddon) return null;
 
-    return (
-      <div className="mt-4 space-y-2">
+  const isChecked = visibleAddons.some((a) => a.code === selectedInsurance?.code);
+  const activeAddon = isChecked ? selectedInsurance ?? defaultAddon : defaultAddon;
 
-        {/* Free complimentary years banner (from product DB field) */}
-        {hasComplimentaryYears && (
-          <div className="rounded-xl border p-4">
-            <div className="flex items-start gap-3">
-              {/* <Shield className="mt-0.5 h-4 w-4 text-green-600 shrink-0" /> */}
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-gray-800">
-                  {loxaComplimentaryYears}-Year Free Protection Included
-                </span>
-                <p className="mt-1 text-xs text-gray-500">
-                  Complimentary protection provided with your purchase by SofaDeal.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+  return (
+    <div className="mt-4 space-y-2">
 
-        {/* Paid add-on / extend option */}
-        <div className="rounded-xl border-2 border-gray-200 p-4 transition-all">
+      {/* Free complimentary years banner */}
+      {hasComplimentaryYears && (
+        <div className="rounded-xl border p-4">
           <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1 h-4 w-4 cursor-pointer accent-blue-600 shrink-0"
-              checked={isChecked}
-              onChange={(e) => {
-                if (!e.target.checked) {
-                  setSelectedInsurance(null);
-                } else {
-                  setSelectedInsurance(activeAddon);
-                }
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-            <img
-              src="/loxa.png"
-              alt="Loxa"
-              className="h-5 w-5 object-contain mt-[2px] shrink-0"
-            />
             <div className="flex-1">
-              {hasComplimentaryYears ? (
-                // With complimentary years: show total years (complimentary + addon term)
-                <span className="text-sm font-semibold text-gray-800">
-                  Extend to{" "}
-                  {(loxaComplimentaryYears ?? 0) + Number(activeAddon.insurance_term)}{" "}
-                  Years Total — {activeAddon.insurance_term} more years for £
-                  {activeAddon.insurance_price.toFixed(2)}
-                </span>
-              ) : (
-                // No complimentary years: standard addon wording
-                <span className="text-sm font-semibold text-gray-800">
-                  Add {activeAddon.insurance_term}-Year Protection for £
-                  {activeAddon.insurance_price.toFixed(2)}
-                </span>
-              )}
-
+              <span className="text-sm font-semibold text-gray-800">
+                {loxaComplimentaryYears}-Year Free Protection Included
+              </span>
               <p className="mt-1 text-xs text-gray-500">
-                {activeAddon.insurance_content?.description ||
-                  "Covers accidental damage and structural defects."}
+                Complimentary protection provided with your purchase by SofaDeal.
               </p>
-              <button
-                type="button"
-                className="mt-1 text-xs font-medium text-blue-600 underline cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSidebar(activeAddon);
-                }}
-              >
-                {defaultAddon.insurance_content?.learn_more || "Details"}
-              </button>
-
-              {/* Year selector buttons */}
-              {addons.length > 1 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {addons.map((addon: LoxaInsurance) => (
-                    <button
-                      type="button"
-                      key={addon.code}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedInsurance(addon);
-                      }}
-                      className={cn(
-                        "rounded-lg border px-3 py-1 text-xs font-medium transition-all",
-                        isChecked && activeAddon.code === addon.code
-                          ? "border-blue-500 bg-blue-500 text-white"
-                          : "border-gray-300 text-gray-600 hover:border-blue-400",
-                      )}
-                    >
-                      {hasComplimentaryYears
-                        ? `${(loxaComplimentaryYears ?? 0) + Number(addon.insurance_term)} yrs total — £${addon.insurance_price.toFixed(2)}`
-                        : `${addon.insurance_term} Year — £${addon.insurance_price.toFixed(2)}`}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
+      )}
 
-        <LoxaSidebar
-          insurance={sidebarInsurance}
-          allOptions={addons}
-          selectedCode={selectedInsurance?.code || null}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onSelect={(ins: LoxaInsurance) => {
-            setSelectedInsurance(ins);
-            setSidebarOpen(false);
-          }}
-        />
+      {/* Paid add-on / extend option */}
+      <div className="rounded-xl border-2 border-gray-200 p-4 transition-all">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 cursor-pointer accent-blue-600 shrink-0"
+            checked={isChecked}
+            onChange={(e) => {
+              if (!e.target.checked) {
+                setSelectedInsurance(null);
+              } else {
+                setSelectedInsurance(activeAddon);
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <img
+            src="/loxa.png"
+            alt="Loxa"
+            className="h-5 w-5 object-contain mt-[2px] shrink-0"
+          />
+          <div className="flex-1">
+            {hasComplimentaryYears ? (
+              <span className="text-sm font-semibold text-gray-800">
+                Extend by {Number(activeAddon.insurance_term) - (loxaComplimentaryYears ?? 0)} more year
+                {Number(activeAddon.insurance_term) - (loxaComplimentaryYears ?? 0) !== 1 ? "s" : ""} — Total{" "}
+                {Number(activeAddon.insurance_term)} Years for £{activeAddon.insurance_price.toFixed(2)}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-gray-800">
+                Add {activeAddon.insurance_term}-Year Protection for £
+                {activeAddon.insurance_price.toFixed(2)}
+              </span>
+            )}
+
+            <p className="mt-1 text-xs text-gray-500">
+              {activeAddon.insurance_content?.description ||
+                "Covers accidental damage and structural defects."}
+            </p>
+            <button
+              type="button"
+              className="mt-1 text-xs font-medium text-blue-600 underline cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                openSidebar(activeAddon);
+              }}
+            >
+              {defaultAddon.insurance_content?.learn_more || "Details"}
+            </button>
+
+            {/* Year selector buttons — only show if more than 1 visible addon */}
+            {visibleAddons.length > 1 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {visibleAddons.map((addon: LoxaInsurance) => (
+                  <button
+                    type="button"
+                    key={addon.code}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedInsurance(addon);
+                    }}
+                    className={cn(
+                      "rounded-lg border px-3 py-1 text-xs font-medium transition-all",
+                      isChecked && activeAddon.code === addon.code
+                        ? "border-blue-500 bg-blue-500 text-white"
+                        : "border-gray-300 text-gray-600 hover:border-blue-400",
+                    )}
+                  >
+                    {hasComplimentaryYears
+                      ? `${Number(addon.insurance_term) - (loxaComplimentaryYears ?? 0)} yr${Number(addon.insurance_term) - (loxaComplimentaryYears ?? 0) !== 1 ? "s" : ""} more — £${addon.insurance_price.toFixed(2)}`
+                      : `${addon.insurance_term} Year — £${addon.insurance_price.toFixed(2)}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    );
-  }
+
+      <LoxaSidebar
+        insurance={sidebarInsurance}
+        allOptions={visibleAddons}
+        selectedCode={selectedInsurance?.code || null}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelect={(ins: LoxaInsurance) => {
+          setSelectedInsurance(ins);
+          setSidebarOpen(false);
+        }}
+      />
+    </div>
+  );
+}
 
   // ── CASE 5: INCLUSIVE ────────────────────────────────────────────
   if (integrationType === "inclusive" && inclusiveBase) {
