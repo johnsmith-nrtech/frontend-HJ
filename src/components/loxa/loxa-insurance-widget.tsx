@@ -21,6 +21,9 @@ interface LoxaInsuranceWidgetProps {
     inclusiveCode?: string;
     price: number;
   } | null) => void;
+  showPrompt?: boolean;
+  onPromptClose?: () => void;
+  onContinueWithoutProtection?: () => void;
 }
 
 export function LoxaInsuranceWidget({
@@ -29,6 +32,9 @@ export function LoxaInsuranceWidget({
   productTitle,
   loxaComplimentaryYears,
   onInsuranceChange,
+  showPrompt = false,
+  onPromptClose,
+  onContinueWithoutProtection,
 }: LoxaInsuranceWidgetProps) {
   const [insuranceData, setInsuranceData] = useState<LoxaInsuranceResponse | null>(null);
   const [selectedInsurance, setSelectedInsurance] = useState<LoxaInsurance | null>(null);
@@ -36,6 +42,7 @@ export function LoxaInsuranceWidget({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarInsurance, setSidebarInsurance] = useState<LoxaInsurance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [openedFromPrompt, setOpenedFromPrompt] = useState(false);
 
   const hasComplimentaryYears = loxaComplimentaryYears && loxaComplimentaryYears > 0;
 
@@ -111,6 +118,21 @@ export function LoxaInsuranceWidget({
     }
   }, [selectedInsurance, isOptedOut, insuranceData, onInsuranceChange]);
 
+
+  useEffect(() => {
+    if (showPrompt && insuranceData) {
+      const defaultIns =
+        insuranceData.insurances.find((i: LoxaInsurance) => i.is_base_insurance_product) ||
+        insuranceData.insurances[0];
+      if (defaultIns) {
+        setSidebarInsurance(defaultIns);
+        setOpenedFromPrompt(true);
+        setSidebarOpen(true);
+        onPromptClose?.();
+      }
+    }
+  }, [showPrompt]);
+
   // ── Priority: hybrid_extension → hybrid_warranty → addon → inclusive ──
   const getEffectiveIntegrationType = (data: LoxaInsuranceResponse): string => {
     const priority = ["hybrid_extension", "hybrid_warranty", "addon", "inclusive"];
@@ -122,6 +144,7 @@ export function LoxaInsuranceWidget({
 
   const openSidebar = (insurance: LoxaInsurance) => {
     setSidebarInsurance(insurance);
+    setOpenedFromPrompt(false);
     setSidebarOpen(true);
   };
 
@@ -247,7 +270,11 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
         />
+
+      
       </div>
     );
   }
@@ -334,6 +361,8 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
         />
       </div>
     );
@@ -461,6 +490,8 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
         />
       </div>
     );
@@ -533,6 +564,8 @@ export function LoxaInsuranceWidget({
             setIsOptedOut(false);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
         />
       </div>
     );
@@ -552,6 +585,8 @@ interface LoxaSidebarProps {
   open: boolean;
   onClose: () => void;
   onSelect: (insurance: LoxaInsurance) => void;
+  onContinueWithoutProtection?: () => void;
+  openedFromPrompt?: boolean;
 }
 
 function LoxaSidebar({
@@ -561,6 +596,8 @@ function LoxaSidebar({
   open,
   onClose,
   onSelect,
+  onContinueWithoutProtection,
+  openedFromPrompt,
 }: LoxaSidebarProps) {
   if (!insurance) return null;
 
@@ -688,6 +725,27 @@ function LoxaSidebar({
           >
             Add Protection
           </button>
+
+          {openedFromPrompt ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onContinueWithoutProtection?.();
+              }}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Continue without protection
+            </button>
+            ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Close sidebar
+            </button>
+          )}
 
           {content?.legal_disclaimer && (
             <p className="text-[10px] leading-relaxed text-gray-400">
