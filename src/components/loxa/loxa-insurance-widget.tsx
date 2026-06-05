@@ -21,6 +21,9 @@ interface LoxaInsuranceWidgetProps {
     inclusiveCode?: string;
     price: number;
   } | null) => void;
+  showPrompt?: boolean;
+  onPromptClose?: () => void;
+  onContinueWithoutProtection?: () => void;
 }
 
 export function LoxaInsuranceWidget({
@@ -29,6 +32,9 @@ export function LoxaInsuranceWidget({
   productTitle,
   loxaComplimentaryYears,
   onInsuranceChange,
+  showPrompt = false,
+  onPromptClose,
+  onContinueWithoutProtection,
 }: LoxaInsuranceWidgetProps) {
   const [insuranceData, setInsuranceData] = useState<LoxaInsuranceResponse | null>(null);
   const [selectedInsurance, setSelectedInsurance] = useState<LoxaInsurance | null>(null);
@@ -36,6 +42,7 @@ export function LoxaInsuranceWidget({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarInsurance, setSidebarInsurance] = useState<LoxaInsurance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [openedFromPrompt, setOpenedFromPrompt] = useState(false);
 
   const hasComplimentaryYears = loxaComplimentaryYears && loxaComplimentaryYears > 0;
 
@@ -111,6 +118,21 @@ export function LoxaInsuranceWidget({
     }
   }, [selectedInsurance, isOptedOut, insuranceData, onInsuranceChange]);
 
+
+  useEffect(() => {
+    if (showPrompt && insuranceData) {
+      const defaultIns =
+        insuranceData.insurances.find((i: LoxaInsurance) => i.is_base_insurance_product) ||
+        insuranceData.insurances[0];
+      if (defaultIns) {
+        setSidebarInsurance(defaultIns);
+        setOpenedFromPrompt(true);
+        setSidebarOpen(true);
+        onPromptClose?.();
+      }
+    }
+  }, [showPrompt]);
+
   // ── Priority: hybrid_extension → hybrid_warranty → addon → inclusive ──
   const getEffectiveIntegrationType = (data: LoxaInsuranceResponse): string => {
     const priority = ["hybrid_extension", "hybrid_warranty", "addon", "inclusive"];
@@ -122,6 +144,7 @@ export function LoxaInsuranceWidget({
 
   const openSidebar = (insurance: LoxaInsurance) => {
     setSidebarInsurance(insurance);
+    setOpenedFromPrompt(false);
     setSidebarOpen(true);
   };
 
@@ -163,11 +186,16 @@ export function LoxaInsuranceWidget({
     (i: LoxaInsurance) => i.is_base_insurance_product,
   );
   const extensions = insuranceData.insurances.filter(
-    (i: LoxaInsurance) => i.extension,
+    (i: LoxaInsurance) => !i.is_base_insurance_product,
   );
 
   // ── CASE 2: HYBRID EXTENSION (priority 1) ───────────────────────
   if (integrationType === "hybrid_extension" && inclusiveBase) {
+
+    const visibleExtensions = extensions.filter(
+  (e) => Number(e.insurance_term) > (loxaComplimentaryYears ?? 0)
+);
+
     return (
       <div className="mt-4 space-y-2">
         {/* Free base — always shown */}
@@ -175,71 +203,91 @@ export function LoxaInsuranceWidget({
           <div className="flex items-start gap-3">
             <div className="flex-1">
               <span className="text-sm font-semibold text-gray-800">
-                {inclusiveBase.insurance_term}-Year Free Protection Included
+                {hasComplimentaryYears ? loxaComplimentaryYears : inclusiveBase.insurance_term}-Year Free Protection Included
               </span>
               <p className="mt-1 text-xs text-gray-500">
-                {inclusiveBase.insurance_content?.description ||
-                  "Base protection included at no extra cost."}
+                Complimentary protection provided with your purchase by SofaDeal.
               </p>
-              <button
-                type="button"
-                className="mt-1 text-xs font-medium text-green-700 underline"
-                onClick={() => openSidebar(inclusiveBase)}
-              >
-                See details
-              </button>
             </div>
           </div>
         </div>
 
         {/* Paid extension upsell */}
-        {extensions.map((ext: LoxaInsurance) => {
-          const isAdded = selectedInsurance?.code === ext.code;
-          return (
-            <div
-              key={ext.code}
-              className={cn(
-                "rounded-xl border-2 p-4 transition-all",
-                isAdded ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">
-                    Extend your protection to {ext.insurance_term} years for £
-                    {ext.insurance_price.toFixed(2)}
-                  </p>
-                  <button
-                    type="button"
-                    className="mt-0.5 text-xs text-blue-600 underline"
-                    onClick={() => openSidebar(ext)}
-                  >
-                    See details
-                  </button>
-                </div>
+        {/* {extensions.map((ext: LoxaInsurance) => { */}
+        {visibleExtensions.length > 0 && (
+          <div className="rounded-xl border-2 border-gray-200 p-4 transition-all">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 cursor-pointer accent-blue-600 shrink-0"
+                checked={visibleExtensions.some((e) => e.code === selectedInsurance?.code)}
+                onChange={(e) => {
+                  if (!e.target.checked) {
+                    setSelectedInsurance(null);
+                  } else {
+                    setSelectedInsurance(visibleExtensions[0]);
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <img
+                src="/loxa.png"
+                alt="Loxa"
+                className="h-5 w-5 object-contain mt-[2px] shrink-0"
+              />
+              <div className="flex-1">
+                <span className="text-sm font-semibold text-gray-800">
+                  {visibleExtensions.length === 1
+                    ? `Extend by ${Number(visibleExtensions[0]?.insurance_term) - (loxaComplimentaryYears ?? 0)} more year${Number(visibleExtensions[0]?.insurance_term) - (loxaComplimentaryYears ?? 0) !== 1 ? "s" : ""} — Total ${visibleExtensions[0]?.insurance_term} Years for £${visibleExtensions[0]?.insurance_price.toFixed(2)}`
+                    : `Extend your protection`}
+                </span>
+                <p className="mt-1 text-xs text-gray-500">
+                  Covers accidental damage and structural defects.
+                </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedInsurance(isAdded ? null : ext);
-                    setIsOptedOut(false);
+                  className="mt-1 text-xs font-medium text-blue-600 underline cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSidebar(visibleExtensions[0]);
                   }}
-                  className={cn(
-                    "ml-4 shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
-                    isAdded
-                      ? "border-blue-500 bg-blue-500 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-blue-400",
-                  )}
                 >
-                  {isAdded ? "✓ Added" : "+ Add"}
+                  See details
                 </button>
+                {visibleExtensions.length > 1 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {visibleExtensions.map((ext: LoxaInsurance) => {
+                      const isAdded = selectedInsurance?.code === ext.code;
+                      const extraYears = Number(ext.insurance_term) - (loxaComplimentaryYears ?? 0);
+                      return (
+                        <button
+                          key={ext.code}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedInsurance(ext);
+                          }}
+                          className={cn(
+                            "rounded-lg border px-3 py-1 text-xs font-medium transition-all",
+                            isAdded
+                              ? "border-blue-500 bg-blue-500 text-white"
+                              : "border-gray-300 text-gray-600 hover:border-blue-400",
+                          )}
+                        >
+                          {extraYears} yr{extraYears !== 1 ? "s" : ""} Total {ext.insurance_term} Yrs — £{ext.insurance_price.toFixed(2)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
-          );
-        })}
+          </div>
+        )}
 
         <LoxaSidebar
           insurance={sidebarInsurance}
-          allOptions={[inclusiveBase, ...extensions]}
+          allOptions={visibleExtensions}
           selectedCode={selectedInsurance?.code || null}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -247,6 +295,9 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
+          hasComplimentaryYears={loxaComplimentaryYears || false}
         />
       </div>
     );
@@ -334,6 +385,9 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
+          hasComplimentaryYears={loxaComplimentaryYears || false}
         />
       </div>
     );
@@ -461,6 +515,9 @@ export function LoxaInsuranceWidget({
             setSelectedInsurance(ins);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
+          hasComplimentaryYears={loxaComplimentaryYears || false}
         />
       </div>
     );
@@ -533,6 +590,9 @@ export function LoxaInsuranceWidget({
             setIsOptedOut(false);
             setSidebarOpen(false);
           }}
+          openedFromPrompt={openedFromPrompt}
+          onContinueWithoutProtection={onContinueWithoutProtection}
+          hasComplimentaryYears={loxaComplimentaryYears || false}
         />
       </div>
     );
@@ -552,6 +612,9 @@ interface LoxaSidebarProps {
   open: boolean;
   onClose: () => void;
   onSelect: (insurance: LoxaInsurance) => void;
+  onContinueWithoutProtection?: () => void;
+  openedFromPrompt?: boolean;
+  hasComplimentaryYears?: number | boolean;
 }
 
 function LoxaSidebar({
@@ -561,6 +624,9 @@ function LoxaSidebar({
   open,
   onClose,
   onSelect,
+  onContinueWithoutProtection,
+  openedFromPrompt,
+  hasComplimentaryYears,
 }: LoxaSidebarProps) {
   if (!insurance) return null;
 
@@ -622,16 +688,62 @@ function LoxaSidebar({
       >
         <img src="/loxa.png" alt="Loxa" className="h-8 w-8 object-contain mb-2" />
         <SheetHeader>
-          <SheetTitle className="text-left mt-4">
+          {/* <SheetTitle className="text-left mt-4">
             {content?.header || insurance.name}
+          </SheetTitle> */}
+          <SheetTitle className="text-left mt-4">
+            {hasComplimentaryYears
+              ? `Extend Your ${insurance.insurance_term}-Year Protection`
+              : content?.header || insurance.name}
           </SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-4">
-          {content?.subheading && (
+          {/* {content?.subheading && (
             <p className="text-sm text-gray-600">{content.subheading}</p>
+          )} */}
+          {hasComplimentaryYears ? (
+            <p className="text-sm text-gray-600">
+              Extend your complimentary protection for complete long-term peace of mind.
+            </p>
+          ) : content?.subheading ? (
+            <p className="text-sm text-gray-600">{content.subheading}</p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => {
+              const toSelect =
+                allOptions.find((o: LoxaInsurance) => o.code === selectedCode) ||
+                allOptions[0];
+              if (toSelect) onSelect(toSelect);
+            }}
+            className="w-full cursor-pointer rounded-full bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Add Protection
+          </button>
+
+          {openedFromPrompt ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onContinueWithoutProtection?.();
+              }}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Continue without protection
+            </button>
+            ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              No Thanks
+            </button>
           )}
 
-          {content?.terms && (
+          {/* {content?.terms && (
             <div className="rounded-lg bg-gray-50 p-4">
               <p className="mb-2 text-sm font-semibold">{content.terms.heading}</p>
               <ul className="space-y-2">
@@ -648,7 +760,39 @@ function LoxaSidebar({
                 </div>
               )}
             </div>
-          )}
+          )} */}
+
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="mb-2 text-sm font-semibold">What to expect</p>
+            <ul className="space-y-2">
+              {hasComplimentaryYears ? (
+                <>
+                  {[
+                    "Covers accidental stains such as food, drink, ink, make up and more",
+                    "Covers accidental damage such as rips, tears, scratches, burns and damage caused by pets",
+                    "For approved claims, our team will arrange the right fix, which may be at-home repair or a replacement item",
+                  ].map((line, i) => (
+                    <li key={i} className="text-sm text-gray-600 flex gap-2">
+                      <span className="text-green-500 font-bold">✓</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </>
+              ) : (
+              content?.terms?.lines.map(
+                (
+                  line: string | { text?: string; links?: Record<string, string> },
+                  i: number,
+                ) => renderTermLine(line, i),
+              )
+              )}
+            </ul>
+            {content?.footer_pill && (
+              <div className="mt-3 rounded-full bg-green-100 px-3 py-1 text-center text-xs font-medium text-green-700">
+                {content.footer_pill}
+              </div>
+            )}
+          </div>
 
           {allOptions.length > 1 && (
             <div className="space-y-2">
@@ -665,7 +809,12 @@ function LoxaSidebar({
                       : "border-gray-200 hover:border-blue-300",
                   )}
                 >
-                  <span className="font-medium">{opt.insurance_term} Year</span>
+                  {/* <span className="font-medium">{opt.insurance_term} Year</span> */}
+                  <span className="font-medium">
+  {hasComplimentaryYears
+    ? `+${Number(opt.insurance_term) - Number(hasComplimentaryYears)} yr — Total ${opt.insurance_term} Years`
+    : `${opt.insurance_term} Year`}
+</span>
                   {opt.insurance_price > 0 && (
                     <span className="ml-2 text-gray-500">
                       £{opt.insurance_price.toFixed(2)}
@@ -676,18 +825,26 @@ function LoxaSidebar({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              const toSelect =
-                allOptions.find((o: LoxaInsurance) => o.code === selectedCode) ||
-                allOptions[0];
-              if (toSelect) onSelect(toSelect);
-            }}
-            className="w-full cursor-pointer rounded-full bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Add Protection
-          </button>
+          {/* {openedFromPrompt ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onContinueWithoutProtection?.();
+              }}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Continue without protection
+            </button>
+            ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full cursor-pointer rounded-full border border-gray-300 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              No Thanks
+            </button>
+          )} */}
 
           {content?.legal_disclaimer && (
             <p className="text-[10px] leading-relaxed text-gray-400">

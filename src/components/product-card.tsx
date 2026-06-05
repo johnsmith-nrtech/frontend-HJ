@@ -369,7 +369,7 @@ const handleAddToCart = async () => {
                 }}
                 size="sm"
                 variant="ghost"
-                className="rounded-full bg-white"
+                className="rounded-full bg-white !p-1 !h-7 !w-7 [&_svg]:h-6 [&_svg]:w-6"
               />
             </div>
           </div>
