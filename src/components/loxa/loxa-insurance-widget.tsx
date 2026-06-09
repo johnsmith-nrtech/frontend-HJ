@@ -165,27 +165,22 @@ export function LoxaInsuranceWidget({
       <div className="mt-4 space-y-2">
         <div className="rounded-xl border p-4">
           <div className="flex items-start gap-3">
+            <img
+              src="/loxa.png"
+              alt="Loxa"
+              className="h-5 w-5 object-contain mt-[2px] shrink-0"
+            />
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/loxa.png"
-                  alt="Loxa"
-                  width={20}
-                  height={20}
-                />
-                <p className="text-sm font-semibold text-gray-800">
-                  Free 5-year Protection Included
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-gray-800">
+                Free 5-year Protection Included
+              </p>
               <p className="mt-1 text-xs text-gray-500">
                 Protect you against accidental stains, accidental damage and structural defects.
               </p>
               <button
                 type="button"
                 className="mt-1 text-xs font-medium text-blue-600 underline cursor-pointer"
-                onClick={() => {
-                  setSidebarOpen(true);
-                }}
+                onClick={() => setSidebarOpen(true)}
               >
                 See Details
               </button>
