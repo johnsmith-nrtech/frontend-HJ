@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Heart, Truck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart, useCartAnimationStore } from "@/lib/store/cart-store";
+import { useWishlist } from "@/lib/store/wishlist-store";
 import { WishlistButton } from "@/components/wishlist/wishlist-button";
 import { toast } from "sonner";
 import { Button } from "./button-custom";
@@ -104,7 +105,7 @@ const handleAddToCart = async () => {
     <div className="space-y-3">
       {/* 1. Product Name (Title) */}
       <Link href={`/products/${id}`}>
-        <h3 className="font-bebas text-dark-gray hover:text-blue overflow-hidden text-lg leading-tight text-ellipsis whitespace-nowrap uppercase transition-colors">
+        <h3 className="font-bebas text-dark-gray hover:text-blue text-lg leading-tight uppercase transition-colors break-words w-full" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {name}
         </h3>
       </Link>
@@ -139,8 +140,12 @@ const handleAddToCart = async () => {
             £{formatPrice(price)}
           </span>
           {showInstallments && (
-            <span className="line-clamp-1 inline-block rounded-xl bg-[#3293a8] px-2 py-1 text-xs 
-            font-medium text-white w-fit mt-1">
+            // <span className="line-clamp-1 inline-block rounded-xl bg-[#3293a8] px-2 py-1 text-xs 
+            // font-medium text-white w-fit mt-1">
+            //   {deliveryInfo}
+            // </span>
+            <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+              <Truck className="h-3 w-3 shrink-0" />
               {deliveryInfo}
             </span>
           )}
@@ -149,7 +154,8 @@ const handleAddToCart = async () => {
         {/* Right side */}
         {showInstallments ? (
           <>
-            <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} />
+            {/* <div style={{ width: '3px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} /> */}
+            <div style={{ width: '1px', alignSelf: 'stretch', backgroundColor: '#2563eb', flexShrink: 0, margin: '0 8px' }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <span className="text-xs text-gray-400">36 monthly payments of</span>
               <span className="text-[18px] font-bold text-blue-700">
@@ -242,7 +248,21 @@ const handleAddToCart = async () => {
   // );
 
 
-  const DesktopLayout = () => (
+  const DesktopLayout = () => {
+    const { isInWishlist: checkWishlist, toggleItem, isItemLoading } = useWishlist();
+    const isInWishlist = checkWishlist(variantId || id.toString());
+    const isWishlistLoading = isItemLoading(variantId || id.toString());
+
+    const toggleWishlistItem = async () => {
+      try {
+        const added = await toggleItem(variantId || id.toString(), { name, price, image: imageSrc, size, color, stock });
+        toast.success(added ? `Added ${name} to wishlist` : `Removed ${name} from wishlist`);
+      } catch {
+        toast.error("Failed to update wishlist");
+      }
+    };
+
+    return (
     <div className="space-y-3">
       {/* Product Name and Rating Row */}
       <div className="flex items-center justify-between">
@@ -264,7 +284,11 @@ const handleAddToCart = async () => {
             £{formatPrice(price)}
           </span>
           {showInstallments && (
-            <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+            // <span className="line-clamp-1 inline-block rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+            //   {deliveryInfo}
+            // </span>
+            <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+              <Truck className="h-3 w-3 shrink-0" />
               {deliveryInfo}
             </span>
           )}
@@ -273,7 +297,8 @@ const handleAddToCart = async () => {
         {/* Right side: divider + installments OR delivery badge justify-between */}
         {showInstallments ? (
           <>
-            <div style={{ width: '1px', borderLeft: '3px solid #2563eb', alignSelf: 'stretch', flexShrink: 0, margin: '0 10px' }} />
+            {/* <div style={{ width: '1px', borderLeft: '3px solid #2563eb', alignSelf: 'stretch', flexShrink: 0, margin: '0 10px' }} /> */}
+            <div style={{ width: '1px', borderLeft: '1px solid #2563eb', alignSelf: 'stretch', flexShrink: 0, margin: '0 10px' }} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <span className="text-xs text-gray-400">36 monthly payments of</span>
                 <span className="text-[20px] font-bold text-blue-700">
@@ -317,8 +342,35 @@ const handleAddToCart = async () => {
           )}
         </div>
       </Button>
+
+      {/* Add to Wishlist Button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleWishlistItem();
+        }}
+        disabled={isWishlistLoading}
+        className="font-open-sans relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full border border-blue px-4 font-medium text-blue transition-colors ease-in-out hover:bg-blue/10 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span>{isInWishlist ? "Remove From Wishlist" : "Add To Wishlist"}</span>
+        <div className="absolute top-1/2 right-2 -translate-y-1/2">
+          {isWishlistLoading ? (
+            <Loader2 className="h-[30px] w-[30px] rounded-full bg-blue/10 p-2 text-blue md:h-[40px] md:w-[40px] animate-spin" />
+          ) : (
+            <Image
+              src={isInWishlist ? "/fav-filled.png" : "/fav.png"}
+              alt={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+              width={40}
+              height={40}
+              className="h-[30px] w-[30px] rounded-full bg-blue/10 object-contain p-2 md:h-[40px] md:w-[40px]"
+            />
+          )}
+        </div>
+      </button>
     </div>
   );
+}
 
 
   return (
@@ -350,7 +402,7 @@ const handleAddToCart = async () => {
           )}
 
           {/* Wishlist Button - Top Right */}
-          <div className="absolute top-2 right-2">
+          {/* <div className="absolute top-2 right-2">
             <div
               onClick={(e) => {
                 e.preventDefault();
@@ -372,7 +424,7 @@ const handleAddToCart = async () => {
                 className="rounded-full bg-white !p-1 !h-7 !w-7 [&_svg]:h-6 [&_svg]:w-6"
               />
             </div>
-          </div>
+          </div> */}
         </div>
       </Link>
 

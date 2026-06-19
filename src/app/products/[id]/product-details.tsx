@@ -343,37 +343,12 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   const { user, session } = useAuth();
 
-// useEffect(() => {
-//   if (!session?.access_token) return;
-
-//   const existingRef = new URLSearchParams(window.location.search).get('ref');
-//   if (existingRef) return; // someone else's ref in URL — leave it alone
-
-//   const appendOwnRefCode = async () => {
-//     try {
-//       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/user/referral-code`, {
-//         headers: { Authorization: `Bearer ${session.access_token}` },
-//       });
-//       if (!res.ok) return;
-//       const data = await res.json();
-//       if (data.referral_code) {
-//         const url = new URL(window.location.href);
-//         url.searchParams.set('ref', data.referral_code);
-//         window.history.replaceState({}, '', url.toString());
-//       }
-//     } catch (err) {
-//       console.error('Failed to fetch own referral code:', err);
-//     }
-//   };
-
-//   appendOwnRefCode();
-// }, [session]);
 
 useEffect(() => {
   if (!session?.access_token) return;
 
   const existingRef = new URLSearchParams(window.location.search).get('ref');
-  if (existingRef) return; // someone else's ref — leave it alone
+  if (existingRef) return;
 
   const appendOwnRefCode = async () => {
     try {
@@ -900,12 +875,12 @@ const proceedToAddToCart = () => {
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator>
+            {/* <BreadcrumbSeparator>
               <ChevronRight className="h-4 w-4" />
             </BreadcrumbSeparator>
             <BreadcrumbItem>
               <BreadcrumbLink className="font-medium">{product.name}</BreadcrumbLink>
-            </BreadcrumbItem>
+            </BreadcrumbItem> */}
           </BreadcrumbList>
         </Breadcrumb>
 
@@ -986,17 +961,14 @@ const proceedToAddToCart = () => {
                   <div className="absolute top-4 right-4 z-10 md:hidden">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleWishlistToggle(); }}
-                      className={cn(
-                        "flex h-10 w-10 items-center justify-center transition-all",
-                        isWishlisted ? "" : "border-white bg-white/90 backdrop-blur-sm",
-                      )}
+                      className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
                     >
                       <Image
                         src={isWishlisted ? "/fav-filled.png" : "/fav.png"}
                         alt="Wishlist"
                         width={40}
                         height={40}
-                        className="object-contain"
+                        className="object-contain bg-white rounded-full"
                       />
                     </button>
                   </div>
