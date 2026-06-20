@@ -50,6 +50,8 @@ import {
 } from "@/components/ui/carousel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInView } from "@/hooks/use-in-view";
+import { useSearchStore } from "@/lib/store/search-store";
+
 
 // ─────────────────────────────────────────────────────────────────
 //  INTERFACES
@@ -222,10 +224,24 @@ interface DimensionItem {
 // ─────────────────────────────────────────────────────────────────
 
   const marqueeItems = [
-    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
-    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
-    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
-    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+    { text: "Interest-free credit ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Free delivery offers", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Finance availability", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Referral rewards", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Protection cover offers ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Discount campaigns", 
+      // icon: "/sofa-icon.png" 
+    },
   ];
 
 const tabList = [
@@ -342,6 +358,11 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const router = useRouter()
 
   const { user, session } = useAuth();
+  const clearSearch = useSearchStore((state) => state.clearSearch);
+
+  useEffect(() => {
+    clearSearch();
+  }, []);
 
 
 useEffect(() => {
@@ -947,8 +968,26 @@ const proceedToAddToCart = () => {
                     </div>
                   )}
 
+                  {/* Mobile prev/next arrows */}
+                  {displayImages.length > 1 && !isZoomed && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow-md md:hidden"
+                      >
+                        <ChevronLeft className="h-4 w-4 text-gray-700" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow-md md:hidden"
+                      >
+                        <ChevronRight className="h-4 w-4 text-gray-700" />
+                      </button>
+                    </>
+                  )}
+
                   {isZoomed && (
-                    <div className="absolute top-4 right-4 z-10">
+                    <div className="absolute top-4 right-4 z-20">
                       <button
                         onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
                         className="bg-opacity-50 hover:bg-opacity-70 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"

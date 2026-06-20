@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Button } from "../button-custom";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useProducts } from "@/hooks/use-products";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -73,7 +75,14 @@ function useBestSellerProducts() {
 
 const ShopOurBestSeller = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { data: bestSellers = [], isLoading, error } = useBestSellerProducts();
+  const { data: bestSellers = [], isLoading: isBestSellerLoading, error } = useBestSellerProducts();
+  const { data: regularProductsData, isLoading: isRegularLoading } = useProducts({
+    limit: 1000,
+    includeVariants: true,
+    includeImages: true,
+  });
+  const regularProducts: BestSellerProductData[] = regularProductsData?.items || [];
+  const isLoading = isBestSellerLoading || isRegularLoading;
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -153,9 +162,22 @@ const ShopOurBestSeller = () => {
     );
   }
 
-  if (bestSellers.length === 0) return null;
+  const bestSellerProductIds = new Set(bestSellers.map((bs: BestSellerItem) => bs.product_id));
 
-  const processed = bestSellers
+  const fallbackAsBestSellerShape: BestSellerItem[] = regularProducts
+    .filter((p: BestSellerProductData) => !bestSellerProductIds.has(p.id))
+    .map((p: BestSellerProductData) => ({
+      id: p.id,
+      product_id: p.id,
+      created_at: "",
+      product: p,
+    }));
+
+  const combined = [...bestSellers, ...fallbackAsBestSellerShape];
+
+  if (combined.length === 0) return null;
+
+  const processed = combined
     .map((item: BestSellerItem) => processProduct(item))
     .filter((p: ProcessedProduct | null): p is ProcessedProduct => p !== null);
 
@@ -195,7 +217,7 @@ const ShopOurBestSeller = () => {
           {/* Left button */}
           <button
             onClick={() => scroll("left")}
-            className="absolute -left-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            className="absolute left-0 sm:-left-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-1 sm:p-2 shadow-md transition-colors hover:bg-gray-50"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -245,7 +267,7 @@ const ShopOurBestSeller = () => {
           {/* Right button */}
           <button
             onClick={() => scroll("right")}
-            className="absolute -right-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            className="absolute right-0 sm:-right-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-1 sm:p-2 shadow-md transition-colors hover:bg-gray-50"
             aria-label="Scroll right"
           >
             <ChevronRight className="h-5 w-5" />

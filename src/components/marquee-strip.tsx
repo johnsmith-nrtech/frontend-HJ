@@ -21,7 +21,7 @@ export function MarqueeStrip({
   backgroundColor = "bg-blue",
   textColor = "text-white",
 }: MarqueeStripProps) {
-  const repeatedItems = [...items, ...items]; // Repeat for smooth loop
+  const repeatedItems = [...items, ...items];
 
   return (
     <>

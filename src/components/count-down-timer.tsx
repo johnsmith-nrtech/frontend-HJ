@@ -57,43 +57,44 @@ export function CountdownTimer({
   const minutesStr = formatNumber(timeRemaining.minutes);
   const secondsStr = formatNumber(timeRemaining.seconds);
 
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {/* Hours - First Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{hoursStr.charAt(0)}</div>
-      </div>
-
-      {/* Hours - Second Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{hoursStr.charAt(1)}</div>
-      </div>
-
-      {/* Colon */}
-      <span className="text-blue mx-1 text-2xl font-bold">:</span>
-
-      {/* Minutes - First Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{minutesStr.charAt(0)}</div>
-      </div>
-
-      {/* Minutes - Second Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{minutesStr.charAt(1)}</div>
-      </div>
-
-      {/* Colon */}
-      <span className="text-blue mx-1 text-2xl font-bold">:</span>
-
-      {/* Seconds - First Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{secondsStr.charAt(0)}</div>
-      </div>
-
-      {/* Seconds - Second Digit */}
-      <div className="bg-blue font-open-sans h-auto w-[43px] rounded-lg text-center text-white shadow-md">
-        <div className="text-xl md:text-[46px]">{secondsStr.charAt(1)}</div>
-      </div>
+  <div className={`flex items-center gap-1 sm:gap-1.5 md:gap-2 ${className}`}>
+    {/* Hours - First Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{hoursStr.charAt(0)}</div>
     </div>
-  );
+
+    {/* Hours - Second Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{hoursStr.charAt(1)}</div>
+    </div>
+
+    {/* Colon */}
+    <span className="text-blue mx-0.5 sm:mx-1 text-sm sm:text-xl md:text-2xl font-bold">:</span>
+
+    {/* Minutes - First Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{minutesStr.charAt(0)}</div>
+    </div>
+
+    {/* Minutes - Second Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{minutesStr.charAt(1)}</div>
+    </div>
+
+    {/* Colon */}
+    <span className="text-blue mx-0.5 sm:mx-1 text-sm sm:text-xl md:text-2xl font-bold">:</span>
+
+    {/* Seconds - First Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{secondsStr.charAt(0)}</div>
+    </div>
+
+    {/* Seconds - Second Digit */}
+    <div className="bg-blue font-open-sans h-auto w-[26px] sm:w-[34px] md:w-[43px] rounded-lg text-center text-white shadow-md">
+      <div className="text-sm sm:text-2xl md:text-[46px]">{secondsStr.charAt(1)}</div>
+    </div>
+  </div>
+);
 }

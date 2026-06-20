@@ -1036,29 +1036,50 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* Right - Cart Icon (Large) */}
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-gray relative p-2 hover:text-[#222222]"
-                asChild
-              >
-                <Link href="/cart">
-                  <ShoppingCart className="!h-10 !w-10 text-black" size={100} />
-                  {isClient && totalItems > 0 && (
-                    <Badge
-                      className={`bg-blue absolute -top-1 -right-1 flex items-center justify-center rounded-full text-xs text-white hover:bg-blue-700 ${
-                        totalItems > 99 ? "h-6 w-6 text-[10px]" : "h-5 w-5"
-                      } p-0`}
-                    >
-                      {totalItems > 99 ? "99+" : totalItems}
-                    </Badge>
-                  )}
-                  <span className="sr-only">Cart</span>
-                </Link>
-              </Button>
-            </div>
+            {/* Right - Wishlist + Cart Icons */}
+<div className="flex items-center gap-3">
+  <Button
+    variant="ghost"
+    size="icon"
+    className="text-gray relative p-2 hover:text-[#222222]"
+    asChild
+  >
+    <Link href="/wishlist">
+      <Heart className="!h-7 !w-7 text-black" />
+      {isClient && wishlistCount > 0 && (
+        <Badge
+          className={`bg-blue absolute -top-1 -right-1 flex items-center justify-center rounded-full text-xs text-white hover:bg-blue-700 ${
+            wishlistCount > 99 ? "h-6 w-6 text-[10px]" : "h-5 w-5"
+          } p-0`}
+        >
+          {wishlistCount > 99 ? "99+" : wishlistCount}
+        </Badge>
+      )}
+      <span className="sr-only">Wishlist</span>
+    </Link>
+  </Button>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="text-gray relative p-2 hover:text-[#222222]"
+    asChild
+  >
+    <Link href="/cart">
+      <ShoppingCart className="!h-10 !w-10 text-black" size={100} />
+      {isClient && totalItems > 0 && (
+        <Badge
+          className={`bg-blue absolute -top-1 -right-1 flex items-center justify-center rounded-full text-xs text-white hover:bg-blue-700 ${
+            totalItems > 99 ? "h-6 w-6 text-[10px]" : "h-5 w-5"
+          } p-0`}
+        >
+          {totalItems > 99 ? "99+" : totalItems}
+        </Badge>
+      )}
+      <span className="sr-only">Cart</span>
+    </Link>
+  </Button>
+</div>
           </div>
         </div>
 

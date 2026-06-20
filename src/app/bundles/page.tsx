@@ -21,10 +21,24 @@ import { cn } from "@/lib/utils";
 
 // ─── Marquee items (same as /products) ───────────────────────
   const marqueeItems = [
-    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
-    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
-    { text: "3-Years Interest Free Credit", icon: "/sofa-icon.png" },
-    { text: "10% Deposit Only", icon: "/sofa-icon.png" },
+    { text: "Interest-free credit ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Free delivery offers", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Finance availability", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Referral rewards", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Protection cover offers ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Discount campaigns", 
+      // icon: "/sofa-icon.png" 
+    },
   ];
 
 export default function BundlesPage() {

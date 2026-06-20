@@ -5,6 +5,8 @@ import { CountdownTimer } from "../count-down-timer";
 import { ProductCard } from "../product-card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useProducts } from "@/hooks/use-products";
+
 
 // Types defined locally
 interface SaleProductVariant {
@@ -72,7 +74,14 @@ function useSaleProducts() {
 
 const FeaturedProducts = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { data: saleProducts = [], isLoading, error } = useSaleProducts();
+  const { data: saleProducts = [], isLoading: isSaleLoading, error } = useSaleProducts();
+  const { data: regularProductsData, isLoading: isRegularLoading } = useProducts({
+    limit: 1000,
+    includeVariants: true,
+    includeImages: true,
+  });
+  const regularProducts: SaleProductData[] = regularProductsData?.items || [];
+  const isLoading = isSaleLoading || isRegularLoading;
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -170,9 +179,22 @@ const FeaturedProducts = () => {
     );
   }
 
-  if (saleProducts.length === 0) return null;
+const saleProductIds = new Set(saleProducts.map((sp: SaleProduct) => sp.product_id));
 
-  const processed = saleProducts
+  const fallbackAsSaleShape: SaleProduct[] = regularProducts
+    .filter((p: SaleProductData) => !saleProductIds.has(p.id))
+    .map((p: SaleProductData) => ({
+      id: p.id,
+      product_id: p.id,
+      created_at: "",
+      product: p,
+    }));
+
+  const combined = [...saleProducts, ...fallbackAsSaleShape];
+
+  if (combined.length === 0) return null;
+
+  const processed = combined
     .map((sp: SaleProduct) => processProduct(sp))
     .filter((p: ProcessedProduct | null): p is ProcessedProduct => p !== null);
 
@@ -182,21 +204,29 @@ const FeaturedProducts = () => {
     <div className="py-4 pb-8 md:py-8">
       <div className="px-4 sm:px-8">
         {/* Header */}
-        <div className="mb-8 flex w-full items-center justify-center md:justify-between md:mb-10">
+        {/* <div className="mb-8 flex w-full items-center justify-center md:justify-between md:mb-10">
           <h1 className="text-3xl sm:text-6xl lg:text-[85px]">
             SALES ENDS SOON
           </h1>
           <span className="ml-4 hidden lg:flex">
             <CountdownTimer />
           </span>
-        </div>
+        </div> */}
+        <div className="mb-8 flex w-full flex-nowrap items-center justify-between md:mb-10">
+  <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-[85px] shrink-0">
+    SALES ENDS SOON
+  </h1>
+  <span className="ml-2 flex shrink-0 scale-75 sm:scale-90 md:scale-100 origin-right">
+    <CountdownTimer />
+  </span>
+</div>
 
         {/* Scrollable row — exactly 3 cards visible at a time */}
         <div className="relative">
           {/* Left button */}
           <button
             onClick={() => scroll("left")}
-            className="absolute -left-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            className="absolute -left-5 top-1/3 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -249,7 +279,7 @@ const FeaturedProducts = () => {
           {/* Right button */}
           <button
             onClick={() => scroll("right")}
-            className="absolute -right-5 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
+            className="absolute -right-5 top-1/3 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-colors hover:bg-gray-50"
             aria-label="Scroll right"
           >
             <ChevronRight className="h-5 w-5" />
