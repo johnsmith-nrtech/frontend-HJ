@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Save, Loader2, GripVertical,
@@ -232,6 +233,7 @@ function TestimonialsTab() {
   const [editItem, setEditItem] = useState<Testimonial | null>(null);
   const [form, setForm] = useState({
     time_ago: "", rating: 5, title: "", description: "", author: "", role: "", order_index: 0,
+    image_url: "", video_url: "",
   });
 
   useEffect(() => { fetchAll(); }, []);
@@ -245,15 +247,25 @@ function TestimonialsTab() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ time_ago: "1 day ago", rating: 5, title: "", description: "", author: "", role: "", order_index: items.length });
+   setForm({ time_ago: "1 day ago", rating: 5, title: "", description: "", author: "", role: "", order_index: items.length, image_url: "", video_url: "" });
     setShowModal(true);
   };
 
   const openEdit = (item: Testimonial) => {
-    setEditItem(item);
-    setForm({ time_ago: item.time_ago, rating: item.rating, title: item.title, description: item.description, author: item.author, role: item.role, order_index: item.order_index });
-    setShowModal(true);
-  };
+  setEditItem(item);
+  setForm({ 
+    time_ago: item.time_ago, 
+    rating: item.rating, 
+    title: item.title, 
+    description: item.description, 
+    author: item.author, 
+    role: item.role, 
+    order_index: item.order_index, 
+    image_url: item.image_url || "", 
+    video_url: item.video_url || "",
+  });
+  setShowModal(true);
+};
 
   const handleSave = async () => {
     if (!form.title || !form.description || !form.author || !form.role) { toast.error("All fields are required"); return; }
@@ -407,6 +419,57 @@ function TestimonialsTab() {
                   <input type="text" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
                     placeholder="e.g. INTERIOR DESIGNER" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
+                <div>
+  <label className="mb-1 block text-xs font-semibold uppercase text-gray-500">Image (optional)</label>
+  <div className="flex items-center gap-2">
+    <input
+      type="file"
+      accept="image/*"
+      id="image-upload"
+      className="hidden"
+      onChange={async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const path = `testimonials/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("testimonials").upload(path, file);
+  if (error) { toast.error("Image upload failed"); return; }
+  const { data } = supabase.storage.from("testimonials").getPublicUrl(path);
+  setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+  toast.success("Image uploaded!");
+}}
+    />
+    <label htmlFor="image-upload" className="cursor-pointer flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
+      <Plus size={14} /> Upload Image
+    </label>
+    {form.image_url && <span className="text-xs text-green-600 truncate max-w-[150px]">✓ Uploaded</span>}
+  </div>
+</div>
+
+<div>
+  <label className="mb-1 block text-xs font-semibold uppercase text-gray-500">Video (optional)</label>
+  <div className="flex items-center gap-2">
+    <input
+      type="file"
+      accept="video/*"
+      id="video-upload"
+      className="hidden"
+      onChange={async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const path = `testimonials/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("testimonials").upload(path, file);
+  if (error) { toast.error("Video upload failed"); return; }
+  const { data } = supabase.storage.from("testimonials").getPublicUrl(path);
+  setForm((prev) => ({ ...prev, video_url: data.publicUrl }));
+  toast.success("Video uploaded!");
+}}
+    />
+    <label htmlFor="video-upload" className="cursor-pointer flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
+      <Plus size={14} /> Upload Video
+    </label>
+    {form.video_url && <span className="text-xs text-green-600 truncate max-w-[150px]">✓ Uploaded</span>}
+  </div>
+</div>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
