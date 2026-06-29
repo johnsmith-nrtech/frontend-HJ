@@ -85,6 +85,16 @@ export interface Product {
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
   show_sofadeal_coverage?: boolean;
+  dimensions?: {
+    width?: { cm: number; inches: number };
+    depth?: { cm: number; inches: number };
+    height?: { cm: number; inches: number };
+    seat_width?: { cm: number; inches: number };
+    seat_depth?: { cm: number; inches: number };
+    seat_height?: { cm: number; inches: number };
+    bed_width?: { cm: number; inches: number };
+    bed_length?: { cm: number; inches: number };
+  };
 }
 
 export interface ProductVariant {

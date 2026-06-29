@@ -304,7 +304,7 @@ const processProduct = (product: FeaturedProduct) => {
             <div className="overflow-hidden mx-2">
               <div
                 ref={lgScrollRef}
-                className="flex gap-6 md:gap-8 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                className="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               >
                 {products.map((product: FeaturedProduct, index: number) => {
                   const processed = processProduct(product);

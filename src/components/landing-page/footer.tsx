@@ -166,7 +166,7 @@ const Footer = () => {
 
               {/* Resources Column from DB */}
               <div>
-                <h3 className="font-open-sans mb-4 text-lg font-semibold tracking-wider text-white uppercase md:mb-6 md:text-xl">
+                <h3 className="font-open-sans mb-4 text-lg font-bold tracking-wider text-white uppercase md:mb-6 md:text-xl">
                   RESOURCES
                 </h3>
                 <div className="space-y-3">

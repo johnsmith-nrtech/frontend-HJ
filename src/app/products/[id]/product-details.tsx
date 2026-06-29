@@ -372,6 +372,7 @@ useEffect(() => {
   if (existingRef) return;
 
   const appendOwnRefCode = async () => {
+    await new Promise((res) => setTimeout(res, 300));
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/user/referral-code`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -1124,9 +1125,9 @@ const proceedToAddToCart = () => {
                     {product.name}
                   </h1>
                   <Badge className="flex items-center gap-2 rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
-  <Truck className="h-6 w-6 md:h-7 md:w-7" />
-  {getDeliveryDetails()}
-</Badge>
+                    <Truck className="h-6 w-6 md:h-7 md:w-7" />
+                    {getDeliveryDetails()}
+                  </Badge>
                 </div>
               )}
 
