@@ -38,6 +38,8 @@ export interface ProductVariant {
     seat_width?: { cm: number; inches: number };
     seat_depth?: { cm: number; inches: number };
     seat_height?: { cm: number; inches: number };
+    bed_width?: { cm: number; inches: number };
+    bed_length?: { cm: number; inches: number };
     armrest_height?: { cm: number; inches: number };
   };
   material?: string;
@@ -85,6 +87,8 @@ const emptyDimensions = {
   seat_width: { cm: 0, inches: 0 },
   seat_depth: { cm: 0, inches: 0 },
   seat_height: { cm: 0, inches: 0 },
+  bed_width: { cm: 0, inches: 0 },
+  bed_length: { cm: 0, inches: 0 },
   armrest_height: { cm: 0, inches: 0 },
 };
 
@@ -716,6 +720,43 @@ export function VariantManager({
                         setNewVariant({
                           ...newVariant,
                           dimensions: { ...newVariant.dimensions, armrest_height: { cm, inches } },
+                        });
+                      }}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Bed Width (cm)</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      min="0"
+                      value={newVariant.dimensions?.bed_width?.cm || 0}
+                      onChange={(e) => {
+                        const cm = parseFloat(e.target.value) || 0;
+                        const inches = Math.round((cm / 2.54) * 10) / 10;
+                        setNewVariant({
+                          ...newVariant,
+                          dimensions: { ...newVariant.dimensions, bed_width: { cm, inches } },
+                        });
+                      }}
+                      disabled={disabled}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Bed Length (cm)</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      min="0"
+                      value={newVariant.dimensions?.bed_length?.cm || 0}
+                      onChange={(e) => {
+                        const cm = parseFloat(e.target.value) || 0;
+                        const inches = Math.round((cm / 2.54) * 10) / 10;
+                        setNewVariant({
+                          ...newVariant,
+                          dimensions: { ...newVariant.dimensions, bed_length: { cm, inches } },
                         });
                       }}
                       disabled={disabled}

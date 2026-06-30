@@ -100,6 +100,7 @@ const formSchema = z.object({
   seat_height_cm: z.coerce.number().min(0, "Must be positive").optional(),
   bed_width_cm: z.coerce.number().min(0, "Must be positive").optional(),
   bed_length_cm: z.coerce.number().min(0, "Must be positive").optional(),
+  armrest_height_cm: z.coerce.number().min(0, "Must be positive").optional(),
 
   // Payment Options
   klarna_enabled: z.boolean().optional(),
@@ -190,6 +191,7 @@ export default function AddProductPage() {
       seat_height_cm: 0,
       bed_width_cm: 0,
       bed_length_cm: 0,
+      armrest_height_cm: 0,
       klarna_enabled: false,
       klarna_installments: 3,
       klarna_description: "",
@@ -276,7 +278,10 @@ export default function AddProductPage() {
               inches: calculateInches(values.bed_length_cm),
             }
           : undefined,
-      };
+        armrest_height: values.armrest_height_cm
+          ? { cm: values.armrest_height_cm, inches: calculateInches(values.armrest_height_cm) }
+          : undefined,
+        };
 
       // Prepare payment options
       const payment_options = [];
@@ -1562,6 +1567,21 @@ export default function AddProductPage() {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={form.control}
+                      name="armrest_height_cm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Armrest Height (cm)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                   </div>
                 </CardContent>
               </Card>
