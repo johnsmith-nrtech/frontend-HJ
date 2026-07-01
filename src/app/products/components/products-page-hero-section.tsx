@@ -40,14 +40,18 @@ export function ProductsPageHeroSection() {
   return (
     <div className="relative">
       <div className="relative h-[350px] overflow-hidden md:h-[450px] 2xl:h-[550px]">
-        <Image
-          src={slides[currentSlide]}
-          alt="Sofa Deals Product Page"
-          fill
-          className="object-cover object-center"
-          style={{ opacity, transition: "opacity 0.5s ease-in-out" }}
-          priority
-        />
+  <div className="absolute inset-0 h-full w-full md:ml-[44.5px] 2xl:mt-[0px] 2xl:ml-[68px]">
+    <Image
+      src={slides[currentSlide]}
+      alt="Sofa Deals Product Page"
+      fill
+      className="object-cover object-center"
+      style={{ opacity, transition: "opacity 0.5s ease-in-out" }}
+      priority
+    />
+  </div>
+
+  {/* Slide indicator dots, text, button stay outside this wrapper, unchanged */}
 
         {/* Slide indicator dots */}
         {slides.length > 1 && (
