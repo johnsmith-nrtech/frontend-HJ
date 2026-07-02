@@ -89,12 +89,14 @@ export function useCheckoutForm() {
   const [referralDiscount, setReferralDiscount] = React.useState(0);
 
 React.useEffect(() => {
-  // Priority 1: ?ref= from URL (works for both guests and logged-in)
+  // Priority 1: ?ref= from URL, or a ref code carried over from the product page
   const urlParams = new URLSearchParams(window.location.search);
-  const refCode = urlParams.get("ref");
+  const refCode = urlParams.get("ref") || localStorage.getItem("incoming_ref_code");
   if (refCode && !appliedCoupon) {
     setCouponCode(refCode);
-    return; // URL param takes priority, skip cookie
+    applyCoupon(undefined, refCode); // auto-apply immediately, no email yet — re-checked with email at step 2 for guests
+    localStorage.removeItem("incoming_ref_code");
+    return; // URL/carried-over ref takes priority, skip cookie
   }
 
   // Priority 2: ref_code cookie (logged-in auto-apply only)
@@ -143,6 +145,15 @@ React.useEffect(() => {
 
   autoApplyRef();
 }, [session]);
+
+const revalidatedCodeRef = React.useRef<string | null>(null);
+React.useEffect(() => {
+  if (!session?.access_token) return;
+  if (!appliedCoupon?.is_referral) return;
+  if (revalidatedCodeRef.current === appliedCoupon.code) return;
+  revalidatedCodeRef.current = appliedCoupon.code;
+  applyCoupon(undefined, appliedCoupon.code);
+}, [session?.access_token, appliedCoupon?.code, appliedCoupon?.is_referral]);
 
   const totalPrice = React.useMemo(() => getCartTotal(), [getCartTotal, items]);
 

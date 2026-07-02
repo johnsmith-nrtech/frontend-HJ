@@ -364,6 +364,13 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     clearSearch();
   }, []);
 
+  useEffect(() => {
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (ref) {
+    localStorage.setItem('incoming_ref_code', ref);
+  }
+}, []);
+
 
 useEffect(() => {
   if (!session?.access_token) return;

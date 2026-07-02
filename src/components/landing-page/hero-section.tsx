@@ -83,8 +83,9 @@ const [heroSettings, setHeroSettings] = useState<{
           </div>
         </div>
 
-        <div className="relative h-[50vh] overflow-hidden md:min-h-[650px] lg:min-h-[500px] 
-        lg:mb-[-4rem] 2xl:min-h-[1000px]">
+
+        <div className="relative h-[33vh] sm:h-[40vh] md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
+        2xl:min-h-[1000px]">
           {/* Hero Image - Background for entire section */}
           <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 
             2xl:ml-[21px] flex items-center justify-center">
@@ -129,7 +130,7 @@ const [heroSettings, setHeroSettings] = useState<{
           <div className="relative z-10 h-full px-4 sm:px-6 lg:px-9">
             <div className="grid h-full grid-cols-1 lg:grid-cols-2">
               {/* Left Side - Content */}
-              <div className="flex flex-col justify-between py-4 sm:py-6 md:py-8 lg:py-2">
+              <div className="flex flex-col justify-between py-4 sm:py-3 md:py-8 lg:py-2">
                 {/* Empty space for visual balance on desktop */}
                 <div className="hidden lg:block"></div>
               </div>
