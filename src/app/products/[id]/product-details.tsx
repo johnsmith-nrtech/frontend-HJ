@@ -748,7 +748,11 @@ const proceedToAddToCart = () => {
       green: "#008000", red: "#FF0000", pink: "#FFC0CB", purple: "#800080",
       orange: "#FFA500", yellow: "#FFFF00", cream: "#F5F0E1", charcoal: "#36454F",
       emerald: "#50C878", burgundy: "#800020", teal: "#008080", olive: "#808000",
-      maroon: "#800000",
+      maroon: "#800000", "light grey": "#D3D3D3", "medium grey": "#A9A9A9", "blush pink": "#F9C5D1",
+      "sky blue": "#87CEEB", "light beige": "#F5F0DC", "light taupe": "#C4B7A6", "taupe": "#8B7D6B",
+      "chocolate brown": "#7B3F00", "dark espresso": "#3C2414", "espresso": "#4B3621", "olive green": "#556B2F",
+      "forest green": "#228B22", "royal blue": "#4169E1", "navy blue": "#000080", "peacock blue": "#005F6A",
+      "bright yellow": "#FFD700", "mustard": "#E1AD01", "rust": "#B7410E",
     };
     return colorMap[colorName.toLowerCase().trim()] || colorName.toLowerCase().trim();
   };
