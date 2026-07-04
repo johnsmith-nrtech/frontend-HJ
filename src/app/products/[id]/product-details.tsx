@@ -364,43 +364,43 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     clearSearch();
   }, []);
 
-  useEffect(() => {
-  const ref = new URLSearchParams(window.location.search).get('ref');
-  if (ref) {
-    localStorage.setItem('incoming_ref_code', ref);
-  }
-}, []);
+//   useEffect(() => {
+//   const ref = new URLSearchParams(window.location.search).get('ref');
+//   if (ref) {
+//     localStorage.setItem('incoming_ref_code', ref);
+//   }
+// }, []);
 
 
-useEffect(() => {
-  if (!session?.access_token) return;
+// useEffect(() => {
+//   if (!session?.access_token) return;
 
-  const existingRef = new URLSearchParams(window.location.search).get('ref');
-  if (existingRef) return;
+//   const existingRef = new URLSearchParams(window.location.search).get('ref');
+//   if (existingRef) return;
 
-  const appendOwnRefCode = async () => {
-    await new Promise((res) => setTimeout(res, 300));
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/user/referral-code`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.referral_code) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('ref', data.referral_code);
-        window.history.replaceState({}, '', url.toString());
+//   const appendOwnRefCode = async () => {
+//     await new Promise((res) => setTimeout(res, 300));
+//     try {
+//       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coupons/user/referral-code`, {
+//         headers: { Authorization: `Bearer ${session.access_token}` },
+//       });
+//       if (!res.ok) return;
+//       const data = await res.json();
+//       if (data.referral_code) {
+//         const url = new URL(window.location.href);
+//         url.searchParams.set('ref', data.referral_code);
+//         window.history.replaceState({}, '', url.toString());
 
-        // Clear the ref_code cookie so own ref doesn't auto-apply in cart
-        document.cookie = 'ref_code=; Max-Age=0; path=/;';
-      }
-    } catch (err) {
-      console.error('Failed to fetch own referral code:', err);
-    }
-  };
+//         // Clear the ref_code cookie so own ref doesn't auto-apply in cart
+//         document.cookie = 'ref_code=; Max-Age=0; path=/;';
+//       }
+//     } catch (err) {
+//       console.error('Failed to fetch own referral code:', err);
+//     }
+//   };
 
-  appendOwnRefCode();
-}, [session]);
+//   appendOwnRefCode();
+// }, [session]);
 
   // ── scroll spy ────────────────────────────────────────────────
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Bebas_Neue, Open_Sans } from "next/font/google";
+import { ReferralTracker } from "@/components/referral-tracker";
 import "./globals.css";
 import { ReactQueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/lib/providers/auth-provider";
@@ -99,6 +100,7 @@ export default function RootLayout({
           <AuthProvider>
             <DynamicHead />
             <SearchInitializer />
+            <ReferralTracker />
             {!isAuthPage && !isAdminPage && <Navbar />}
             {children}
             {!isAuthPage && !isAdminPage && <FloatingWhatsAppButton />}
