@@ -927,6 +927,13 @@ export function Navbar() {
                             Wishlist ({isClient ? wishlistCount : 0})
                           </Link>
                           <Link
+                            href="/referral"
+                            className="font-open-sans flex items-center text-base font-medium"
+                            onClick={() => setIsSheetOpen(false)}
+                          >
+                            My Referral
+                          </Link>
+                          <Link
                             href="/cart"
                             className="font-open-sans flex items-center text-base font-medium"
                             onClick={() => setIsSheetOpen(false)}
