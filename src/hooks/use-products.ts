@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   getProducts,
   getProductById,
@@ -71,10 +71,41 @@ export function useProducts(params?: {
   return useQuery({
     queryKey: ["products", params],
     queryFn: () => getProducts(params),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
+
+
+export function useInfiniteProducts(params?: {
+  categoryId?: string;
+  size?: string;
+  material?: string;
+  search?: string;
+  limit?: number;
+  sortBy?: string;
+  priceRange?: string;
+  sortOrder?: string;
+  includeVariants?: boolean;
+  includeImages?: boolean;
+  includeCategory?: boolean;
+}) {
+  const limit = params?.limit ?? 24;
+
+  return useInfiniteQuery({
+    queryKey: ["products-infinite", params],
+    queryFn: ({ pageParam = 1 }) =>
+      getProducts({ ...params, page: pageParam, limit }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
 
 // Hook for fetching a single product by ID
 export function useProduct(

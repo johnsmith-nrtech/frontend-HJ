@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useInfiniteProducts } from "@/hooks/use-products";
+import { useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCard } from "@/components/product-card";
 import Link from "next/link";
@@ -76,21 +77,50 @@ function useBestSellerProducts() {
 const ShopOurBestSeller = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: bestSellers = [], isLoading: isBestSellerLoading, error } = useBestSellerProducts();
-  const { data: regularProductsData, isLoading: isRegularLoading } = useProducts({
-    limit: 1000,
-    includeVariants: true,
-    includeImages: true,
-  });
-  const regularProducts: BestSellerProductData[] = regularProductsData?.items || [];
-  const isLoading = isBestSellerLoading || isRegularLoading;
+  const {
+  data: infiniteData,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteProducts({
+  limit: 24,
+  includeVariants: true,
+  includeImages: true,
+});
+
+  const regularProducts: BestSellerProductData[] =
+  infiniteData?.pages.flatMap((page) => page.items) || [];
+const isLoading = isBestSellerLoading;
+
 
   const scroll = (direction: "left" | "right") => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -390 : 390,
-      behavior: "smooth",
-    });
+  if (!scrollRef.current) return;
+  scrollRef.current.scrollBy({
+    left: direction === "left" ? -390 : 390,
+    behavior: "smooth",
+  });
+
+  if (direction === "right") {
+    const el = scrollRef.current;
+    const nearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 800;
+    if (nearEnd && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }
+};
+
+useEffect(() => {
+  const el = scrollRef.current;
+  if (!el) return;
+  const handleScroll = () => {
+    const nearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 800;
+    if (nearEnd && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
+  el.addEventListener("scroll", handleScroll);
+  return () => el.removeEventListener("scroll", handleScroll);
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const processProduct = (item: BestSellerItem): ProcessedProduct | null => {
     const product = item.product;

@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { CountdownTimer } from "../count-down-timer";
 import { ProductCard } from "../product-card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useInfiniteProducts } from "@/hooks/use-products";
 import { useProducts } from "@/hooks/use-products";
 
 
@@ -75,22 +76,48 @@ function useSaleProducts() {
 const FeaturedProducts = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: saleProducts = [], isLoading: isSaleLoading, error } = useSaleProducts();
-  const { data: regularProductsData, isLoading: isRegularLoading } = useProducts({
-    limit: 1000,
-    includeVariants: true,
-    includeImages: true,
-  });
-  const regularProducts: SaleProductData[] = regularProductsData?.items || [];
-  const isLoading = isSaleLoading || isRegularLoading;
+  const {
+  data: infiniteData,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteProducts({
+  limit: 24,
+  includeVariants: true,
+  includeImages: true,
+});
+const regularProducts: SaleProductData[] =
+  infiniteData?.pages.flatMap((page) => page.items) || [];
+  const isLoading = isSaleLoading;
 
   const scroll = (direction: "left" | "right") => {
-    if (!scrollRef.current) return;
-    // Scroll exactly one card width + gap
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -390 : 390,
-      behavior: "smooth",
-    });
+  if (!scrollRef.current) return;
+  scrollRef.current.scrollBy({
+    left: direction === "left" ? -390 : 390,
+    behavior: "smooth",
+  });
+
+  if (direction === "right") {
+    const el = scrollRef.current;
+    const nearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 800;
+    if (nearEnd && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }
+};
+
+  useEffect(() => {
+  const el = scrollRef.current;
+  if (!el) return;
+  const handleScroll = () => {
+    const nearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 800;
+    if (nearEnd && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
+  el.addEventListener("scroll", handleScroll);
+  return () => el.removeEventListener("scroll", handleScroll);
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const processProduct = (saleProduct: SaleProduct): ProcessedProduct | null => {
     const product = saleProduct.product;
@@ -213,9 +240,9 @@ const saleProductIds = new Set(saleProducts.map((sp: SaleProduct) => sp.product_
           </span>
         </div> */}
         <div className="mb-8 flex w-full flex-nowrap items-center justify-between md:mb-10">
-  <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-[85px] shrink-0">
-    SALES ENDS SOON
-  </h1>
+          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-[85px] shrink-0">
+            SALES ENDS SOON
+          </h1>
   <span className="ml-2 flex shrink-0 scale-75 sm:scale-90 md:scale-100 origin-right">
     <CountdownTimer />
   </span>

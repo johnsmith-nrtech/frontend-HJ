@@ -1,6 +1,7 @@
 "use client";
 
-import { useNewArrivals } from "@/hooks/use-products";
+import { useNewArrivals, useInfiniteProducts } from "@/hooks/use-products";
+import { useRef, useEffect } from "react";
 import { ProductCard } from "@/components/product-card";
 import Link from "next/link";
 import { Button } from "../button-custom";
@@ -16,7 +17,6 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { FeaturedProduct } from "@/lib/api/products";
 import { useProducts } from "@/hooks/use-products";
-import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
@@ -26,14 +26,19 @@ const NewArrivals = () => {
     includeCategory: true,
   });
 
-  const { data: regularProductsData, isLoading: isRegularLoading } = useProducts({
-    limit: 1000,
-    includeVariants: true,
-    includeImages: true,
-  });
+  const {
+  data: infiniteData,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteProducts({
+  limit: 24,
+  includeVariants: true,
+  includeImages: true,
+});
 
   const newArrivals = (data as FeaturedProduct[] | undefined) || [];
-  const isLoading = isNewLoading || isRegularLoading;
+const isLoading = isNewLoading;
 
   interface RegularProductItem {
     id: string;
@@ -73,7 +78,8 @@ const NewArrivals = () => {
   };
 
   const newArrivalIds = new Set(newArrivals.map((p) => p.id));
-  const regularProducts: RegularProductItem[] = regularProductsData?.items || [];
+const regularProducts: RegularProductItem[] =
+  infiniteData?.pages.flatMap((page) => page.items) || [];
   const fallbackProducts = regularProducts
     .filter((p) => !newArrivalIds.has(p.id))
     .map(mapToFeaturedShape);
@@ -83,12 +89,20 @@ const NewArrivals = () => {
   const desktopScrollRef = useRef<HTMLDivElement>(null);
 const lgScrollRef = useRef<HTMLDivElement>(null);
 
+const maybeFetchNext = (el: HTMLDivElement) => {
+  const nearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 800;
+  if (nearEnd && hasNextPage && !isFetchingNextPage) {
+    fetchNextPage();
+  }
+};
+
 const scrollDesktop = (direction: "left" | "right") => {
   if (!desktopScrollRef.current) return;
   desktopScrollRef.current.scrollBy({
     left: direction === "left" ? -390 : 390,
     behavior: "smooth",
   });
+  if (direction === "right") maybeFetchNext(desktopScrollRef.current);
 };
 
 const scrollLg = (direction: "left" | "right") => {
@@ -97,7 +111,24 @@ const scrollLg = (direction: "left" | "right") => {
     left: direction === "left" ? -390 : 390,
     behavior: "smooth",
   });
+  if (direction === "right") maybeFetchNext(lgScrollRef.current);
 };
+
+useEffect(() => {
+  const desktopEl = desktopScrollRef.current;
+  const lgEl = lgScrollRef.current;
+
+  const handleDesktopScroll = () => desktopEl && maybeFetchNext(desktopEl);
+  const handleLgScroll = () => lgEl && maybeFetchNext(lgEl);
+
+  desktopEl?.addEventListener("scroll", handleDesktopScroll);
+  lgEl?.addEventListener("scroll", handleLgScroll);
+
+  return () => {
+    desktopEl?.removeEventListener("scroll", handleDesktopScroll);
+    lgEl?.removeEventListener("scroll", handleLgScroll);
+  };
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Helper function to process product
 const processProduct = (product: FeaturedProduct) => {
