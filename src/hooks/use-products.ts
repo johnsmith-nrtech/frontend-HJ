@@ -52,27 +52,32 @@ interface BulkImportResult {
 }
 
 // Hook for fetching products with optional filtering
-export function useProducts(params?: {
-  categoryId?: string;
-  size?: string;
-  material?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  priceRange?: string;
-  sortOrder?: string;
-  delivery_time_days?: string;
-  assemble_charges?: number;
-  includeVariants?: boolean;
-  includeImages?: boolean;
-  includeCategory?: boolean;
-}) {
+// after
+export function useProducts(
+  params?: {
+    categoryId?: string;
+    size?: string;
+    material?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    priceRange?: string;
+    sortOrder?: string;
+    delivery_time_days?: string;
+    assemble_charges?: number;
+    includeVariants?: boolean;
+    includeImages?: boolean;
+    includeCategory?: boolean;
+  },
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ["products", params],
     queryFn: () => getProducts(params),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: options?.enabled,
   });
 }
 

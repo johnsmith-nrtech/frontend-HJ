@@ -14,18 +14,22 @@ const [heroSettings, setHeroSettings] = useState<{
   width: number;
   height: number;
 } | null>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
+const [isLoading, setIsLoading] = useState(true);
+const [currentSlide, setCurrentSlide] = useState(0);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/dimensions`)
-      .then((r) => r.json())
-      .then(setHeroSettings)
-      .catch(() => {});
-  }, []);
+useEffect(() => {
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/dimensions`)
+    .then((r) => r.json())
+    .then(setHeroSettings)
+    .catch(() => {})
+    .finally(() => setIsLoading(false));
+}, []);
 
-  const slides: string[] = heroSettings?.hero_images?.length
-  ? heroSettings.hero_images
-  : [FALLBACK_IMAGE];
+const slides: string[] = heroSettings?.hero_images?.length
+? heroSettings.hero_images
+: isLoading
+? []
+: [FALLBACK_IMAGE];
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -89,7 +93,7 @@ const [heroSettings, setHeroSettings] = useState<{
           {/* Hero Image - Background for entire section */}
           <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 
             2xl:ml-[21px] flex items-center justify-center">
-              {heroSettings?.width && heroSettings?.height ? (
+              {slides.length === 0 ? null : heroSettings?.width && heroSettings?.height ? (
                 <Image
                   src={imageSrc}
                   alt="Sofa Deals Hero"

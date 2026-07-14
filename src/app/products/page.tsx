@@ -193,6 +193,43 @@ const buildPageProduct = (
 };
 
 // ─────────────────────────────────────────────────────────────────
+//  MAP a raw API product into PageProduct (used by both queries)
+// ─────────────────────────────────────────────────────────────────
+
+const mapApiProductToPageProduct = (
+  product: any,
+  filters: { size?: string | null; material?: string | null },
+): PageProduct => {
+  let selectedVariant = pickBestVariant(product.variants ?? []);
+
+  if (product.variants && product.variants.length > 0) {
+    const sizeMatch = filters.size
+      ? product.variants.find(
+          (v: any) => v.size?.toLowerCase() === filters.size?.toLowerCase(),
+        )
+      : null;
+    const materialMatch = filters.material
+      ? product.variants.find(
+          (v: any) => v.material?.toLowerCase() === filters.material?.toLowerCase(),
+        )
+      : null;
+    if (sizeMatch || materialMatch) {
+      selectedVariant = sizeMatch || materialMatch;
+    }
+  }
+
+  const sortedImages = [...(product.images ?? [])].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0),
+  );
+  const imageUrl =
+    sortedImages.find((img) => img.type === "main")?.url ||
+    sortedImages[0]?.url ||
+    "/placeholder.svg";
+
+  return buildPageProduct(product, selectedVariant, imageUrl);
+};
+
+// ─────────────────────────────────────────────────────────────────
 //  MAIN PRODUCTS CONTENT COMPONENT
 // ─────────────────────────────────────────────────────────────────
 
@@ -224,16 +261,20 @@ function ProductsContent() {
       });
 
       // apply category filter
-      if (filters.categoryId && filters.categoryId !== "all") {
-        const selectedCategoryName = categoriesQuery.data
-          ?.find((c) => c.id === filters.categoryId)
-          ?.name?.toLowerCase();
-        if (selectedCategoryName) {
-          transformed = transformed.filter(
-            (p) => p.category?.toLowerCase() === selectedCategoryName,
-          );
-        }
-      }
+      // after
+// prioritize selected category instead of filtering it out
+if (filters.categoryId && filters.categoryId !== "all") {
+  const selectedCategoryName = categoriesQuery.data
+    ?.find((c) => c.id === filters.categoryId)
+    ?.name?.toLowerCase();
+  if (selectedCategoryName) {
+    transformed = [...transformed].sort((a, b) => {
+      const aMatch = a.category?.toLowerCase() === selectedCategoryName ? 0 : 1;
+      const bMatch = b.category?.toLowerCase() === selectedCategoryName ? 0 : 1;
+      return aMatch - bMatch;
+    });
+  }
+}
 
       // apply price filter (against finalPrice)
       if (filters.priceRange && filters.priceRange !== "all") {
@@ -277,24 +318,47 @@ function ProductsContent() {
   ]);
 
   // ── API call (only when NOT in search mode) ────────────────────
+// ── API calls (only when NOT in search mode) ────────────────────
+  const hasCategory =
+    !isSearchMode && !!filters.categoryId && filters.categoryId !== "all";
+
+  // all of the selected category's products (no pagination limit)
+  const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
+    {
+      includeImages: true,
+      includeCategory: true,
+      includeVariants: true,
+      categoryId: filters.categoryId || undefined,
+      limit: 24,
+      page: 1,
+      size: filters.size || undefined,
+      material: filters.material || undefined,
+      priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
+      sortBy: filters.sortBy || undefined,
+    },
+    { enabled: hasCategory },
+  );
+
+  // everything (used as "the rest" once category runs out, or as
+  // the only source when no category is selected)
   const {
     data: apiProducts,
-    isLoading: isProductsLoading,
+    isLoading: isAllLoading,
     error,
   } = useProducts({
     includeImages: true,
     includeCategory: true,
     includeVariants: true,
-    limit: itemsPerPage,
-    page: filters.currentPage,
-    categoryId: filters.categoryId || undefined,
+    limit: 24,
+    page: 1,
     size: filters.size || undefined,
     material: filters.material || undefined,
-    priceRange:
-      filters.priceRange !== "all" ? filters.priceRange : undefined,
+    priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
     sortBy: filters.sortBy || undefined,
     search: isSearchMode ? undefined : filters.search || undefined,
   });
+
+  const isProductsLoading = isAllLoading || (hasCategory && isCategoryLoading);
 
   // ── marquee items ──────────────────────────────────────────────
   const marqueeItems = [
@@ -321,46 +385,34 @@ function ProductsContent() {
   const showLoading = isFiltering || (isProductsLoading && !isSearchMode);
 
   // ── transform API products (only when NOT in search mode) ──────
-  const transformedApiProducts: PageProduct[] =
-    !isSearchMode && apiProducts?.items
-      ? apiProducts.items.map((product) => {
-          // Pick default variant (featured → oldest). Discount does NOT influence this.
-          let selectedVariant = pickBestVariant(product.variants ?? []);
+// ── merge: selected category first, then everything else ────────
+  const mergedProducts: PageProduct[] = (() => {
+    if (isSearchMode) return [];
 
-          // If filtering by size/material, prefer the matching variant
-          if (product.variants && product.variants.length > 0) {
-            const sizeMatch = filters.size
-              ? product.variants.find(
-                  (v) => v.size?.toLowerCase() === filters.size?.toLowerCase(),
-                )
-              : null;
-            const materialMatch = filters.material
-              ? product.variants.find(
-                  (v) =>
-                    v.material?.toLowerCase() ===
-                    filters.material?.toLowerCase(),
-                )
-              : null;
-            if (sizeMatch || materialMatch) {
-              selectedVariant = sizeMatch || materialMatch;
-            }
-          }
-
-          const sortedImages = [...(product.images ?? [])].sort(
-            (a, b) => (a.order ?? 0) - (b.order ?? 0),
-          );
-          const imageUrl =
-            sortedImages.find((img) => img.type === "main")?.url ||
-            sortedImages[0]?.url ||
-            "/placeholder.svg";
-
-          return buildPageProduct(product, selectedVariant, imageUrl);
-        })
+    const mappedCategory = hasCategory
+      ? (categoryProducts?.items ?? []).map((p) =>
+          mapApiProductToPageProduct(p, filters),
+        )
       : [];
+    const mappedAll = (apiProducts?.items ?? []).map((p) =>
+      mapApiProductToPageProduct(p, filters),
+    );
+
+    if (!hasCategory) return mappedAll;
+
+    const categoryIds = new Set(mappedCategory.map((p) => p.id));
+    return [...mappedCategory, ...mappedAll.filter((p) => !categoryIds.has(p.id))];
+  })();
+
+  const totalPages = isSearchMode
+    ? 1
+    : Math.max(1, Math.ceil(mergedProducts.length / itemsPerPage));
+
+  const startIdx = (filters.currentPage - 1) * itemsPerPage;
+  const transformedApiProducts = mergedProducts.slice(startIdx, startIdx + itemsPerPage);
 
   // ── final display products ─────────────────────────────────────
   const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
-  const totalPages = isSearchMode ? 1 : apiProducts?.meta?.totalPages ?? 1;
 
   const handleCategoryChange = (categoryId: string) => {
     actions.setCategoryId(categoryId === "all" ? null : categoryId);
