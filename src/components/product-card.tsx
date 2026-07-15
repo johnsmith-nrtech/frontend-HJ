@@ -60,6 +60,8 @@ export function ProductCard({
   const { addItem } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCartAnimationStore();
+  const [isSelectingQty, setIsSelectingQty] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const { isInWishlist: checkWishlist, toggleItem, isItemLoading } = useWishlist();
   const isInWishlist = checkWishlist(variantId || id.toString());
   const isWishlistLoading = isItemLoading(variantId || id.toString());
@@ -91,7 +93,8 @@ export function ProductCard({
 
     setIsAddingToCart(true);
     try {
-      await addItem({
+      await addItem(
+      {
         id: variantId,
         name,
         price: finalPrice,
@@ -103,16 +106,41 @@ export function ProductCard({
         assembly_required: false,
         assemble_charges: assemble_charges,
         show_installments: showInstallments,
-      });
+      },
+      quantity,
+    );
       toast.success(`${name} added to cart!`);
     } catch (error) {
       console.error("Failed to add to cart:", error);
       toast.error("Failed to add to cart");
     } finally {
       setIsAddingToCart(false);
+      setIsSelectingQty(false);
+      setQuantity(1);
       addToCart({ item: "item added" });
     }
   };
+
+
+  // first click reveals the quantity stepper, second click (outside +/-) confirms
+  const handleButtonClick = () => {
+    if (!isSelectingQty) {
+      setIsSelectingQty(true);
+      return;
+    }
+    handleAddToCart();
+  };
+
+  const incrementQty = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuantity((q) => q + 1);
+  };
+
+  const decrementQty = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuantity((q) => Math.max(1, q - 1));
+  };
+
 
   const formatPrice = (amount: number) => {
     return `${amount.toFixed(2)}`;
@@ -125,7 +153,13 @@ export function ProductCard({
       <Link href={`/products/${id}`}>
         <h3
           className="font-bebas text-dark-gray hover:text-blue text-lg leading-tight uppercase transition-colors break-words w-full"
-          style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: "2.6rem", // reserves space for 2 lines so 1-line titles don't shrink the card
+          }}
         >
           {name}
         </h3>
@@ -168,15 +202,25 @@ export function ProductCard({
 
       {/* 4. Add to Cart Button */}
       <button
-        onClick={handleAddToCart}
+        onClick={handleButtonClick}
         disabled={isAddingToCart}
-        className="font-open-sans flex h-[35px] w-full items-center justify-center rounded-lg bg-[#1b6db4] font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="font-open-sans flex h-[35px] w-full items-center justify-center rounded-lg border border-transparent bg-[#1b6db4] font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isAddingToCart ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Adding...
           </>
+        ) : isSelectingQty ? (
+          <div className="flex w-full items-center justify-between px-4">
+            <button onClick={decrementQty} className="px-2 text-lg leading-none">
+              −
+            </button>
+            <span>{quantity}</span>
+            <button onClick={incrementQty} className="px-2 text-lg leading-none">
+              +
+            </button>
+          </div>
         ) : (
           "Add To Cart"
         )}
@@ -255,27 +299,45 @@ export function ProductCard({
 
         {/* Add to Cart Button */}
         <Button
-          onClick={handleAddToCart}
+          onClick={handleButtonClick}
           disabled={isAddingToCart}
           variant="primary"
           size="sm"
           rounded="full"
-          className="bg-blue font-open-sans hover:bg-blue/80 relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full px-4 font-medium text-white transition-colors ease-in-out disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <span>{isAddingToCart ? "Adding..." : "Add To Cart"}</span>
-          <div className="absolute top-1/2 right-2 -translate-y-1/2">
+          className="bg-blue font-open-sans hover:bg-blue/80 relative flex h-[50px] w-full cursor-pointer items-center justify-start rounded-full px-4 font-bold text-white transition-colors ease-in-out disabled:cursor-not-allowed disabled:opacity-50"
+          >
             {isAddingToCart ? (
-              <Loader2 className="h-[30px] w-[30px] animate-spin rounded-full bg-white p-2 md:h-[40px] md:w-[40px]" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : isSelectingQty ? (
+              <div
+                className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button onClick={decrementQty} className="text-xl leading-none">
+                  −
+                </button>
+                <span className="min-w-[1.5ch] text-center">{quantity}</span>
+                <button onClick={incrementQty} className="text-xl leading-none">
+                  +
+                </button>
+              </div>
             ) : (
-              <Image
-                src="/arrow-right.png"
-                alt="arrow-right"
-                width={20}
-                height={20}
-                className="h-[30px] w-[30px] rounded-full bg-white object-contain p-2 md:h-[40px] md:w-[40px]"
-              />
+              <>
+                <span>Add To Cart</span>
+                <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                  <Image
+                    src="/arrow-right.png"
+                    alt="arrow-right"
+                    width={20}
+                    height={20}
+                    className="h-[30px] w-[30px] rounded-full bg-white object-contain p-2 md:h-[40px] md:w-[40px]"
+                  />
+                </div>
+              </>
             )}
-          </div>
         </Button>
 
         {/* Add to Wishlist Button */}
