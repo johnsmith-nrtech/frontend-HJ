@@ -1,5 +1,4 @@
 "use client";
-
 import { Bebas_Neue, Open_Sans } from "next/font/google";
 import { ReferralTracker } from "@/components/referral-tracker";
 import "./globals.css";
@@ -13,20 +12,17 @@ import { SearchInitializer } from "@/components/search/search-initializer";
 import { DynamicHead } from "@/components/dynamic-head";
 import { CartSuccessModal } from "@/components/modal";
 import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button";
+import Script from "next/script";
 
 const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-bebas",
 });
-
 const openSans = Open_Sans({
   subsets: ["latin"],
   variable: "--font-open-sans",
 });
-
-// The metadata needs to be in a separate file since this is now a client component
-// You can create a separate file for metadata or use a different approach
 
 export default function RootLayout({
   children,
@@ -34,20 +30,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-
   const isAuthPage = [
     "/login",
     "/register",
     "/forgot-password",
     "/reset-password",
   ].includes(pathname);
-
   const isAdminPage = pathname.startsWith("/admin");
-
   return (
     <html lang="en">
       <head>
-        {/* Favicon links */}
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="icon"
@@ -63,8 +55,6 @@ export default function RootLayout({
         />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-
-        {/* Basic SEO meta tags */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="robots" content="index, follow" />
@@ -77,17 +67,11 @@ export default function RootLayout({
           name="keywords"
           content="furniture, sofas, home decor, premium furniture, modern sofas, classic furniture"
         />
-
-        {/* Open Graph meta tags */}
         <meta property="og:site_name" content="Sofa Deal" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="en_US" />
-
-        {/* Twitter Card meta tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@sofadeal" />
-
-        {/* Additional SEO tags */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
@@ -103,7 +87,26 @@ export default function RootLayout({
             <ReferralTracker />
             {!isAuthPage && !isAdminPage && <Navbar />}
             {children}
-            {!isAuthPage && !isAdminPage && <FloatingWhatsAppButton />}
+
+            {!isAuthPage && !isAdminPage && (
+              <div style={{ position: "fixed", bottom: "24px", left: "24px", zIndex: 9999 }}>
+                <FloatingWhatsAppButton />
+              </div>
+            )}
+
+            {!isAuthPage && !isAdminPage && (
+              <>
+                <Script
+                  src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+                  strategy="afterInteractive"
+                  type="text/javascript"
+                />
+                <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}>
+                  <elevenlabs-convai agent-id="agent_1701kvxae4z5e9bazdc1fsjgz51q"></elevenlabs-convai>
+                </div>
+              </>
+            )}
+
             {!isAuthPage && !isAdminPage && <Footer />}
             <Toaster richColors />
           </AuthProvider>
