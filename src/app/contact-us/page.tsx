@@ -8,6 +8,14 @@ import { useState } from "react";
 import Image from "next/image";
 import { useSubmitContactMessage } from "@/lib/api/contact-messages";
 import { toast } from "sonner";
+import { useFaqs } from "@/hooks/use-faq";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -31,6 +39,8 @@ export default function ContactUsPage() {
       "Custom Order feature coming soon! Please contact us for custom orders."
     );
   };
+
+  const { data: faqs = [] } = useFaqs();
 
   // Marquee items data
   const marqueeItems = [
@@ -233,25 +243,27 @@ export default function ContactUsPage() {
                       </a>
                     </div>
 
-                    {/* Location */}
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 sm:h-15 sm:w-15">
-                        <Image
-                          src="/c-3.png"
-                          alt="Location"
-                          width={24}
-                          height={24}
-                          className="h-5 w-5 sm:h-6 sm:w-6"
-                        />
-                      </div>
-                      <div>
-                        <div className="text-sm sm:text-base lg:text-base">
-                          2 Manor House Lane, Datchet, Slough,
-                        </div>
-                        <div className="text-sm sm:text-base lg:text-base">
-                          England, SL3 9EB
-                        </div>
-                      </div>
+                    {/* FAQs */}
+                    <div className="mt-2 w-full">
+                      <h1 className="mb-3 text-3xl font-semibold text-white">
+                        FAQ
+                      </h1>
+                      <Accordion type="single" collapsible className="w-full">
+                        {faqs.map((faq) => (
+                          <AccordionItem
+                            key={faq.id}
+                            value={faq.id}
+                            className="border-white/20"
+                          >
+                            <AccordionTrigger className="text-left text-sm text-white hover:no-underline sm:text-base">
+                              {faq.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-sm text-white/80">
+                              {faq.answer}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
                     </div>
                   </div>
                 </div>

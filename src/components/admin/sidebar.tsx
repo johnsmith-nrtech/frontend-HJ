@@ -23,6 +23,7 @@ import {
   Percent,
   FileText,
   ImageIcon,
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/providers/auth-provider";
@@ -105,6 +106,11 @@ export const adminNavItems = [
     title: "Best Sellers",
     href: "/admin/best-sellers",
     icon: <Star className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "FAQs",
+    href: "/admin/faqs",
+    icon: <HelpCircle className="mr-3 h-5 w-5" />,
   },
   // {
   //   title: "Settings",
