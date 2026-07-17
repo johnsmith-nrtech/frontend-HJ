@@ -90,19 +90,19 @@ export default function RootLayout({
     fbq('track', 'PageView');
   `}
 </Script>
-        <noscript>
-  <img
-    height="1"
-    width="1"
-    style={{ display: "none" }}
-    src="https://www.facebook.com/tr?id=2511714169307241&ev=PageView&noscript=1"
-  />
-</noscript>
       </head>
       <body
         className={`${openSans.variable} ${bebasNeue.variable} ${openSans.className}`}
         suppressHydrationWarning
       >
+        <noscript>
+    <img
+      height="1"
+      width="1"
+      style={{ display: "none" }}
+      src="https://www.facebook.com/tr?id=2511714169307241&ev=PageView&noscript=1"
+    />
+  </noscript>
         <ReactQueryProvider>
           <AuthProvider>
             <DynamicHead />
