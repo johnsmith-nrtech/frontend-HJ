@@ -318,7 +318,6 @@ if (filters.categoryId && filters.categoryId !== "all") {
   ]);
 
   // ── API call (only when NOT in search mode) ────────────────────
-// ── API calls (only when NOT in search mode) ────────────────────
   const hasCategory =
     !isSearchMode && !!filters.categoryId && filters.categoryId !== "all";
 
@@ -446,7 +445,7 @@ if (filters.categoryId && filters.categoryId !== "all") {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex justify-between gap-4 sm:flex-row">
                 {/* category */}
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-none">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Categories
                   </span>
@@ -455,12 +454,12 @@ if (filters.categoryId && filters.categoryId !== "all") {
                     onValueChange={handleCategoryChange}
                     disabled={categoriesQuery.isLoading}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                      <div className="flex items-center gap-2">
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <div className="flex min-w-0 items-center gap-2">
                         {categoriesQuery.isLoading && (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
+                          <Loader2Icon className="h-4 w-4 flex-shrink-0 animate-spin" />
                         )}
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select" className="truncate" />
                       </div>
                     </SelectTrigger>
                     <SelectContent>

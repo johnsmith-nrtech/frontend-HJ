@@ -77,28 +77,36 @@ export default function AdminFaqsPage() {
       <h1 className="mb-6 text-2xl font-bold">Manage FAQs</h1>
 
       {/* Add new FAQ */}
-      <div className="mb-8 space-y-3 rounded-lg border border-gray-200 p-4">
-        <h2 className="font-semibold">Add New FAQ</h2>
-        <Input
-          placeholder="Question"
-          value={newQuestion}
-          onChange={(e) => setNewQuestion(e.target.value)}
-        />
-        <Textarea
-          placeholder="Answer"
-          value={newAnswer}
-          onChange={(e) => setNewAnswer(e.target.value)}
-          rows={3}
-        />
-        <Button
-          onClick={handleCreate}
-          disabled={createFaq.isPending}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          {createFaq.isPending ? "Adding..." : "Add FAQ"}
-        </Button>
-      </div>
+      {sorted.length >= 4 ? (
+        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            Maximum of 4 FAQs reached. Delete an existing FAQ to add a new one.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-8 space-y-3 rounded-lg border border-gray-200 p-4">
+          <h2 className="font-semibold">Add New FAQ ({sorted.length}/4)</h2>
+          <Input
+            placeholder="Question"
+            value={newQuestion}
+            onChange={(e) => setNewQuestion(e.target.value)}
+          />
+          <Textarea
+            placeholder="Answer"
+            value={newAnswer}
+            onChange={(e) => setNewAnswer(e.target.value)}
+            rows={3}
+          />
+          <Button
+            onClick={handleCreate}
+            disabled={createFaq.isPending}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {createFaq.isPending ? "Adding..." : "Add FAQ"}
+          </Button>
+        </div>
+      )}
 
       {/* FAQ list */}
       <div className="space-y-3">

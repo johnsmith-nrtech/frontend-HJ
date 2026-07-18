@@ -200,7 +200,7 @@ export default function ContactUsPage() {
               {/* Contact Information */}
               <div className="w-full lg:ml-[-200px] lg:w-2/5">
                 <div className="bg-blue mx-auto flex h-full w-full flex-col items-center justify-center gap-4 rounded-3xl p-4 text-white sm:gap-6 sm:p-6 lg:gap-8 lg:p-8">
-                  <div>
+                  <div className="w-full min-w-0">
                     <h2 className="font-bebas mb-4 text-center text-3xl font-medium text-white sm:mb-6 sm:text-start sm:text-4xl lg:mt-0 lg:mb-8 lg:text-[52px]">
                       Contact Us
                     </h2>
@@ -244,21 +244,21 @@ export default function ContactUsPage() {
                     </div>
 
                     {/* FAQs */}
-                    <div className="mt-2 w-full">
+                    <div className="mt-2 w-full min-w-0">
                       <h1 className="mb-3 text-3xl font-semibold text-white">
                         FAQ
                       </h1>
-                      <Accordion type="single" collapsible className="w-full">
+                      <Accordion type="single" collapsible className="w-full min-w-0">
                         {faqs.map((faq) => (
                           <AccordionItem
                             key={faq.id}
                             value={faq.id}
-                            className="border-white/20"
+                            className="w-full min-w-0 border-white/20"
                           >
-                            <AccordionTrigger className="text-left text-sm text-white hover:no-underline sm:text-base">
+                            <AccordionTrigger className="w-full text-left text-sm text-white hover:no-underline sm:text-base">
                               {faq.question}
                             </AccordionTrigger>
-                            <AccordionContent className="text-sm text-white/80">
+                            <AccordionContent className="w-full min-w-0 text-sm break-words text-white/80">
                               {faq.answer}
                             </AccordionContent>
                           </AccordionItem>

@@ -582,10 +582,10 @@ export function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-shrink-0 items-center gap-2">
                   <Link
                     href="/login"
-                    className="flex items-center gap-1"
+                    className="flex flex-shrink-0 items-center gap-1 whitespace-nowrap"
                     onClick={handleLoginClick}
                   >
                     <Image
@@ -593,9 +593,9 @@ export function Navbar() {
                       alt="User"
                       width={20}
                       height={20}
-                      className="h-5 w-5"
+                      className="h-5 w-5 flex-shrink-0"
                     />
-                    <span className="font-open-sans text-gray text-sm">
+                    <span className="font-open-sans text-gray text-sm whitespace-nowrap">
                       Login
                     </span>
                   </Link>
@@ -608,7 +608,7 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray relative hover:text-[#222222]"
+                    className="text-gray relative flex-shrink-0 hover:text-[#222222]"
                   >
                     <ShoppingCart
                       className="!h-10 !w-10 text-black"
