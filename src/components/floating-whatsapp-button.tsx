@@ -20,7 +20,7 @@ export function FloatingWhatsAppButton() {
     <a href={whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 shadow-lg transition-colors hover:bg-green-600"
+      className="fixed left-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 shadow-lg transition-colors hover:bg-green-600"
       aria-label="Chat with us on WhatsApp"
     >
       <svg
