@@ -113,8 +113,9 @@ export class ApiService {
       // If it's a network error and we haven't exceeded max retries
       if (error instanceof Error && retryCount < this.MAX_RETRIES) {
         // Wait for a short time before retrying
+        const delays = [1000, 2000, 5000];
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (retryCount + 1))
+          setTimeout(resolve, delays[retryCount] ?? 5000)
         );
         return this.fetchWithAuth(endpoint, options, retryCount + 1);
       }
@@ -123,11 +124,12 @@ export class ApiService {
   }
 
   /**
-   * Make a public API request (no auth required)
+   * Make a public API request (no auth required), with retry on network failure
    */
   static async fetchPublic(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<Response> {
     const headers: HeadersInit = {
       ...options.headers,
@@ -138,10 +140,22 @@ export class ApiService {
       (headers as Record<string, string>)["Content-Type"] = "application/json";
     }
 
-    return fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      return await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
+    } catch (error) {
+      // If it's a network error and we haven't exceeded max retries
+      if (error instanceof Error && retryCount < this.MAX_RETRIES) {
+        const delays = [1000, 2000, 5000];
+        await new Promise((resolve) =>
+          setTimeout(resolve, delays[retryCount] ?? 5000)
+        );
+        return this.fetchPublic(endpoint, options, retryCount + 1);
+      }
+      throw error;
+    }
   }
 
   /**
