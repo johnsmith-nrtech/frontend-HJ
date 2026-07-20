@@ -328,8 +328,8 @@ if (filters.categoryId && filters.categoryId !== "all") {
       includeCategory: true,
       includeVariants: true,
       categoryId: filters.categoryId || undefined,
-      limit: 24,
-      page: 1,
+      limit: itemsPerPage,
+      page: filters.currentPage,
       size: filters.size || undefined,
       material: filters.material || undefined,
       priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
@@ -348,8 +348,8 @@ if (filters.categoryId && filters.categoryId !== "all") {
     includeImages: true,
     includeCategory: true,
     includeVariants: true,
-    limit: 24,
-    page: 1,
+    limit: itemsPerPage,
+    page: filters.currentPage,
     size: filters.size || undefined,
     material: filters.material || undefined,
     priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
@@ -405,10 +405,14 @@ if (filters.categoryId && filters.categoryId !== "all") {
 
   const totalPages = isSearchMode
     ? 1
-    : Math.max(1, Math.ceil(mergedProducts.length / itemsPerPage));
+    : Math.max(
+        1,
+        hasCategory
+          ? (categoryProducts?.meta?.totalPages ?? 1)
+          : (apiProducts?.meta?.totalPages ?? 1),
+      );
 
-  const startIdx = (filters.currentPage - 1) * itemsPerPage;
-  const transformedApiProducts = mergedProducts.slice(startIdx, startIdx + itemsPerPage);
+  const transformedApiProducts = mergedProducts;
 
   // ── final display products ─────────────────────────────────────
   const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
