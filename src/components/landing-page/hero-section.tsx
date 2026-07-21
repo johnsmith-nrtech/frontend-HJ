@@ -319,7 +319,7 @@ const HeroSectionMobile = ({
   onCustomOrderClick,
 }: HeroSlideProps) => {
   return (
-    <div className="relative flex h-[calc(100svh-56px)] max-h-[420px] min-h-[380px] flex-col justify-between lg:hidden bg-light-blue">
+    <div className="relative flex h-[calc(100svh-56px)] max-h-[460px] min-h-[380px] flex-col justify-between lg:hidden bg-light-blue">
   <div className="relative w-full flex-1 min-h-0">
     {slides.length === 0 ? null : (
       <Image
