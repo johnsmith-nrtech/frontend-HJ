@@ -166,18 +166,21 @@ export function ProductCard({
       </Link>
 
       <div style={{ minHeight: "90px", display: "flex", alignItems: "flex-start" }}>
-        {/* Left: price */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <span className="font-bold text-red-500 text-[18px] mt-8">
-            £{formatPrice(price)}
-          </span>
-          {showInstallments && (
-            <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-              <Truck className="h-3 w-3 shrink-0" />
-              {deliveryInfo}
-            </span>
-          )}
-        </div>
+ {/* Left: price */}
+<div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+  <span className={`text-[13px] mt-8 ${originalPrice && originalPrice > price ? "text-gray-500 line-through" : "invisible"}`}>
+    £{formatPrice(originalPrice ?? price)}
+  </span>
+  <span className="font-bold text-red-500 text-[18px]">
+    £{formatPrice(price)}
+  </span>
+  {showInstallments && (
+    <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+      <Truck className="h-3 w-3 shrink-0" />
+      {deliveryInfo}
+    </span>
+  )}
+</div>
 
         {/* Right side */}
         {showInstallments ? (
@@ -263,18 +266,21 @@ export function ProductCard({
         </div>
 
         <div style={{ minHeight: "70px", display: "flex", alignItems: "flex-start" }}>
-          {/* Left: price + delivery */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <span className="font-bold text-red-500 text-[20px] mt-4">
-              £{formatPrice(price)}
-            </span>
-            {showInstallments && (
-              <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-                <Truck className="h-3 w-3 shrink-0" />
-                {deliveryInfo}
-              </span>
-            )}
-          </div>
+{/* Left: price + delivery */}
+<div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+  <span className={`text-[16px] mt-4 ${originalPrice && originalPrice > price ? "text-red-500 line-through" : "invisible"}`}>
+    £{formatPrice(originalPrice ?? price)}
+  </span>
+  <span className="font-bold text-red-500 text-[20px]">
+    £{formatPrice(price)}
+  </span>
+  {showInstallments && (
+    <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+      <Truck className="h-3 w-3 shrink-0" />
+      {deliveryInfo}
+    </span>
+  )}
+</div>
 
           {/* Right side: divider + installments OR delivery badge */}
           {showInstallments ? (
