@@ -88,8 +88,8 @@ const slides: string[] = heroSettings?.hero_images?.length
         </div>
 
 
-        <div className="relative h-[38vh] pt-6 sm:h-[40vh] sm:pt-8 md:min-h-[650px] md:pt-0 lg:min-h-[500px] 
-          2xl:min-h-[1000px] lg:overflow-hidden">
+        <div className="relative mt-2 h-[280px] xs:h-[320px] sm:h-[400px] md:mt-0 md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
+          2xl:min-h-[1000px] mt-8 sm:mt-28 md:mt-0 overflow-hidden">
           {/* Hero Image - Background for entire section */}
           <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 
             2xl:ml-[21px] flex items-center justify-center">
@@ -107,7 +107,7 @@ const slides: string[] = heroSettings?.hero_images?.length
                   src={imageSrc}
                   alt="Sofa Deals Hero"
                   fill
-                  className="h-[90vh] object-contain object-center transition-opacity duration-500"
+                  className="object-contain object-center transition-opacity duration-500"
                   priority
                 />
               )}

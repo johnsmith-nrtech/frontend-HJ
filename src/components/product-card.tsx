@@ -166,33 +166,35 @@ export function ProductCard({
       </Link>
 
       <div style={{ minHeight: "90px", display: "flex", alignItems: "flex-start" }}>
- {/* Left: price */}
-<div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-  <span className={`text-[13px] mt-8 ${originalPrice && originalPrice > price ? "text-gray-500 line-through" : "invisible"}`}>
-    £{formatPrice(originalPrice ?? price)}
-  </span>
-  <span className="font-bold text-red-500 text-[18px]">
-    £{formatPrice(price)}
-  </span>
-  {showInstallments && (
-    <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-      <Truck className="h-3 w-3 shrink-0" />
-      {deliveryInfo}
-    </span>
-  )}
-</div>
+        {/* Left: price */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {originalPrice && originalPrice > price && (
+            <span className="text-red-400 text-[13px] line-through mt-8">
+              £{formatPrice(originalPrice)}
+            </span>
+          )}
+          <span className={`font-bold text-red-500 text-[18px] ${originalPrice && originalPrice > price ? "" : "mt-8"}`}>
+            £{formatPrice(price)}
+          </span>
+          {showInstallments && (
+            <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+              <Truck className="h-3 w-3 shrink-0" />
+              {deliveryInfo}
+            </span>
+          )}
+        </div>
 
         {/* Right side */}
         {showInstallments ? (
           <>
             <div style={{ width: "1px", alignSelf: "stretch", backgroundColor: "#dc2626", flexShrink: 0, margin: "0 8px" }} />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", paddingTop: "14px" }}>
-              <span className="text-xs text-gray-400">36 monthly payments of</span>
-              <span className="text-[18px] font-bold text-red-500">
-                £{((price * 0.9) / 36).toFixed(2)}
-              </span>
-              <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
-            </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <span className="text-xs text-gray-400">36 monthly payments of</span>
+                <span className="text-[20px] font-bold text-red-500">
+                  £{((price * 0.9) / 36).toFixed(2)}
+                </span>
+                <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+              </div>
           </>
         ) : (
           <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
@@ -266,33 +268,33 @@ export function ProductCard({
         </div>
 
         <div style={{ minHeight: "70px", display: "flex", alignItems: "flex-start" }}>
-{/* Left: price + delivery */}
-<div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-  <span className={`text-[16px] mt-4 ${originalPrice && originalPrice > price ? "text-red-500 line-through" : "invisible"}`}>
-    £{formatPrice(originalPrice ?? price)}
-  </span>
-  <span className="font-bold text-red-500 text-[20px]">
-    £{formatPrice(price)}
-  </span>
-  {showInstallments && (
-    <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-      <Truck className="h-3 w-3 shrink-0" />
-      {deliveryInfo}
-    </span>
-  )}
-</div>
+          {/* Left: price + delivery */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <span className={`text-xs ${originalPrice && originalPrice > price ? "text-red-400 line-through" : "invisible"}`}>
+              £{formatPrice(originalPrice ?? price)}
+            </span>
+            <span className="font-bold text-red-500 text-[20px]">
+              £{formatPrice(price)}
+            </span>
+            {showInstallments && (
+              <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#56748e] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+                <Truck className="h-3 w-3 shrink-0" />
+                {deliveryInfo}
+              </span>
+            )}
+          </div>
 
           {/* Right side: divider + installments OR delivery badge */}
           {showInstallments ? (
             <>
               <div style={{ width: "1px", borderLeft: "1px solid #dc2626", alignSelf: "stretch", flexShrink: 0, margin: "0 10px" }} />
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <span className="text-xs text-gray-400">36 monthly payments of</span>
-                <span className="text-[20px] font-bold text-red-500">
-                  £{((price * 0.9) / 36).toFixed(2)}
-                </span>
-                <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
-              </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <span className="text-xs text-gray-400">36 monthly payments of</span>
+                  <span className="text-[20px] font-bold text-red-500">
+                    £{((price * 0.9) / 36).toFixed(2)}
+                  </span>
+                  <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
+                </div>
             </>
           ) : (
             <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
