@@ -166,44 +166,43 @@ export function ProductCard({
       </Link>
 
       <div style={{ minHeight: "90px", display: "flex", alignItems: "flex-start" }}>
-        {/* Left: price */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          {originalPrice && originalPrice > price && (
-            <span className="text-red-400 text-[13px] line-through mt-8">
-              £{formatPrice(originalPrice)}
-            </span>
-          )}
-          <span className={`font-bold text-red-500 text-[18px] ${originalPrice && originalPrice > price ? "" : "mt-8"}`}>
-            £{formatPrice(price)}
-          </span>
-          {showInstallments && (
-            <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
-              <Truck className="h-3 w-3 shrink-0" />
-              {deliveryInfo}
-            </span>
-          )}
-        </div>
+  {/* Left: price */}
+  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <span className={`text-xs ${originalPrice && originalPrice > price ? "text-gray-400 line-through" : "invisible"}`}>
+      £{formatPrice(originalPrice ?? price)}
+    </span>
+    <span className="font-bold text-red-500 text-[18px]">
+      £{formatPrice(price)}
+    </span>
+    <span className="invisible text-xs">placeholder</span>
+    {showInstallments && (
+      <span className="line-clamp-1 inline-flex items-center gap-1 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit mt-1">
+        <Truck className="h-3 w-3 shrink-0" />
+        {deliveryInfo}
+      </span>
+    )}
+  </div>
 
-        {/* Right side */}
-        {showInstallments ? (
-          <>
-            <div style={{ width: "1px", alignSelf: "stretch", backgroundColor: "#dc2626", flexShrink: 0, margin: "0 8px" }} />
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <span className="text-xs text-gray-400">36 monthly payments of</span>
-                <span className="text-[20px] font-bold text-red-500">
-                  £{((price * 0.9) / 36).toFixed(2)}
-                </span>
-                <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
-              </div>
-          </>
-        ) : (
-          <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
-            <span className="line-clamp-1 inline-block mt-8 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit">
-              {deliveryInfo}
-            </span>
-          </div>
-        )}
+  {/* Right side */}
+  {showInstallments ? (
+    <>
+      <div style={{ width: "1px", alignSelf: "stretch", backgroundColor: "#dc2626", flexShrink: 0, margin: "0 8px" }} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <span className="text-xs text-gray-400">36 monthly payments of</span>
+        <span className="text-[18px] font-bold text-red-500">
+          £{((price * 0.9) / 36).toFixed(2)}
+        </span>
+        <span className="text-xs text-gray-400">0% APR - 10% deposit.</span>
       </div>
+    </>
+  ) : (
+    <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
+      <span className="line-clamp-1 inline-block mt-8 rounded-xl bg-[#3293a8] px-2 py-1 text-xs font-medium text-white w-fit">
+        {deliveryInfo}
+      </span>
+    </div>
+  )}
+</div>
 
       {/* 4. Add to Cart Button */}
       <button

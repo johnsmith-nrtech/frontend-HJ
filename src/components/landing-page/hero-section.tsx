@@ -88,8 +88,8 @@ const slides: string[] = heroSettings?.hero_images?.length
         </div>
 
 
-        <div className="relative mt-2 h-[280px] xs:h-[320px] sm:h-[400px] md:mt-0 md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
-          2xl:min-h-[1000px] mt-8 sm:mt-28 md:mt-0 overflow-hidden">
+        <div className="relative mt-14 h-[266px] xs:h-[314px] sm:mt-30 sm:h-[340px] md:mt-0 md:min-h-[650px] lg:min-h-[500px] lg:mb-[-4rem] 
+          2xl:min-h-[1000px] overflow-hidden">
           {/* Hero Image - Background for entire section */}
           <div className="absolute inset-0 ml-0 h-full lg:max-h-[90vh] w-full sm:ml-[15px] xl:ml-[18px] 
             2xl:ml-[21px] flex items-center justify-center">
