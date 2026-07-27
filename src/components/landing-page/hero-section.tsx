@@ -64,17 +64,14 @@ const slides: string[] = heroSettings?.hero_images?.length
   ];
 
   // Handle custom order button click
-  const handleCustomOrderClick = () => {
-    // TODO: Replace with actual custom order functionality
-    // Options:
-    // 1. Navigate to custom order page: router.push('/custom-order')
-    // 2. Open a modal/dialog
-    // 3. Scroll to contact section
-    // For now, we'll show an alert as placeholder
-    alert(
-      "Custom Order feature coming soon! Please contact us for custom orders."
-    );
-  };
+    const handleCustomOrderClick = () => {
+      const message = "Hi, I want to place a custom order. What is the procedure ?";
+      window.open(
+        `https://wa.me/447306127481?text=${encodeURIComponent(message)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    };
 
   return (
     <div className="w-full">
