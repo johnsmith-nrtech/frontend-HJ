@@ -31,10 +31,9 @@ import { cn } from "@/lib/utils";
 interface PageProduct {
   id: string | number;
   name: string;
-  // finalPrice = the sale price to display and send to cart
   finalPrice: number;
-  // originalPrice = the "was" price to show struck-through (undefined if no discount)
   originalPrice?: number;
+  isCompareDiscount?: boolean;
   deliveryInfo: string;
   category?: string;
   type?: string;
@@ -158,12 +157,17 @@ const buildPageProduct = (
   const originalPrice = selectedVariant
     ? getOriginalPrice(selectedVariant, discountPct)
     : undefined;
+  const isCompareDiscount = !!(
+    selectedVariant?.compare_price &&
+    selectedVariant.compare_price > selectedVariant.price
+  );
 
   return {
     id: product.id,
     name: product.name ?? "Product",
     finalPrice,
     originalPrice,
+    isCompareDiscount,
     deliveryInfo: (() => {
       const raw = selectedVariant?.delivery_time_days ||
       product.delivery_info?.text ||
@@ -567,10 +571,9 @@ if (filters.categoryId && filters.categoryId !== "all") {
                   variant={index % 2 === 0 ? "layout1" : "layout2"}
                   id={product.id}
                   name={product.name}
-                  // finalPrice is passed as `price` — this is what
-                  // goes into the cart. It is already the sale price.
                   price={product.finalPrice}
                   originalPrice={product.originalPrice}
+                  isCompareDiscount={product.isCompareDiscount}
                   discount={product.discountLabel}
                   imageSrc={product.image}
                   rating={product.rating ?? 4.9}
