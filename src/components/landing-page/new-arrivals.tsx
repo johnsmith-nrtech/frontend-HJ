@@ -49,6 +49,7 @@ const NewArrivals = () => {
     variants?: {
       id: string;
       price: number;
+      compare_price?: number;
       color?: string;
       size?: string;
       stock: number;
@@ -131,33 +132,43 @@ useEffect(() => {
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Helper function to process product
-  const processProduct = (product: FeaturedProduct) => {
-    const basePrice = product.base_price || 0;
-    const variantPrice = product.default_variant?.price || basePrice;
-    const discount = Number((product as any).discount_offer) || 0;
+const processProduct = (product: FeaturedProduct) => {
+  const basePrice = product.base_price || 0;
+  const variantPrice = product.default_variant?.price || basePrice;
+  const comparePrice = (product.default_variant as any)?.compare_price;
+  const isCompareDiscount = !!(comparePrice && comparePrice > variantPrice);
+  const discount = isCompareDiscount ? 0 : Number((product as any).discount_offer) || 0;
 
-    const discountedPrice =
-      discount > 0
-        ? Math.round(variantPrice - (variantPrice * discount) / 100)
-        : variantPrice;
+  const discountedPrice = isCompareDiscount
+    ? variantPrice
+    : discount > 0
+    ? Math.round(variantPrice - (variantPrice * discount) / 100)
+    : variantPrice;
 
-    const hasDiscount = discount > 0;
-    const discountPercentage = hasDiscount ? `${discount}% off` : undefined;
+  const originalPriceValue = isCompareDiscount ? comparePrice : variantPrice;
 
-    const productImage =
-      product.main_image?.url?.startsWith("http") ||
-      product.main_image?.url?.startsWith("/")
-        ? product.main_image.url
-        : "/hero-img.png";
+  const hasDiscount = isCompareDiscount || discount > 0;
+  const discountPercentage = isCompareDiscount
+    ? `${Math.round(((comparePrice - variantPrice) / comparePrice) * 100)}% off`
+    : hasDiscount
+    ? `${discount}% off`
+    : undefined;
 
-    return {
-      ...product,
-      currentPrice: discountedPrice,
-      originalPrice: variantPrice,
-      discount,
-      discountPercentage,
-      hasDiscount,
-      productImage,
+  const productImage =
+    product.main_image?.url?.startsWith("http") ||
+    product.main_image?.url?.startsWith("/")
+      ? product.main_image.url
+      : "/hero-img.png";
+
+  return {
+    ...product,
+    currentPrice: discountedPrice,
+    originalPrice: originalPriceValue,
+    discount,
+    discountPercentage,
+    hasDiscount,
+    isCompareDiscount,
+    productImage,
       default_variant: product.default_variant
         ? {
             ...product.default_variant,
@@ -234,6 +245,7 @@ useEffect(() => {
                       name={product.name}
                       price={processed.currentPrice}
                       originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
+                      isCompareDiscount={processed.isCompareDiscount}
                       discount={processed.discountPercentage}
                       imageSrc={processed.productImage}
                       rating={4.9}
@@ -286,6 +298,7 @@ useEffect(() => {
                         name={product.name}
                         price={processed.currentPrice}
                         originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
+                        isCompareDiscount={processed.isCompareDiscount}
                         discount={processed.discountPercentage}
                         imageSrc={processed.productImage}
                         rating={4.9}
@@ -344,6 +357,7 @@ useEffect(() => {
                         name={product.name}
                         price={processed.currentPrice}
                         originalPrice={processed.hasDiscount ? processed.originalPrice : undefined}
+                        isCompareDiscount={processed.isCompareDiscount}
                         discount={processed.discountPercentage}
                         imageSrc={processed.productImage}
                         rating={4.9}

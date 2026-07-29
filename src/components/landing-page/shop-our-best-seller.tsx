@@ -16,6 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 interface BestSellerVariant {
   id: string;
   price: number;
+  compare_price?: number;
   color?: string;
   size?: string;
   stock: number;
@@ -53,6 +54,7 @@ interface ProcessedProduct {
   currentPrice: number;
   originalPrice: number;
   hasDiscount: boolean;
+  isCompareDiscount: boolean;
   discountPercentage?: string;
   productImage: string;
   variantId?: string;
@@ -123,23 +125,33 @@ useEffect(() => {
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const processProduct = (item: BestSellerItem): ProcessedProduct | null => {
-    const product = item.product;
-    if (!product) return null;
+  const product = item.product;
+  if (!product) return null;
 
-    const defaultVariant: BestSellerVariant | undefined =
-      product.variants?.find((v: BestSellerVariant) => v.featured) ||
-      product.variants?.[0];
+  const defaultVariant: BestSellerVariant | undefined =
+    product.variants?.find((v: BestSellerVariant) => v.featured) ||
+    product.variants?.[0];
 
-    const originalPrice = defaultVariant?.price || product.base_price || 0;
-    const discount = Number(product.discount_offer) || 0;
+  const basePrice = defaultVariant?.price || product.base_price || 0;
+  const isCompareDiscount = !!(
+    defaultVariant?.compare_price && defaultVariant.compare_price > basePrice
+  );
+  const discount = isCompareDiscount ? 0 : Number(product.discount_offer) || 0;
 
-    const currentPrice =
-      discount > 0
-        ? Math.round(originalPrice - (originalPrice * discount) / 100)
-        : originalPrice;
+  const currentPrice = isCompareDiscount
+    ? basePrice
+    : discount > 0
+    ? Math.round(basePrice - (basePrice * discount) / 100)
+    : basePrice;
 
-    const hasDiscount = discount > 0;
-    const discountPercentage = hasDiscount ? `${discount}% off` : undefined;
+  const originalPrice = isCompareDiscount ? defaultVariant!.compare_price! : basePrice;
+
+  const hasDiscount = isCompareDiscount || discount > 0;
+  const discountPercentage = isCompareDiscount
+    ? `${Math.round(((defaultVariant!.compare_price! - basePrice) / defaultVariant!.compare_price!) * 100)}% off`
+    : hasDiscount
+    ? `${discount}% off`
+    : undefined;
 
     const mainImage =
       [...(product.images || [])]
@@ -158,6 +170,7 @@ useEffect(() => {
       currentPrice,
       originalPrice,
       hasDiscount,
+      isCompareDiscount,
       discountPercentage,
       productImage,
       variantId: defaultVariant?.id,
@@ -273,6 +286,7 @@ useEffect(() => {
                     originalPrice={
                       product.hasDiscount ? product.originalPrice : undefined
                     }
+                    isCompareDiscount={product.isCompareDiscount}
                     discount={product.discountPercentage}
                     imageSrc={product.productImage}
                     rating={4.9}

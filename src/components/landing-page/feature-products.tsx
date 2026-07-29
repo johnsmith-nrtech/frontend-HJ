@@ -13,6 +13,7 @@ import { useProducts } from "@/hooks/use-products";
 interface SaleProductVariant {
   id: string;
   price: number;
+  compare_price?: number;
   color?: string;
   size?: string;
   stock: number;
@@ -50,7 +51,8 @@ interface ProcessedProduct {
   currentPrice: number;
   originalPrice: number;
   hasDiscount: boolean;
-  discountPercentage: string;
+  isCompareDiscount: boolean;
+  discountPercentage?: string;
   productImage: string;
   variantId?: string;
   color?: string;
@@ -121,22 +123,34 @@ const FeaturedProducts = () => {
 
   const processProduct = (saleProduct: SaleProduct): ProcessedProduct | null => {
     const product = saleProduct.product;
-    if (!product) return null;
+  if (!product) return null;
 
-    const defaultVariant: SaleProductVariant | undefined =
-      product.variants?.find((v: SaleProductVariant) => v.featured) ||
-      product.variants?.[0];
+  const defaultVariant: SaleProductVariant | undefined =
+    product.variants?.find((v: SaleProductVariant) => v.featured) ||
+    product.variants?.[0];
 
-    const variantPrice = defaultVariant?.price || product.base_price;
-    const discount = Number(product.discount_offer) || 0;
+  const variantPrice = defaultVariant?.price || product.base_price;
+  const isCompareDiscount = !!(
+    defaultVariant?.compare_price && defaultVariant.compare_price > variantPrice
+  );
+  const discount = isCompareDiscount ? 0 : Number(product.discount_offer) || 0;
 
-    const discountedPrice =
-      discount > 0
-        ? Math.round(variantPrice - (variantPrice * discount) / 100)
-        : variantPrice;
+  const discountedPrice = isCompareDiscount
+    ? variantPrice
+    : discount > 0
+    ? Math.round(variantPrice - (variantPrice * discount) / 100)
+    : variantPrice;
 
-    const hasDiscount = discount > 0;
-    const discountPercentage = hasDiscount ? `${discount}% off` : "15% off";
+  const originalPriceValue = isCompareDiscount
+    ? defaultVariant!.compare_price!
+    : variantPrice;
+
+  const hasDiscount = isCompareDiscount || discount > 0;
+  const discountPercentage = isCompareDiscount
+    ? `${Math.round(((defaultVariant!.compare_price! - variantPrice) / defaultVariant!.compare_price!) * 100)}% off`
+    : hasDiscount
+    ? `${discount}% off`
+    : undefined;
 
     const mainImage =
       [...(product.images || [])]
@@ -153,8 +167,9 @@ const FeaturedProducts = () => {
       id: product.id,
       name: product.name,
       currentPrice: discountedPrice,
-      originalPrice: variantPrice,
+      originalPrice: originalPriceValue,
       hasDiscount,
+      isCompareDiscount,
       discountPercentage,
       productImage,
       variantId: defaultVariant?.id,
@@ -269,11 +284,8 @@ const saleProductIds = new Set(saleProducts.map((sp: SaleProduct) => sp.product_
                     id={product.id}
                     name={product.name}
                     price={product.currentPrice}
-                    originalPrice={
-                      product.hasDiscount
-                        ? product.originalPrice
-                        : Math.round(product.currentPrice * 1.25)
-                    }
+                    originalPrice={product.hasDiscount ? product.originalPrice : undefined}
+                    isCompareDiscount={product.isCompareDiscount}
                     imageSrc={product.productImage}
                     rating={4.9}
                     discount={product.discountPercentage}
