@@ -206,10 +206,10 @@ const FeaturedCategories = () => {
   }
 
   return (
-    <div className="px-4 py-6 md:px-8 lg:px-12">
-      <h1 className="mb-8 text-center text-3xl font-bold uppercase sm:text-5xl lg:text-[85px]">
-        Shop Our Featured Categories
-      </h1>
+  <div className="overflow-x-hidden px-4 py-6 md:px-8 lg:px-12">
+    <h1 className="mb-8 text-center text-3xl font-bold uppercase sm:text-5xl lg:text-[85px]">
+      Shop Our Featured Categories
+    </h1>
 
       {/* <Carousel
         opts={{ loop: true, align: "start" }}
