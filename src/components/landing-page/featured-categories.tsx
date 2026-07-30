@@ -14,13 +14,38 @@ import {
 import { useFeaturedCategories } from "@/hooks/use-categories";
 
 // Mobile Feature Card Component
+// const MobileFeatureCard: React.FC<{
+//   title: string;
+//   image: string;
+//   href: string;
+// }> = ({ title, image, href }) => (
+//   <Link href={href} className="group relative block w-full">
+//     <div className="relative h-[160px] w-full overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
+//       <Image
+//         src={image}
+//         alt={title}
+//         fill
+//         sizes="(max-width: 768px) 50vw, 33vw"
+//         className="object-cover transition-transform duration-300 group-hover:scale-110"
+//         priority
+//       />
+//       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent transition-all duration-300 group-hover:from-black/70 group-hover:via-black/30" />
+//       <div className="absolute right-0 bottom-0 left-0 p-3">
+//         <h3 className="font-bebas text-lg leading-tight text-white uppercase transition-transform duration-300 group-hover:translate-y-[-2px]">
+//           {title}
+//         </h3>
+//       </div>
+//     </div>
+//   </Link>
+// );
+
 const MobileFeatureCard: React.FC<{
   title: string;
   image: string;
   href: string;
 }> = ({ title, image, href }) => (
   <Link href={href} className="group relative block w-full">
-    <div className="relative h-[160px] w-full overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
       <Image
         src={image}
         alt={title}
@@ -29,9 +54,9 @@ const MobileFeatureCard: React.FC<{
         className="object-cover transition-transform duration-300 group-hover:scale-110"
         priority
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent transition-all duration-300 group-hover:from-black/70 group-hover:via-black/30" />
-      <div className="absolute right-0 bottom-0 left-0 p-3">
-        <h3 className="font-bebas text-lg leading-tight text-white uppercase transition-transform duration-300 group-hover:translate-y-[-2px]">
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-transparent transition-all duration-300 group-hover:from-black/70 group-hover:via-black/20" />
+      <div className="absolute inset-x-0 top-0 flex justify-center p-4">
+        <h3 className="font-bebas text-center text-lg leading-tight text-white uppercase transition-transform duration-300 group-hover:translate-y-[2px]">
           {title}
         </h3>
       </div>
@@ -181,12 +206,12 @@ const FeaturedCategories = () => {
   }
 
   return (
-    <div className="px-4 py-6 md:px-8 lg:px-12">
-      <h1 className="mb-8 text-center text-3xl font-bold uppercase sm:text-5xl lg:text-[85px]">
-        Shop Our Featured Categories
-      </h1>
+  <div className="overflow-x-hidden px-4 py-6 md:px-8 lg:px-12">
+    <h1 className="mb-8 text-center text-3xl font-bold uppercase sm:text-5xl lg:text-[85px]">
+      Shop Our Featured Categories
+    </h1>
 
-      <Carousel
+      {/* <Carousel
         opts={{ loop: true, align: "start" }}
         setApi={setApi}
         className="w-full"
@@ -211,7 +236,7 @@ const FeaturedCategories = () => {
         <CarouselNext className="right-0 md:-right-10" />
       </Carousel>
 
-      {/* Pagination Dots */}
+      
       {categories.length > 1 && (
         <div className="mt-6 flex justify-center gap-2">
           {categories.map((_, index) => (
@@ -224,7 +249,52 @@ const FeaturedCategories = () => {
             />
           ))}
         </div>
-      )}
+      )} */}
+
+      {/* Mobile: 2-column grid, stacked vertically */}
+<div className="grid grid-cols-2 gap-3 md:hidden">
+  {categories.map((cat) => (
+    <MobileFeatureCard key={cat.id} {...cat} />
+  ))}
+</div>
+
+{/* Desktop: horizontal carousel */}
+<div className="hidden md:block">
+  <Carousel
+    opts={{ loop: true, align: "start" }}
+    setApi={setApi}
+    className="w-full"
+  >
+    <CarouselContent className="-ml-4">
+      {categories.map((cat) => (
+        <CarouselItem
+          key={cat.id}
+          className="pl-4 md:basis-1/2 lg:basis-1/3"
+        >
+          <FeatureCard {...cat} />
+        </CarouselItem>
+      ))}
+    </CarouselContent>
+
+    <CarouselPrevious className="left-0 md:-left-10" />
+    <CarouselNext className="right-0 md:-right-10" />
+  </Carousel>
+
+  {/* Pagination Dots */}
+  {/* {categories.length > 1 && (
+    <div className="mt-6 flex justify-center gap-2">
+      {categories.map((_, index) => (
+        <button
+          key={index}
+          onClick={() => api?.scrollTo(index)}
+          className={`h-2 rounded-full transition-all duration-300 ${
+            index === currentIndex ? "w-6 bg-blue-600" : "w-2 bg-gray-300"
+          }`}
+        />
+      ))}
+    </div>
+  )} */}
+</div>
     </div>
   );
 };
