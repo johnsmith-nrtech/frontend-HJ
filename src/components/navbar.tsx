@@ -180,7 +180,7 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          "sticky top-0 z-50 h-16 w-full transition-all duration-200",
+          "sticky top-0 z-50 min-h-16 w-full transition-all duration-200",
           {
             "bg-background/95 supports-backdrop-filter:bg-background/80 border-b shadow-sm backdrop-blur":
               isScrolled,

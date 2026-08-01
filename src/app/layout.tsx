@@ -93,7 +93,7 @@ export default function RootLayout({
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body
-        className={`${openSans.variable} ${bebasNeue.variable} ${openSans.className}`}
+        className={`${openSans.variable} ${bebasNeue.variable} ${openSans.className} overflow-x-hidden`}
         suppressHydrationWarning
       >
         <ReactQueryProvider>

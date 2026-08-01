@@ -9,8 +9,9 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button as UIButton } from "@/components/ui/button";
 import Image from "next/image";
+import { Button } from "../button-custom";
 import { TestimonialsApi, Testimonial } from "@/lib/api/content";
 
 // Desktop Testimonial Card
@@ -55,6 +56,7 @@ const TestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }
     </CardContent>
   </Card>
 );
+
 
 // Mobile Testimonial Card
 const MobileTestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }) => (
@@ -110,6 +112,15 @@ export const Testimonials: React.FC<TestimonialsProps> = ({ showBackground = tru
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleCustomOrderClick = () => {
+      const message = "Hi, I want to place a custom order. What is the procedure ?";
+      window.open(
+        `https://wa.me/447306127481?text=${encodeURIComponent(message)}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    };
+
   useEffect(() => {
     TestimonialsApi.getAll()
       .then(setTestimonials)
@@ -163,20 +174,40 @@ export const Testimonials: React.FC<TestimonialsProps> = ({ showBackground = tru
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="py-4 md:py-16 lg:py-20">
-      <div className={`py-12 ${showBackground ? "bg-light-blue" : ""}`}>
-        <div className="px-4 sm:px-[32px]">
-          <div className="mb-8 flex items-center justify-center md:mb-12 md:justify-between">
+  <section className="py-4 md:py-16 lg:py-20">
+    <div className={`py-12 ${showBackground ? "bg-light-blue" : ""}`}>
+      <div className="px-4 sm:px-[32px]">
+        <div className="mb-4 flex justify-center md:justify-start">
+                <Button
+                  onClick={handleCustomOrderClick}
+                  variant="main"
+                  size="xl"
+                  rounded="full"
+                  className="bg-blue relative !w-[244px] items-center justify-start"
+                  icon={
+                    <Image
+                      src="/arrow-right.png"
+                      alt="arrow-right"
+                      width={20}
+                      height={20}
+                      className="text-blue absolute top-1/2 right-2 h-[30px] w-[30px] -translate-y-1/2 rounded-full bg-[#fff] object-contain p-2 sm:h-[40px] sm:w-[40px]"
+                    />
+                  }
+                >
+                  Make Custom Order
+                </Button>
+              </div>
+        <div className="mb-8 flex items-center justify-center md:mb-12 md:justify-between">
             <div className="md:mb-0">
               <h1 className="text-3xl lg:text-[85px]">WHAT OUR BUYERS SAYS</h1>
             </div>
             <div className="hidden items-center gap-4 md:flex">
-              <Button onClick={scrollPrev} className="border-blue text-blue hover:bg-blue flex h-[50px] w-[50px] items-center justify-center rounded-full border-1 bg-transparent p-0 transition-all duration-300 hover:text-white md:h-16 md:w-16">
+              <UIButton onClick={scrollPrev} className="border-blue text-blue hover:bg-blue flex h-[50px] w-[50px] items-center justify-center rounded-full border-1 bg-transparent p-0 transition-all duration-300 hover:text-white md:h-16 md:w-16">
                 <Image src="/arrow-left.png" alt="Previous" width={24} height={24} className="h-8 w-8 object-contain" />
-              </Button>
-              <Button onClick={scrollNext} className="bg-blue hover:bg-blue/90 flex h-[50px] w-[50px] items-center justify-center rounded-full p-0 text-white transition-all duration-300 md:h-16 md:w-16">
+              </UIButton>
+              <UIButton onClick={scrollNext} className="bg-blue hover:bg-blue/90 flex h-[50px] w-[50px] items-center justify-center rounded-full p-0 text-white transition-all duration-300 md:h-16 md:w-16">
                 <Image src="/arrow-right1.png" alt="Next" width={24} height={24} className="h-8 w-8 object-contain" />
-              </Button>
+              </UIButton>
             </div>
           </div>
         </div>
