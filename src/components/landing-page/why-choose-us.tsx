@@ -69,9 +69,9 @@ const WhyChooseUs = () => {
     return (
       <div className="py-6 md:py-6 lg:py-6">
         <div className="px-4 sm:px-[32px]">
-          <div className="mb-8 text-center md:mb-10">
+          {/* <div className="mb-8 text-center md:mb-10">
             <h1 className="text-3xl sm:text-5xl lg:text-[85px]">WHY SOFA DEAL</h1>
-          </div>
+          </div> */}
           <div className="flex gap-4 overflow-hidden">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-40 w-64 shrink-0 animate-pulse rounded-lg bg-gray-100" />
@@ -87,9 +87,9 @@ const WhyChooseUs = () => {
   return (
     <div className="py-6 md:py-6 lg:py-6">
       <div className="px-4 sm:px-[32px]">
-        <div className="mb-8 text-center md:mb-10">
+        {/* <div className="mb-8 text-center md:mb-10">
           <h1 className="text-3xl sm:text-5xl lg:text-[85px]">WHY SOFA DEAL</h1>
-        </div>
+        </div> */}
 
         {/* Desktop Layout */}
 <div className="hidden lg:block">

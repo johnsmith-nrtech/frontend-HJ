@@ -190,7 +190,7 @@ const FeaturedCategories = () => {
     </h1> */}
 
       {/* Mobile: 2-column grid, stacked vertically */}
-      <div className="grid grid-cols-2 gap-3 md:hidden">
+      <div className="grid grid-cols-2 gap-1.5 md:hidden">
         {categories.map((cat) => (
           <MobileFeatureCard key={cat.id} {...cat} />
         ))}

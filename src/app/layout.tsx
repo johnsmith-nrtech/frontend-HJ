@@ -92,7 +92,7 @@ export default function RootLayout({
 </Script>
       </head>
       <body
-        className={`${openSans.variable} ${bebasNeue.variable} ${openSans.className}`}
+        className={`${openSans.variable} ${bebasNeue.variable} ${openSans.className} overflow-x-hidden`}
         suppressHydrationWarning
       >
         <noscript>
