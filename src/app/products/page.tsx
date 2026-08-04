@@ -237,10 +237,17 @@ const mapApiProductToPageProduct = (
 //  MAIN PRODUCTS CONTENT COMPONENT
 // ─────────────────────────────────────────────────────────────────
 
+const COLOR_OPTIONS = [
+  "Red", "Blue", "Grey", "Black", "White", "Green",
+  "Brown", "Beige", "Cream", "Navy", "Yellow", "Pink",
+];
+
+
 function ProductsContent() {
   const { filters, actions, isLoading: isFiltering } =
     useProductsPageFilters();
   const [viewMode, setViewMode] = useState("grid");
+  const [selectedColor, setSelectedColor] = useState<string>("all");
   const filterSectionRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
@@ -326,40 +333,40 @@ if (filters.categoryId && filters.categoryId !== "all") {
     !isSearchMode && !!filters.categoryId && filters.categoryId !== "all";
 
   // all of the selected category's products (no pagination limit)
-  const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
-    {
-      includeImages: true,
-      includeCategory: true,
-      includeVariants: true,
-      categoryId: filters.categoryId || undefined,
-      limit: itemsPerPage,
-      page: filters.currentPage,
-      size: filters.size || undefined,
-      material: filters.material || undefined,
-      priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
-      sortBy: filters.sortBy || undefined,
-    },
-    { enabled: hasCategory },
-  );
-
-  // everything (used as "the rest" once category runs out, or as
-  // the only source when no category is selected)
-  const {
-    data: apiProducts,
-    isLoading: isAllLoading,
-    error,
-  } = useProducts({
+const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
+  {
     includeImages: true,
     includeCategory: true,
     includeVariants: true,
+    categoryId: filters.categoryId || undefined,
     limit: itemsPerPage,
     page: filters.currentPage,
     size: filters.size || undefined,
     material: filters.material || undefined,
+    color: selectedColor !== "all" ? selectedColor : undefined,
     priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
     sortBy: filters.sortBy || undefined,
-    search: isSearchMode ? undefined : filters.search || undefined,
-  });
+  },
+  { enabled: hasCategory },
+);
+
+const {
+  data: apiProducts,
+  isLoading: isAllLoading,
+  error,
+} = useProducts({
+  includeImages: true,
+  includeCategory: true,
+  includeVariants: true,
+  limit: itemsPerPage,
+  page: filters.currentPage,
+  size: filters.size || undefined,
+  material: filters.material || undefined,
+  color: selectedColor !== "all" ? selectedColor : undefined,
+  priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
+  sortBy: filters.sortBy || undefined,
+  search: isSearchMode ? undefined : filters.search || undefined,
+});
 
   const isProductsLoading = isAllLoading || (hasCategory && isCategoryLoading);
 
@@ -419,7 +426,15 @@ if (filters.categoryId && filters.categoryId !== "all") {
   const transformedApiProducts = mergedProducts;
 
   // ── final display products ─────────────────────────────────────
-  const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
+
+  const baseDisplayProducts = isSearchMode ? searchProducts : transformedApiProducts;
+
+const displayProducts = selectedColor === "all"
+  ? baseDisplayProducts
+  : baseDisplayProducts.filter((p) =>
+      p.color?.toLowerCase() === selectedColor.toLowerCase(),
+    );
+  // const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
 
   const handleCategoryChange = (categoryId: string) => {
     actions.setCategoryId(categoryId === "all" ? null : categoryId);
@@ -503,6 +518,29 @@ if (filters.categoryId && filters.categoryId !== "all") {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* color */}
+<div className="flex flex-col items-start gap-2">
+  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+    Colors
+  </span>
+  <Select
+    value={selectedColor}
+    onValueChange={setSelectedColor}
+  >
+    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+      <SelectValue placeholder="Select" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="all">All Colors</SelectItem>
+      {COLOR_OPTIONS.map((color) => (
+        <SelectItem key={color} value={color}>
+          {color}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
               </div>
 
               {/* sort + view mode */}

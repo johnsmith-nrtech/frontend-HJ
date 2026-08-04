@@ -342,6 +342,7 @@ export async function getProducts(params?: {
   categoryId?: string;
   size?: string;
   material?: string;
+  color?: string;
   search?: string;
   page?: number;
   limit?: number;
