@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Loader2Icon } from "lucide-react";
 
@@ -247,7 +248,18 @@ function ProductsContent() {
   const { filters, actions, isLoading: isFiltering } =
     useProductsPageFilters();
   const [viewMode, setViewMode] = useState("grid");
-  const [selectedColor, setSelectedColor] = useState<string>("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedColor = searchParams.get("color") || "all";
+  const setSelectedColor = (color: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (color === "all") {
+      params.delete("color");
+    } else {
+      params.set("color", color);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
   const filterSectionRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
