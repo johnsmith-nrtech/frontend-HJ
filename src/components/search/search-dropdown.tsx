@@ -172,7 +172,7 @@ export function SearchDropdown({
                     className="text-primary flex items-center gap-2 text-sm hover:underline"
                   >
                     <Search className="h-4 w-4" />
-                    View all results for &quot;{searchQuery}&quot;
+                    <span className="font-bold">View all</span> results for &quot;{searchQuery}&quot;
                   </Link>
                 </div>
               </div>
