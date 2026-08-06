@@ -517,8 +517,8 @@ const displayProducts = selectedColor === "all"
         <div className="px-4 sm:px-[32px]">
           {/* FILTERS */}
           <div id="filters-section" className="mb-8" ref={filterSectionRef}>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex justify-between gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex flex-wrap gap-4">
                 {/* category */}
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-none">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
@@ -638,7 +638,7 @@ const displayProducts = selectedColor === "all"
               )}
 
               {/* sort + view mode */}
-              <div className="flex items-center gap-6">
+              <div className="flex flex-shrink-0 items-center gap-6">
                 <Select
                   value={filters.sortBy}
                   onValueChange={actions.setSortBy}
