@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -243,6 +243,10 @@ const COLOR_OPTIONS = [
   "Brown", "Beige", "Cream", "Navy", "Yellow", "Pink",
 ];
 
+const SIZE_OPTIONS = [
+  "1 Seater", "2 Seater", "3 Seater", "4 Seater", "5 Seater", "3+2 Seater",
+];
+
 
 function ProductsContent() {
   const { filters, actions, isLoading: isFiltering } =
@@ -250,6 +254,7 @@ function ProductsContent() {
   const [viewMode, setViewMode] = useState("grid");
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const selectedColor = searchParams.get("color") || "all";
   const setSelectedColor = (color: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -260,10 +265,42 @@ function ProductsContent() {
     }
     router.push(`/products?${params.toString()}`, { scroll: false });
   };
+
+  const selectedSize = searchParams.get("size") || "all";
+  const setSelectedSize = (size: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (size === "all") {
+      params.delete("size");
+    } else {
+      params.set("size", size);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
+
+  const selectedSubcategory = searchParams.get("subcategoryId") || "all";
+  const setSelectedSubcategory = (subcategoryId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (subcategoryId === "all") {
+      params.delete("subcategoryId");
+    } else {
+      params.set("subcategoryId", subcategoryId);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
+
   const filterSectionRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
   const categoriesQuery = useCategories();
+  const nestedCategoriesQuery = useCategories(true);
+
+  const availableSubcategories = React.useMemo(() => {
+    if (!filters.categoryId || filters.categoryId === "all") return [];
+    const parent = nestedCategoriesQuery.data?.find(
+    (cat) => cat.id === filters.categoryId,
+    );
+    return parent?.subcategories || [];
+  }, [nestedCategoriesQuery.data, filters.categoryId]);
   const { filteredResults, isInitialized } = useSearchStore();
 
   // ── search mode detection ──────────────────────────────────────
@@ -345,15 +382,18 @@ if (filters.categoryId && filters.categoryId !== "all") {
     !isSearchMode && !!filters.categoryId && filters.categoryId !== "all";
 
   // all of the selected category's products (no pagination limit)
+const effectiveCategoryId =
+  selectedSubcategory !== "all" ? selectedSubcategory : filters.categoryId;
+
 const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
   {
     includeImages: true,
     includeCategory: true,
     includeVariants: true,
-    categoryId: filters.categoryId || undefined,
+    categoryId: effectiveCategoryId || undefined,
     limit: itemsPerPage,
     page: filters.currentPage,
-    size: filters.size || undefined,
+    size: selectedSize !== "all" ? selectedSize : undefined,
     material: filters.material || undefined,
     color: selectedColor !== "all" ? selectedColor : undefined,
     priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
@@ -372,7 +412,7 @@ const {
   includeVariants: true,
   limit: itemsPerPage,
   page: filters.currentPage,
-  size: filters.size || undefined,
+  size: selectedSize !== "all" ? selectedSize : undefined,
   material: filters.material || undefined,
   color: selectedColor !== "all" ? selectedColor : undefined,
   priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
@@ -532,28 +572,70 @@ const displayProducts = selectedColor === "all"
                 </div>
 
                 {/* color */}
-<div className="flex flex-col items-start gap-2">
-  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
-    Colors
-  </span>
-  <Select
-    value={selectedColor}
-    onValueChange={setSelectedColor}
-  >
-    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-      <SelectValue placeholder="Select" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="all">All Colors</SelectItem>
-      {COLOR_OPTIONS.map((color) => (
-        <SelectItem key={color} value={color}>
-          {color}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+                <div className="flex flex-col items-start gap-2">
+                  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                    Colors
+                  </span>
+                  <Select
+                    value={selectedColor}
+                    onValueChange={setSelectedColor}
+                  >
+                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Colors</SelectItem>
+                      {COLOR_OPTIONS.map((color) => (
+                        <SelectItem key={color} value={color}>
+                          {color}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              {/* size */}
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                  Sizes
+                </span>
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sizes</SelectItem>
+                    {SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* subcategory */}
+              {availableSubcategories.length > 0 && (
+                <div className="flex flex-col items-start gap-2">
+                  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                    Subcategories
+                  </span>
+                  <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subcategories</SelectItem>
+                      {availableSubcategories.map((sub) => (
+                        <SelectItem key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* sort + view mode */}
               <div className="flex items-center gap-6">
