@@ -85,6 +85,7 @@ export interface Product {
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
   show_sofadeal_coverage?: boolean;
+  category_ids?: string[];
   dimensions?: {
     width?: { cm: number; inches: number };
     depth?: { cm: number; inches: number };
@@ -230,6 +231,7 @@ export interface ProductCreateInput {
   show_installments?: boolean;
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
+  category_ids?: string[];
 }
 
 
@@ -260,6 +262,7 @@ export interface ProductUpdateInput {
   brand?: string;
   featured?: boolean;
   delivery_time_days?: string;
+  category_ids?: string[];
 }
 
 // Featured Product interfaces for the optimized API response

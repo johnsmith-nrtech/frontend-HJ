@@ -142,6 +142,9 @@ export default function AddProductPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [additionalVariants, setAdditionalVariants] = useState<ProductVariant[]>([]);
   const [relatedProductIds, setRelatedProductIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [categorySearch, setCategorySearch] = useState("");
+
 
   const {
     isAuthenticated,
@@ -310,7 +313,8 @@ export default function AddProductPage() {
         // Basic product information
         name: values.name,
         description: values.description || undefined,
-        category_id: values.category_id || undefined,
+        category_id: selectedCategoryIds[0] || undefined,
+        category_ids: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
         base_price: Number(values.base_price),
         discount_offer: Number(values.discount_offer) || 0,
         is_visible: values.is_visible ?? true,
@@ -598,40 +602,66 @@ export default function AddProductPage() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="category_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {!isLoadingCategories &&
-                                categories.map((category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select the product category.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-medium">Categories *</label>
+                      <p className="text-muted-foreground text-xs">
+                        Search and select one or more categories this product belongs to. The first selected category is used as the primary category.
+                      </p>
+                      <Input
+                        placeholder="Search categories..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                      />
+                      <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
+                        {!isLoadingCategories &&
+                          categories
+                          .filter((category) =>
+                            category.name.toLowerCase().includes(categorySearch.toLowerCase())
+                          )
+                          .map((category) => {
+                            const isSelected = selectedCategoryIds.includes(category.id);
+                            return (
+                              <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCategoryIds((prev) =>
+                                    isSelected
+                                      ? prev.filter((id) => id !== category.id)
+                                      : [...prev, category.id]
+                                  );
+                                }}
+                                className="hover:bg-muted flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm"
+                              >
+                                <span
+                                  className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                                  isSelected ? "border-primary" : "border-muted-foreground"
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <span className="bg-primary h-2 w-2 rounded-full" />
+                                  )}
+                                </span>
+                                {category.name}
+                              </button>
+                            );
+                          })}
+                          {!isLoadingCategories &&
+                            categories.filter((category) =>
+                              category.name.toLowerCase().includes(categorySearch.toLowerCase())
+                              ).length === 0 && (
+                                <p className="text-muted-foreground p-2 text-sm">No categories found</p>
+                          )}
+                        </div>
+                        {selectedCategoryIds.length > 0 && (
+                          <p className="text-muted-foreground text-xs">
+                            Selected: {categories
+                              .filter((c) => selectedCategoryIds.includes(c.id))
+                              .map((c) => c.name)
+                              .join(", ")}
+                          </p>
+                        )}
+                    </div>
 
                     <FormField
                       control={form.control}
