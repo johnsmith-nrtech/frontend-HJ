@@ -10,6 +10,9 @@ import {
   Category,
   CategoryCreateInput,
   CategoryUpdateInput,
+  uploadCategoryImage,
+  removeCategoryImage,
+  CategoryImageInput,
 } from "@/lib/api/categories";
 import { toast } from "sonner";
 
@@ -133,4 +136,43 @@ function removeCategory(
       }
       return category;
     });
+}
+
+
+// id passed at call-time (not bound), so it works right after creating a new category too
+export function useUploadCategoryImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ...input }: CategoryImageInput & { id: string }) =>
+      uploadCategoryImage(id, input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["categories", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["featuredCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["popularCategories"] });
+      toast.success("Category image updated");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update category image", { description: error.message });
+    },
+  });
+}
+
+export function useRemoveCategoryImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => removeCategoryImage(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["categories", id] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["featuredCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["popularCategories"] });
+      toast.success("Category image removed");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to remove category image", { description: error.message });
+    },
+  });
 }

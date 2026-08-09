@@ -7,8 +7,8 @@ const paymentMethods = [
   { name: "Visa", icon: "/visa-card.png" },
   { name: "Mastercard", icon: "/mastercard.jpg" },
   { name: "PayPal", icon: "/paypal.png" },
-  // { name: "Apple Pay", icon: "/apple-pay.png" },
-  // { name: "Google Pay", icon: "/google-pay.png" },
+  { name: "Ideal for finance", icon: "/ideal.jpg" },
+  { name: "Barclays", icon: "/barclays.png" },
   // { name: "Klarna", icon: "/klarna.png" },
 ];
 
@@ -27,11 +27,11 @@ const financePerks = [
 
 const FinanceInfoSection = () => {
   return (
-    <section className="py-10 md:py-12">
+    <section className="py-10 md:py-6">
       <div className="px-4 sm:px-[32px]">
         {/* Payment Methods */}
         <div className="mb-12 text-center">
-          <p className="mb-6 text-sm font-medium tracking-wide text-gray-400 uppercase">
+          <p className="mb-6 text-sm text-black tracking-wide uppercase">
             We Accept
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
@@ -79,7 +79,7 @@ const FinanceInfoSection = () => {
             </div>
 
             {/* Right: Example Breakdowns */}
-            {/* <div>
+            <div>
               <p className="font-open-sans mb-4 text-sm font-semibold text-gray-500 uppercase">
                 Example Monthly Payments
               </p>
@@ -112,7 +112,7 @@ const FinanceInfoSection = () => {
                 Representative examples based on 10% deposit over 36 months at
                 0% APR. Final terms confirmed during application.
               </p>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>

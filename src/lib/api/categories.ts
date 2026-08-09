@@ -35,6 +35,12 @@ export interface CategoryUpdateInput {
   featured?: boolean;
 }
 
+export interface CategoryImageInput {
+  file?: File;
+  url?: string;
+}
+
+
 // Get all categories (with optional nesting)
 export async function getCategories(nested = false): Promise<Category[]> {
   const response = await ApiService.fetchPublic(
@@ -44,6 +50,38 @@ export async function getCategories(nested = false): Promise<Category[]> {
   return ApiService.handleResponse<Category[]>(
     response,
     "Failed to fetch categories"
+  );
+}
+
+// Upload or set category image (multipart/form-data)
+export async function uploadCategoryImage(
+  id: string,
+  input: CategoryImageInput
+): Promise<Category> {
+  const formData = new FormData();
+  if (input.file) formData.append("imageFile", input.file);
+  if (input.url) formData.append("url", input.url);
+
+  const response = await ApiService.fetchWithAuth(`/categories/admin/${id}/image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  return ApiService.handleResponse<Category>(
+    response,
+    `Failed to upload image for category: ${id}`
+  );
+}
+
+// Remove category image
+export async function removeCategoryImage(id: string): Promise<Category> {
+  const response = await ApiService.fetchWithAuth(`/categories/admin/${id}/image`, {
+    method: "DELETE",
+  });
+
+  return ApiService.handleResponse<Category>(
+    response,
+    `Failed to remove image for category: ${id}`
   );
 }
 

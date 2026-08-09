@@ -887,9 +887,9 @@ const proceedToAddToCart = () => {
                 {product.name}
               </h1>
               <Badge className="flex items-center gap-2 rounded-full bg-[#56748e] px-3 py-1 text-[14px] text-white md:px-6 md:py-2 md:text-[18px] lg:text-[20px]">
-  <Truck className="h-6 w-6 md:h-7 md:w-7" />
-  {getDeliveryDetails()}
-</Badge>
+                <Truck className="h-6 w-6 md:h-7 md:w-7" />
+                {getDeliveryDetails()}
+              </Badge>
             </div>
           )}
 
@@ -1672,8 +1672,8 @@ const proceedToAddToCart = () => {
           {/* Delivery section */}
           <section className="py-6 md:py-8">
             <div className="space-y-3 md:space-y-4">
-              <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">DELIVERY</h1>
-              <p className="text-sm leading-relaxed text-[#999] md:text-base">{getDeliveryDetails()}</p>
+              <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">Product Features and Quality Highlights</h1>
+              {/* <p className="text-sm leading-relaxed text-[#999] md:text-base">{getDeliveryDetails()}</p> */}
             </div>
           </section>
 
