@@ -1727,6 +1727,7 @@ const proceedToAddToCart = () => {
                           { key: "seat_height", label: "Seat Height", letter: "F" },
                           { key: "bed_width", label: "Bed Width", letter: "G" },
                           { key: "bed_length", label: "Bed Length", letter: "H" },
+                          { key: "armrest_height", label: "Armrest Height", letter: "I" },
                         ];
                         dimensions = dimensionMap
                           .filter((dim) => apiDimensions[dim.key as keyof typeof apiDimensions])

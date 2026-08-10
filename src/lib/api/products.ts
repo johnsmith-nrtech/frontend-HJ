@@ -95,6 +95,7 @@ export interface Product {
     seat_height?: { cm: number; inches: number };
     bed_width?: { cm: number; inches: number };
     bed_length?: { cm: number; inches: number };
+    armrest_height?: { cm: number; inches: number };
   };
 }
 

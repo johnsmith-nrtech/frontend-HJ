@@ -131,6 +131,8 @@ export function VariantManager({
   const updateImageDetailsMutation = useUpdateImageDetails();
 
   const [newVariant, setNewVariant] = useState<ProductVariant>(emptyVariant);
+  const [hasCustomDimensions, setHasCustomDimensions] = useState(false);
+
 
   const addVariant = async () => {
     if (!productId) {
@@ -201,8 +203,10 @@ export function VariantManager({
         if (newVariant.featured) {
           updateData.featured = newVariant.featured;
         }
-        if (newVariant.dimensions) {
+        if (hasCustomDimensions && newVariant.dimensions) {
           updateData.dimensions = newVariant.dimensions;
+        } else if (!hasCustomDimensions) {
+          updateData.dimensions = undefined;
         }
 
         // Always include material_info — never skip it
@@ -315,7 +319,7 @@ export function VariantManager({
             updateData.featured = newVariant.featured;
             hasUpdates = true;
           }
-          if (newVariant.dimensions) {
+          if (hasCustomDimensions && newVariant.dimensions) {
             updateData.dimensions = newVariant.dimensions;
             hasUpdates = true;
           }
@@ -359,30 +363,35 @@ export function VariantManager({
   };
 
   const editVariant = (index: number) => {
-    isEditingRef.current = true;
-    const variant = variants[index];
-    setNewVariant({
-      ...variant,
-      sku: variant.sku || "",
-      price: variant.price || 0,
-      compare_price: variant.compare_price || 0,
-      color: variant.color || "",
-      size: variant.size || "",
-      stock: variant.stock || 0,
-      weight_kg: variant.weight_kg || 0,
-      delivery_time_days: variant.delivery_time_days || "",
-      assemble_charges: variant.assemble_charges || 0,
-      material: variant.material || "",
-      brand: variant.brand || "",
-      tags: variant.tags || "",
-      warranty_info: variant.warranty_info || "",
-      featured: variant.featured || false,
-      images: variant.images || [],
-      dimensions: variant.dimensions || emptyDimensions,
-      material_info: variant.material_info || emptyMaterialInfo,
-    });
-    setEditingIndex(index);
-  };
+  isEditingRef.current = true;
+  const variant = variants[index];
+  const variantHasDimensions = !!(
+    variant.dimensions &&
+    Object.values(variant.dimensions).some((dim) => dim && dim.cm > 0)
+  );
+  setHasCustomDimensions(variantHasDimensions);
+  setNewVariant({
+    ...variant,
+    sku: variant.sku || "",
+    price: variant.price || 0,
+    compare_price: variant.compare_price || 0,
+    color: variant.color || "",
+    size: variant.size || "",
+    stock: variant.stock || 0,
+    weight_kg: variant.weight_kg || 0,
+    delivery_time_days: variant.delivery_time_days || "",
+    assemble_charges: variant.assemble_charges || 0,
+    material: variant.material || "",
+    brand: variant.brand || "",
+    tags: variant.tags || "",
+    warranty_info: variant.warranty_info || "",
+    featured: variant.featured || false,
+    images: variant.images || [],
+    dimensions: variant.dimensions || emptyDimensions,
+    material_info: variant.material_info || emptyMaterialInfo,
+  });
+  setEditingIndex(index);
+};
 
   const deleteVariant = async (index: number) => {
     const variant = variants[index];
@@ -404,6 +413,7 @@ export function VariantManager({
     isEditingRef.current = false;
     setEditingIndex(null);
     setNewVariant(emptyVariant);
+    setHasCustomDimensions(false);
   };
 
   useEffect(() => {
@@ -580,24 +590,35 @@ export function VariantManager({
               </div>
 
               {/* Dimensions Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">Dimensions</h4>
-                  <span className="text-muted-foreground text-xs">
-                    Enter in cm (inches calculated automatically)
-                  </span>
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={hasCustomDimensions}
+                    onCheckedChange={(checked) => setHasCustomDimensions(!!checked)}
+                    disabled={disabled}
+                  />
+                  <label className="text-sm font-medium">This variant has custom dimensions</label>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <label className="text-sm font-medium">Width (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.width?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
+
+                {hasCustomDimensions && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">Dimensions</h4>
+                      <span className="text-muted-foreground text-xs">
+                        Enter in cm (inches calculated automatically)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <div>
+                        <label className="text-sm font-medium">Width (cm)</label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          value={newVariant.dimensions?.width?.cm || 0}
+                          onChange={(e) => {
+                            const cm = parseFloat(e.target.value) || 0;
+                            const inches = Math.round((cm / 2.54) * 10) / 10;
                         setNewVariant({
                           ...newVariant,
                           dimensions: { ...newVariant.dimensions, width: { cm, inches } },
@@ -763,7 +784,9 @@ export function VariantManager({
                     />
                   </div>
                 </div>
-              </div>
+              </>
+            )}
+            </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>

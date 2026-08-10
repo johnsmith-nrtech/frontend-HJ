@@ -58,7 +58,7 @@ const FinanceInfoSection = () => {
             {/* Left: Messaging */}
             <div>
               <h2 className="text-3xl uppercase sm:text-4xl lg:text-[56px]">
-                Interest Free Credit
+                3 Years Interest Free Credit
               </h2>
               <p className="font-open-sans mt-3 text-sm text-gray-600 sm:text-base">
                 Spread the cost of your new furniture with genuine 0% APR
