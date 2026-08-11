@@ -13,6 +13,7 @@ import Testimonials from "@/components/landing-page/testimonials";
 import PayInSlicesSection from "@/components/landing-page/pay-in-slices";
 import NewArrivals from "@/components/landing-page/new-arrivals";
 import ShopOurBestSeller from "@/components/landing-page/shop-our-best-seller";
+import FinanceInfoSection from "@/components/landing-page/finance-info-section";
 
 
 
@@ -44,6 +45,7 @@ const LandingPage = () => {
           <ShopOurBestSeller />
           {/* <TopSellingProducts limit={4} period="month" /> */}
           <Testimonials />
+          <FinanceInfoSection />
         </main>
       </div>
     </>

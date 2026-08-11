@@ -1,6 +1,7 @@
 "use client";
-
+import React from "react";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Loader2Icon } from "lucide-react";
 
@@ -237,14 +238,69 @@ const mapApiProductToPageProduct = (
 //  MAIN PRODUCTS CONTENT COMPONENT
 // ─────────────────────────────────────────────────────────────────
 
+const COLOR_OPTIONS = [
+  "Red", "Blue", "Grey", "Black", "White", "Green",
+  "Brown", "Beige", "Cream", "Navy", "Yellow", "Pink",
+];
+
+const SIZE_OPTIONS = [
+  "1 Seater", "2 Seater", "3 Seater", "4 Seater", "5 Seater", "3+2 Seater",
+];
+
+
 function ProductsContent() {
   const { filters, actions, isLoading: isFiltering } =
     useProductsPageFilters();
   const [viewMode, setViewMode] = useState("grid");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const selectedColor = searchParams.get("color") || "all";
+  const setSelectedColor = (color: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (color === "all") {
+      params.delete("color");
+    } else {
+      params.set("color", color);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
+
+  const selectedSize = searchParams.get("size") || "all";
+  const setSelectedSize = (size: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (size === "all") {
+      params.delete("size");
+    } else {
+      params.set("size", size);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
+
+  const selectedSubcategory = searchParams.get("subcategoryId") || "all";
+  const setSelectedSubcategory = (subcategoryId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (subcategoryId === "all") {
+      params.delete("subcategoryId");
+    } else {
+      params.set("subcategoryId", subcategoryId);
+    }
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
+
   const filterSectionRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
   const categoriesQuery = useCategories();
+  const nestedCategoriesQuery = useCategories(true);
+
+  const availableSubcategories = React.useMemo(() => {
+    if (!filters.categoryId || filters.categoryId === "all") return [];
+    const parent = nestedCategoriesQuery.data?.find(
+    (cat) => cat.id === filters.categoryId,
+    );
+    return parent?.subcategories || [];
+  }, [nestedCategoriesQuery.data, filters.categoryId]);
   const { filteredResults, isInitialized } = useSearchStore();
 
   // ── search mode detection ──────────────────────────────────────
@@ -326,40 +382,43 @@ if (filters.categoryId && filters.categoryId !== "all") {
     !isSearchMode && !!filters.categoryId && filters.categoryId !== "all";
 
   // all of the selected category's products (no pagination limit)
-  const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
-    {
-      includeImages: true,
-      includeCategory: true,
-      includeVariants: true,
-      categoryId: filters.categoryId || undefined,
-      limit: itemsPerPage,
-      page: filters.currentPage,
-      size: filters.size || undefined,
-      material: filters.material || undefined,
-      priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
-      sortBy: filters.sortBy || undefined,
-    },
-    { enabled: hasCategory },
-  );
+const effectiveCategoryId =
+  selectedSubcategory !== "all" ? selectedSubcategory : filters.categoryId;
 
-  // everything (used as "the rest" once category runs out, or as
-  // the only source when no category is selected)
-  const {
-    data: apiProducts,
-    isLoading: isAllLoading,
-    error,
-  } = useProducts({
+const { data: categoryProducts, isLoading: isCategoryLoading } = useProducts(
+  {
     includeImages: true,
     includeCategory: true,
     includeVariants: true,
+    categoryId: effectiveCategoryId || undefined,
     limit: itemsPerPage,
     page: filters.currentPage,
-    size: filters.size || undefined,
+    size: selectedSize !== "all" ? selectedSize : undefined,
     material: filters.material || undefined,
+    color: selectedColor !== "all" ? selectedColor : undefined,
     priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
     sortBy: filters.sortBy || undefined,
-    search: isSearchMode ? undefined : filters.search || undefined,
-  });
+  },
+  { enabled: hasCategory },
+);
+
+const {
+  data: apiProducts,
+  isLoading: isAllLoading,
+  error,
+} = useProducts({
+  includeImages: true,
+  includeCategory: true,
+  includeVariants: true,
+  limit: itemsPerPage,
+  page: filters.currentPage,
+  size: selectedSize !== "all" ? selectedSize : undefined,
+  material: filters.material || undefined,
+  color: selectedColor !== "all" ? selectedColor : undefined,
+  priceRange: filters.priceRange !== "all" ? filters.priceRange : undefined,
+  sortBy: filters.sortBy || undefined,
+  search: isSearchMode ? undefined : filters.search || undefined,
+});
 
   const isProductsLoading = isAllLoading || (hasCategory && isCategoryLoading);
 
@@ -419,7 +478,15 @@ if (filters.categoryId && filters.categoryId !== "all") {
   const transformedApiProducts = mergedProducts;
 
   // ── final display products ─────────────────────────────────────
-  const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
+
+  const baseDisplayProducts = isSearchMode ? searchProducts : transformedApiProducts;
+
+const displayProducts = selectedColor === "all"
+  ? baseDisplayProducts
+  : baseDisplayProducts.filter((p) =>
+      p.color?.toLowerCase() === selectedColor.toLowerCase(),
+    );
+  // const displayProducts = isSearchMode ? searchProducts : transformedApiProducts;
 
   const handleCategoryChange = (categoryId: string) => {
     actions.setCategoryId(categoryId === "all" ? null : categoryId);
@@ -450,8 +517,8 @@ if (filters.categoryId && filters.categoryId !== "all") {
         <div className="px-4 sm:px-[32px]">
           {/* FILTERS */}
           <div id="filters-section" className="mb-8" ref={filterSectionRef}>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex justify-between gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex flex-wrap gap-4">
                 {/* category */}
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-none">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
@@ -503,10 +570,75 @@ if (filters.categoryId && filters.categoryId !== "all") {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* color */}
+                <div className="flex flex-col items-start gap-2">
+                  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                    Colors
+                  </span>
+                  <Select
+                    value={selectedColor}
+                    onValueChange={setSelectedColor}
+                  >
+                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Colors</SelectItem>
+                      {COLOR_OPTIONS.map((color) => (
+                        <SelectItem key={color} value={color}>
+                          {color}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
+              {/* size */}
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                  Sizes
+                </span>
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sizes</SelectItem>
+                    {SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* subcategory */}
+              {availableSubcategories.length > 0 && (
+                <div className="flex flex-col items-start gap-2">
+                  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                    Subcategories
+                  </span>
+                  <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subcategories</SelectItem>
+                      {availableSubcategories.map((sub) => (
+                        <SelectItem key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* sort + view mode */}
-              <div className="flex items-center gap-6">
+              <div className="flex flex-shrink-0 items-center gap-6">
                 <Select
                   value={filters.sortBy}
                   onValueChange={actions.setSortBy}

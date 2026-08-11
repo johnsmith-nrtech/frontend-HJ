@@ -85,6 +85,7 @@ export interface Product {
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
   show_sofadeal_coverage?: boolean;
+  category_ids?: string[];
   dimensions?: {
     width?: { cm: number; inches: number };
     depth?: { cm: number; inches: number };
@@ -94,6 +95,7 @@ export interface Product {
     seat_height?: { cm: number; inches: number };
     bed_width?: { cm: number; inches: number };
     bed_length?: { cm: number; inches: number };
+    armrest_height?: { cm: number; inches: number };
   };
 }
 
@@ -230,6 +232,7 @@ export interface ProductCreateInput {
   show_installments?: boolean;
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
+  category_ids?: string[];
 }
 
 
@@ -260,6 +263,7 @@ export interface ProductUpdateInput {
   brand?: string;
   featured?: boolean;
   delivery_time_days?: string;
+  category_ids?: string[];
 }
 
 // Featured Product interfaces for the optimized API response
@@ -342,6 +346,7 @@ export async function getProducts(params?: {
   categoryId?: string;
   size?: string;
   material?: string;
+  color?: string;
   search?: string;
   page?: number;
   limit?: number;

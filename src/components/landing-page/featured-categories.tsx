@@ -31,13 +31,13 @@ const MobileFeatureCard: React.FC<{
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-transparent transition-all duration-300 group-hover:from-black/70 group-hover:via-black/20" />
       <div className="absolute inset-x-0 top-0 flex flex-col items-center p-4">
-  <div className="inline-flex flex-col items-center">
-    <h3 className="font-bebas text-center text-lg leading-tight text-white uppercase transition-transform duration-300 group-hover:translate-y-[2px]">
-      {title}
-    </h3>
-    <div className="bg-blue mt-1.5 h-[3px] w-full rounded-full" />
-  </div>
-</div>
+        <div className="inline-flex flex-col items-center">
+          <h3 className="font-bebas text-center text-lg leading-tight text-white uppercase transition-transform duration-300 group-hover:translate-y-[2px]">
+            {title}
+          </h3>
+          <div className="bg-blue mt-1.5 h-[3px] w-full rounded-full" />
+        </div>
+      </div>
     </div>
   </Link>
 );

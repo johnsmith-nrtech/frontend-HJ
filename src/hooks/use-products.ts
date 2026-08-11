@@ -53,24 +53,43 @@ interface BulkImportResult {
 
 // Hook for fetching products with optional filtering
 // after
-export function useProducts(
-  params?: {
-    categoryId?: string;
-    size?: string;
-    material?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    priceRange?: string;
-    sortOrder?: string;
-    delivery_time_days?: string;
-    assemble_charges?: number;
-    includeVariants?: boolean;
-    includeImages?: boolean;
-    includeCategory?: boolean;
-  },
-  options?: { enabled?: boolean },
+// export function useProducts(
+//   params?: {
+//     categoryId?: string;
+//     size?: string;
+//     material?: string;
+//     search?: string;
+//     page?: number;
+//     limit?: number;
+//     sortBy?: string;
+//     priceRange?: string;
+//     sortOrder?: string;
+//     delivery_time_days?: string;
+//     assemble_charges?: number;
+//     includeVariants?: boolean;
+//     includeImages?: boolean;
+//     includeCategory?: boolean;
+//   },
+//   options?: { enabled?: boolean },
+// ) {
+export function useProducts(params?: {
+  categoryId?: string;
+  size?: string;
+  material?: string;
+  color?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  priceRange?: string;
+  sortOrder?: string;
+  delivery_time_days?: string;
+  assemble_charges?: number;
+  includeVariants?: boolean;
+  includeImages?: boolean;
+  includeCategory?: boolean;
+},
+options?: { enabled?: boolean },
 ) {
   return useQuery({
     queryKey: ["products", params],

@@ -50,6 +50,7 @@ export interface FormData {
   billingZipCode?: string;
   billingCountry?: string;
   paymentMethod: "card" | "cod" | "installments";
+  saveAddress?: boolean;
   isGuest?: boolean;
   createAccount?: boolean;
   coupon_code?: string;

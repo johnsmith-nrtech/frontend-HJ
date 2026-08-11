@@ -38,7 +38,7 @@ export function useCheckoutForm() {
   const [showGuestOptions, setShowGuestOptions] = React.useState(false);
 
 
-  const [formData, setFormData] = React.useState<FormData>(() => {
+const [formData, setFormData] = React.useState<FormData>(() => {
     if (typeof window === "undefined") return { firstName: "", lastName: "", phone: "", email: "", address: "", country: "", city: "", state: "", charges: "", zipCode: "", floorId: "", differentBilling: false, paymentMethod: "card" };
     try {
       const saved = localStorage.getItem("checkoutFormData");
@@ -48,33 +48,35 @@ export function useCheckoutForm() {
     }
   });
 
-
-  React.useEffect(() => {
-    setFormData({
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      address: "",
-      country: "",
-      city: "",
-      state: "",
-      charges: "",
-      zipCode: "",
-      floorId: "",
-      differentBilling: false,
-      billingAddress: "",
-      billingCity: "",
-      billingState: "",
-      billingZipCode: "",
-      billingCountry: "GB",
-      paymentMethod: "card",
-    });
-  }, []);
-
   // Coupon state
-  const [couponCode, setCouponCode] = React.useState("");
-  const [appliedCoupon, setAppliedCoupon] = React.useState<AppliedCoupon | null>(null);
+  // const [couponCode, setCouponCode] = React.useState("");
+  // const [appliedCoupon, setAppliedCoupon] = React.useState<AppliedCoupon | null>(null);
+  // const [discountAmount, setDiscountAmount] = React.useState(0);
+  // const [isApplyingCoupon, setIsApplyingCoupon] = React.useState(false);
+  // const [couponError, setCouponError] = React.useState("");
+
+  // // Wallet balance state (new £ system)
+  // const [walletBalance, setWalletBalance] = React.useState(0);
+  // const [walletDiscount, setWalletDiscount] = React.useState(0);
+  // const [useWallet, setUseWallet] = React.useState(false);
+  // Coupon state — hydrated from localStorage so it survives full-page nav (e.g. /installments and back)
+  const [couponCode, setCouponCode] = React.useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      return localStorage.getItem("checkoutCouponCode") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [appliedCoupon, setAppliedCoupon] = React.useState<AppliedCoupon | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = localStorage.getItem("checkoutAppliedCoupon");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [discountAmount, setDiscountAmount] = React.useState(0);
   const [isApplyingCoupon, setIsApplyingCoupon] = React.useState(false);
   const [couponError, setCouponError] = React.useState("");
@@ -82,7 +84,14 @@ export function useCheckoutForm() {
   // Wallet balance state (new £ system)
   const [walletBalance, setWalletBalance] = React.useState(0);
   const [walletDiscount, setWalletDiscount] = React.useState(0);
-  const [useWallet, setUseWallet] = React.useState(false);
+  const [useWallet, setUseWallet] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return JSON.parse(localStorage.getItem("checkoutUseWallet") || "false");
+    } catch {
+      return false;
+    }
+  });
 
   // Old referral credit state (% system — kept for backwards compat)
   const [referralCredit, setReferralCredit] = React.useState(0);
@@ -247,12 +256,57 @@ React.useEffect(() => {
     localStorage.setItem("checkoutFormData", JSON.stringify(formData));
   }, [formData]);
 
+  // Save coupon/wallet selections to localStorage whenever they change
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("checkoutCouponCode", couponCode);
+      localStorage.setItem("checkoutAppliedCoupon", JSON.stringify(appliedCoupon));
+      localStorage.setItem("checkoutUseWallet", JSON.stringify(useWallet));
+    } catch {}
+  }, [couponCode, appliedCoupon, useWallet]);
+
   // Pre-fill email
   React.useEffect(() => {
     if (user?.data?.user?.email && formData.email === "") {
       setFormData((prev) => ({ ...prev, email: user.data.user.email }));
     }
   }, [user, formData.email]);
+
+  // Prefill previously saved shipping address for this email (guest or registered).
+  // Only fills currently-empty fields so it never clobbers what the user already typed,
+  // and everything stays editable afterwards.
+  const prefilledEmailRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    const email = formData.email?.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) return;
+    if (prefilledEmailRef.current === email) return; // only attempt once per email per session
+    prefilledEmailRef.current = email;
+
+    try {
+      const saved = localStorage.getItem(`savedAddress:${email}`);
+      if (!saved) return;
+      const savedAddress = JSON.parse(saved);
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: prev.firstName || savedAddress.firstName || "",
+        lastName: prev.lastName || savedAddress.lastName || "",
+        phone: prev.phone || savedAddress.phone || "",
+        address: prev.address || savedAddress.address || "",
+        city: prev.city || savedAddress.city || "",
+        state: prev.state || savedAddress.state || "",
+        zipCode: prev.zipCode || savedAddress.zipCode || "",
+        country: prev.country || savedAddress.country || "",
+        floorId: prev.floorId || savedAddress.floorId || "",
+      }));
+
+      toast.success("We've filled in your saved address — feel free to edit it.");
+    } catch (err) {
+      console.error("Failed to load saved address:", err);
+    }
+  }, [formData.email]);
+
 
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -382,6 +436,12 @@ React.useEffect(() => {
     } catch {}
     setOrderData(orderDataForSuccess);
     clearCart();
+    try {
+      localStorage.removeItem("checkoutCouponCode");
+      localStorage.removeItem("checkoutAppliedCoupon");
+      localStorage.removeItem("checkoutUseWallet");
+      localStorage.removeItem("checkoutFormData");
+    } catch {}
     setIsProcessingPayment(false);
     toast.dismiss("payment-processing");
     toast.success("COD order placed successfully! You will pay when delivered.", {
@@ -477,6 +537,10 @@ React.useEffect(() => {
     setCouponCode("");
     setDiscountAmount(0);
     setCouponError("");
+    try {
+      localStorage.removeItem("checkoutCouponCode");
+      localStorage.removeItem("checkoutAppliedCoupon");
+    } catch {}
   };
 
 const handlePlaceOrder = async (installmentMeta?: {
@@ -492,6 +556,31 @@ const handlePlaceOrder = async (installmentMeta?: {
         toast.error(validationErrors[0]);
         setIsProcessingPayment(false);
         return;
+      }
+
+      // Save shipping address for this email if the user opted in
+      if (formData.saveAddress) {
+        const email = formData.email?.trim().toLowerCase();
+        if (email) {
+          try {
+            localStorage.setItem(
+              `savedAddress:${email}`,
+              JSON.stringify({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                zipCode: formData.zipCode,
+                country: formData.country,
+                floorId: formData.floorId,
+              })
+            );
+          } catch (err) {
+            console.error("Failed to save address:", err);
+          }
+        }
       }
 
       // use could not be checked then. This is the last checkpoint.

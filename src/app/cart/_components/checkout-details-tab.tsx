@@ -224,6 +224,13 @@ const handlePayInInstallments = () => {
                   />
                 </div>
                 <div className="flex items-center space-x-2">
+                  <Checkbox id="save-address" checked={formData.saveAddress || false}
+                    onCheckedChange={(checked) => handleInputChange("saveAddress", checked as boolean)} />
+                  <Label htmlFor="save-address" className="text-sm text-[#999999]">
+                    Save this address for next time
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
                   <Checkbox id="billing" checked={formData.differentBilling}
                     onCheckedChange={(checked) => handleInputChange("differentBilling", checked as boolean)} />
                   <Label htmlFor="billing" className="text-sm text-[#999999]">
