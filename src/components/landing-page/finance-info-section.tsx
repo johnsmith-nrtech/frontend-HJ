@@ -6,10 +6,12 @@ import { CheckCircle2 } from "lucide-react";
 const paymentMethods = [
   { name: "Visa", icon: "/visa-card.png" },
   { name: "Mastercard", icon: "/mastercard.jpg" },
-  { name: "PayPal", icon: "/paypal.png" },
   { name: "Ideal for finance", icon: "/ideal.jpg" },
-  { name: "Barclays", icon: "/barclays.png" },
+  { name: "American Express", icon: "/amex_card.png" },
+  { name: "Union Pay", icon: "/unionpay.png" },
+  // { name: "Barclays", icon: "/barclays.png" },
   // { name: "Klarna", icon: "/klarna.png" },
+    // { name: "PayPal", icon: "/paypal.png" },
 ];
 
 const financeExamples = [
