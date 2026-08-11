@@ -38,7 +38,7 @@ const FinanceInfoSection = () => {
             {paymentMethods.map((method) => (
               <div
                 key={method.name}
-                className="flex h-12 w-20 items-center justify-center rounded-lg px-3 sm:h-14 sm:w-24"
+                className="flex h-16 w-24 items-center justify-center rounded-lg px-3 sm:h-14 sm:w-24"
               >
                 <Image
                   src={method.icon}
