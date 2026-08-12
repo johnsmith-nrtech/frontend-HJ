@@ -426,7 +426,7 @@ export default function DimensionsPage() {
           <div>
             <h2 className="text-base font-semibold text-gray-800">Slideshow Images</h2>
             <p className="mt-0.5 text-xs text-gray-400">
-              {settings?.hero_images?.length ?? 0} / 4 images — cycles every 3 seconds
+              {settings?.hero_images?.length ?? 0} / 4 images — cycles every 5 seconds
             </p>
           </div>
           {(settings?.hero_images?.length ?? 0) < 4 && (
