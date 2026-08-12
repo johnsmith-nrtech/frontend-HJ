@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 const paymentMethods = [
   { name: "Visa", icon: "/visa-card.png" },
-  { name: "Mastercard", icon: "/mastercard.jpg" },
+  { name: "Mastercard", icon: "/mastercard.png" },
   { name: "Ideal for finance", icon: "/ideal.jpg" },
   { name: "American Express", icon: "/amex_card.png" },
   { name: "Union Pay", icon: "/unionpay.png" },
