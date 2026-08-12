@@ -36,18 +36,18 @@ const FinanceInfoSection = () => {
           <p className="mb-6 text-sm text-black tracking-wide uppercase">
             We Accept
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+          <div className="grid grid-cols-5 items-center justify-items-center gap-1.5 sm:flex sm:flex-wrap sm:justify-center sm:gap-6">
             {paymentMethods.map((method) => (
               <div
                 key={method.name}
-                className="flex h-16 w-24 items-center justify-center rounded-lg px-3 sm:h-14 sm:w-24"
+                className="flex h-10 w-full items-center justify-center rounded-lg px-1 sm:h-14 sm:w-24 sm:px-3"
               >
                 <Image
                   src={method.icon}
                   alt={method.name}
                   width={60}
                   height={30}
-                  className="h-auto max-h-8 w-auto object-contain"
+                  className="h-auto max-h-6 w-auto object-contain sm:max-h-8"
                 />
               </div>
             ))}
