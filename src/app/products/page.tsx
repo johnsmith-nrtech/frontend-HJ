@@ -518,9 +518,9 @@ const displayProducts = selectedColor === "all"
           {/* FILTERS */}
           <div id="filters-section" className="mb-8" ref={filterSectionRef}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:flex-1 lg:grid lg:grid-cols-2 lg:gap-6">
                 {/* category */}
-                <div className="col-span-2 flex min-w-0 flex-col items-start gap-2 sm:col-span-1 sm:flex-1 sm:flex-none">
+                <div className="col-span-2 flex min-w-0 flex-col items-start gap-2 sm:col-span-1 lg:w-full">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Categories
                   </span>
@@ -529,7 +529,7 @@ const displayProducts = selectedColor === "all"
                     onValueChange={handleCategoryChange}
                     disabled={categoriesQuery.isLoading}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 max-w-[280px] rounded-full px-4 disabled:opacity-50 lg:max-w-none">
                       <div className="flex min-w-0 items-center gap-2">
                         {categoriesQuery.isLoading && (
                           <Loader2Icon className="h-4 w-4 flex-shrink-0 animate-spin" />
@@ -558,7 +558,7 @@ const displayProducts = selectedColor === "all"
                     onValueChange={actions.setPriceRange}
                     disabled={isFiltering}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 max-w-[280px] rounded-full px-4 disabled:opacity-50 lg:max-w-none">
                       <SelectValue placeholder="Select" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
@@ -571,7 +571,7 @@ const displayProducts = selectedColor === "all"
                   </Select>
                 </div>
 
-                {/* color */}
+                {/* color — now inline in the main row at every breakpoint */}
                 <div className="flex min-w-0 flex-col items-start gap-2">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Colors
@@ -580,7 +580,7 @@ const displayProducts = selectedColor === "all"
                     value={selectedColor}
                     onValueChange={setSelectedColor}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 max-w-[280px] rounded-full px-4 disabled:opacity-50 lg:max-w-none">
                       <SelectValue placeholder="Select" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
@@ -601,7 +601,7 @@ const displayProducts = selectedColor === "all"
                   Sizes
                 </span>
                 <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                  <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 max-w-[280px] rounded-full px-4 disabled:opacity-50 lg:max-w-none">
                     <SelectValue placeholder="Select" className="truncate" />
                   </SelectTrigger>
                   <SelectContent>
@@ -614,31 +614,10 @@ const displayProducts = selectedColor === "all"
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* subcategory */}
-              {availableSubcategories.length > 0 && (
-                <div className="flex min-w-0 flex-col items-start gap-2">
-                  <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
-                    Subcategories
-                  </span>
-                  <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
-                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                      <SelectValue placeholder="Select" className="truncate" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Subcategories</SelectItem>
-                      {availableSubcategories.map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              
 
               {/* sort + view mode */}
-              <div className="flex flex-shrink-0 items-center gap-6">
+              <div className="flex flex-shrink-0 items-center gap-6 lg:ml-auto">
                 <Select
                   value={filters.sortBy}
                   onValueChange={actions.setSortBy}
@@ -679,6 +658,29 @@ const displayProducts = selectedColor === "all"
                 </div>
               </div>
             </div>
+
+
+          {/* subcategory — own row at the end, only rendered when subcategories exist */}
+            {availableSubcategories.length > 0 && (
+              <div className="mt-4 flex min-w-0 flex-col items-start gap-2 sm:w-1/2 lg:w-auto">
+                <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
+                  Subcategories
+                </span>
+                <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                  <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 max-w-[280px] rounded-full px-4 disabled:opacity-50 lg:w-[394px] lg:max-w-none">
+                    <SelectValue placeholder="Select" className="truncate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subcategories</SelectItem>
+                    {availableSubcategories.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* PRODUCTS GRID */}
@@ -810,7 +812,7 @@ const displayProducts = selectedColor === "all"
           )}
         </div>
       </div>
-    </div>
+    // </div>
   );
 }
 
