@@ -518,9 +518,9 @@ const displayProducts = selectedColor === "all"
           {/* FILTERS */}
           <div id="filters-section" className="mb-8" ref={filterSectionRef}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex flex-wrap gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-4">
                 {/* category */}
-                <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-none">
+                <div className="col-span-2 flex min-w-0 flex-col items-start gap-2 sm:col-span-1 sm:flex-1 sm:flex-none">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Categories
                   </span>
@@ -549,7 +549,7 @@ const displayProducts = selectedColor === "all"
                 </div>
 
                 {/* price */}
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex min-w-0 flex-col items-start gap-2">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Prices
                   </span>
@@ -558,8 +558,8 @@ const displayProducts = selectedColor === "all"
                     onValueChange={actions.setPriceRange}
                     disabled={isFiltering}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                      <SelectValue placeholder="Select" />
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Prices</SelectItem>
@@ -572,7 +572,7 @@ const displayProducts = selectedColor === "all"
                 </div>
 
                 {/* color */}
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex min-w-0 flex-col items-start gap-2">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Colors
                   </span>
@@ -580,8 +580,8 @@ const displayProducts = selectedColor === "all"
                     value={selectedColor}
                     onValueChange={setSelectedColor}
                   >
-                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                      <SelectValue placeholder="Select" />
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Colors</SelectItem>
@@ -596,13 +596,13 @@ const displayProducts = selectedColor === "all"
               </div>
 
               {/* size */}
-              <div className="flex flex-col items-start gap-2">
+              <div className="flex min-w-0 flex-col items-start gap-2">
                 <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                   Sizes
                 </span>
                 <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                    <SelectValue placeholder="Select" />
+                  <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                    <SelectValue placeholder="Select" className="truncate" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sizes</SelectItem>
@@ -617,13 +617,13 @@ const displayProducts = selectedColor === "all"
 
               {/* subcategory */}
               {availableSubcategories.length > 0 && (
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex min-w-0 flex-col items-start gap-2">
                   <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
                     Subcategories
                   </span>
                   <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
-                    <SelectTrigger className="text-blue border-blue h-16 w-[130px] rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
-                      <SelectValue placeholder="Select" />
+                    <SelectTrigger className="text-blue border-blue h-16 w-full min-w-0 rounded-full px-4 disabled:opacity-50 sm:w-[280px]">
+                      <SelectValue placeholder="Select" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Subcategories</SelectItem>
