@@ -816,7 +816,7 @@ const proceedToAddToCart = () => {
       {/* Sticky Add-to-Cart — Mobile */}
       <div
         className={cn(
-          "fixed right-0 bottom-0 left-0 z-50 block border-t border-gray-200 bg-white px-3 py-2 shadow-lg sm:px-4 sm:py-3 md:hidden",
+          "fixed right-0 bottom-0 left-0 z-10 block border-t border-gray-200 bg-white px-3 pt-2 pb-20 shadow-lg sm:px-4 sm:pt-3 sm:pb-24 md:hidden",
           { hidden: featuresInView },
         )}
       >
@@ -850,7 +850,7 @@ const proceedToAddToCart = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mt-10 px-4 py-8 md:px-[32px] lg:mt-0">
+      <div className="mt-10 px-4 pt-8 pb-48 md:px-[32px] md:py-8 lg:mt-0">
         {/* Breadcrumbs */}
         <Breadcrumb className="mb-4">
           <BreadcrumbList>
@@ -1351,9 +1351,15 @@ const proceedToAddToCart = () => {
                 className="mt-3 rounded-xl px-4 py-3 space-y-1"
                 style={{ backgroundColor: '#e5e7eb' }}
               >
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <span className="text-[16px] md:text-[18px] lg:text-md flex items-center gap-3">
                     <BadgePoundSterling className="w-5 h-5" color="#F5B727" /> Finance from <span className="font-bold">£{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month</span> over 36 months
+                  </span>
+                </div> */}
+                <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+                  <BadgePoundSterling className="h-5 w-5 shrink-0 sm:h-5 sm:w-5" color="#F5B727" />
+                  <span className="text-[13px] sm:text-[16px] md:text-[18px] lg:text-md">
+                    Finance from <span className="font-bold">£{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month</span> over 36 months
                   </span>
                 </div>
 
@@ -1607,9 +1613,9 @@ const proceedToAddToCart = () => {
           {featuresInView && <div className="h-16 md:h-20" />}
           <div
             className={cn(
-              "rounded-full shadow-md sm:mt-0",
-              { "fixed right-4 bottom-0 left-4 z-100 mb-4 bg-white": featuresInView },
-              { "mt-5 mb-8 w-full md:mt-12 md:mb-8": !featuresInView },
+              "shadow-md sm:mt-0 overflow-x-hidden",
+              { "fixed right-0 bottom-0 left-0 z-40 bg-white px-4 pt-3 pb-20 sm:right-4 sm:bottom-6 sm:left-4 sm:rounded-full sm:px-0 sm:pt-0 sm:pb-0": featuresInView },
+              { "mt-5 mb-8 w-full rounded-full md:mt-12 md:mb-8": !featuresInView },
             )}
           >
             <div className="flex items-center justify-center">
