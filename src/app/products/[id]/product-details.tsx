@@ -1620,24 +1620,6 @@ const proceedToAddToCart = () => {
           >
             <div className="flex items-center justify-center">
               {isMobile ? (
-                // <Carousel opts={{ align: "start", loop: false }} className="w-full p-2">
-                //   <CarouselContent className="justify-center">
-                //     {tabList.map((tab) => (
-                //       <CarouselItem key={tab.key} className="basis-auto">
-                //         <button
-                //           onClick={() => { setSelectedTab(tab.key); handleScrollToSection(tab.section); }}
-                //           className={`min-w-fit shrink-0 rounded-full border px-2 py-2 text-xs font-medium whitespace-nowrap transition-all ${
-                //             selectedTab === tab.key
-                //               ? "bg-blue border-blue text-white"
-                //               : "text-blue hover:bg-blue/10 border-blue"
-                //           }`}
-                //         >
-                //           {tab.label}
-                //         </button>
-                //       </CarouselItem>
-                //     ))}
-                //   </CarouselContent>
-                // </Carousel>
                 <div className="w-full overflow-x-auto p-2">
                   <div className="flex gap-2 px-1">
                     {tabList.map((tab) => (
