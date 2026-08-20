@@ -1718,7 +1718,10 @@ const proceedToAddToCart = () => {
                           { key: "armrest_height", label: "Armrest Height", letter: "I" },
                         ];
                         dimensions = dimensionMap
-                          .filter((dim) => apiDimensions[dim.key as keyof typeof apiDimensions])
+                          .filter((dim) => {
+                            const d = apiDimensions[dim.key as keyof typeof apiDimensions];
+                            return d && d.cm > 0;
+                          })
                           .map((dim) => {
                             const d = apiDimensions[dim.key as keyof typeof apiDimensions];
                             return { label: dim.label, cm: d?.cm || 0, inches: d?.inches || 0, letter: dim.letter };

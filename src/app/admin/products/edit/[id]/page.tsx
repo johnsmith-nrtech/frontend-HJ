@@ -66,6 +66,8 @@ const basicInfoSchema = z.object({
   show_loxa: z.boolean().optional(),
   loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional().nullable(),
   show_sofadeal_coverage: z.boolean().optional(),
+  is_sofa: z.boolean().optional(),
+  is_bed: z.boolean().optional(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -173,6 +175,8 @@ export default function EditProductPage() {
       show_loxa: true,
       loxa_complimentary_years: undefined,
       show_sofadeal_coverage: false,
+      is_sofa: true,
+      is_bed: false,
     },
   });
 
@@ -208,6 +212,8 @@ export default function EditProductPage() {
         show_loxa: product.show_loxa ?? true,
         loxa_complimentary_years: product.loxa_complimentary_years ?? undefined,
         show_sofadeal_coverage: product.show_sofadeal_coverage ?? false,
+        is_sofa: (product as any).is_sofa ?? true,
+        is_bed: (product as any).is_bed ?? false,
       });
     }
   }, [product, form]);
@@ -233,6 +239,8 @@ export default function EditProductPage() {
         show_loxa: values.show_loxa ?? true,
         loxa_complimentary_years: values.loxa_complimentary_years ?? null,
         show_sofadeal_coverage: values.show_sofadeal_coverage ?? false,
+        is_sofa: values.is_sofa,
+        is_bed: values.is_bed,
       };
 
       // Use the mutation
@@ -510,40 +518,58 @@ export default function EditProductPage() {
                       )}
                     />
 
-                    {/* <FormField
+                    <FormField
                       control={form.control}
-                      name="category_id"
+                      name="is_sofa"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {!isCategoriesLoading &&
-                                categories.map((category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select the product category.
-                          </FormDescription>
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_bed", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Sofa</FormLabel>
+                            <FormDescription>
+                              This product is a sofa. Standard dimension fields apply in Variants.
+                            </FormDescription>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
-                    /> */}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="is_bed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_sofa", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Bed</FormLabel>
+                            <FormDescription>
+                              This product is a bed. Dimension fields in Variants change accordingly.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-sm font-medium">Categories *</label>
                       <p className="text-muted-foreground text-xs">
@@ -823,14 +849,13 @@ export default function EditProductPage() {
                   variants={(product.variants || []).map((variant) =>
                     convertApiVariantToManagerVariant(
                       variant,
-                      // product.images || []
                       (variant.images || []).map(img => ({...img, variant_id: variant.id}))
                     )
                   )}
                   onVariantsChange={() => {
-                    // Refetch product data when variants change
                     refetchProduct();
                   }}
+                  isBed={form.watch("is_bed")}
                 />
               )}
             </CardContent>
