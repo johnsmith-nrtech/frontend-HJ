@@ -294,11 +294,24 @@ function BedsAndMoreContent() {
   const totalPages = Math.max(1, productsData?.meta?.totalPages ?? 1);
 
   const marqueeItems = [
-    { text: "Interest-free credit" },
-    { text: "Free delivery offers" },
-    { text: "Finance availability" },
-    { text: "Referral rewards" },
-    { text: "Protection cover offers" },
+    { text: "Interest-free credit ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Free delivery offers", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Finance availability", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Referral rewards", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Protection cover offers ", 
+      // icon: "/sofa-icon.png" 
+    },
+    { text: "Discount campaigns", 
+      // icon: "/sofa-icon.png" 
+    },
   ];
 
   return (
@@ -308,11 +321,11 @@ function BedsAndMoreContent() {
         <div className="px-4 sm:px-[32px]">
           <h1 className="text-3xl font-bold sm:text-4xl">Beds & More</h1>
           <p className="mt-2 max-w-xl text-white/80">
-            Beds, mattresses, wardrobes and everything else for the bedroom —
-            all in one place.
+            Beds, mattresses, wardrobes and everything else for the bedroom — all in one place.
           </p>
         </div>
       </div>
+
 
       <MarqueeStrip
         items={marqueeItems}
