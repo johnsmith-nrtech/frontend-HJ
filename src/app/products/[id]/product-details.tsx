@@ -419,7 +419,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
         sku: `${product.name}-${color}`.replace(/\s+/g, "-"),
         price: product.base_price,
         color,
-        delivery_time_days: "3 To 4 Days Delivery",
+        delivery_time_days: "3 To 4 Days",
         size: "Standard",
         material: "Premium Fabric",
         stock: 10,
@@ -445,7 +445,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           color: "Default",
           size: "Standard",
           material: "Premium Fabric",
-          delivery_time_days: "3 To 4 Days Delivery",
+          delivery_time_days: "3 To 4 Days",
           stock: 10,
           featured: false,
           images: product.images?.filter((img) => !img.variant_id) || [],
@@ -503,7 +503,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
           (selectedMaterial === "No Material" && v.material === null)),
     );
     if (found && !found.delivery_time_days)
-      found.delivery_time_days = "3 To 4 Days Delivery";
+      found.delivery_time_days = "3 To 4 Days";
     return found ?? null;
   }, [allVariants, selectedColor, selectedSize, selectedMaterial, selectedVariant]);
 
@@ -738,13 +738,21 @@ const proceedToAddToCart = () => {
   const toggleZoom = () => setIsZoomed(!isZoomed);
   const toggleViewInRoom = () => setShowViewInRoom(!showViewInRoom);
 
+  const formatDeliveryText = (raw: string): string => {
+    const match = raw.match(/(\d+)\s*(?:-|to|To)\s*(\d+)/);
+    if (match) {
+      return `${match[1]}-${match[2]} days`;
+    }
+    return raw;
+  };
+
   const getDeliveryDetails = () => {
     if (!currentVariant) return "Not Available";
-    return (
+    const raw =
       currentVariant.delivery_time_days ||
       product?.delivery_info?.text ||
-      "3 To 4 Days Delivery"
-    );
+      "3-5 days";
+    return formatDeliveryText(raw);
   };
 
   // ── material info ─────────────────────────────────────────────
@@ -869,12 +877,6 @@ const proceedToAddToCart = () => {
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            {/* <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4" />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbLink className="font-medium">{product.name}</BreadcrumbLink>
-            </BreadcrumbItem> */}
           </BreadcrumbList>
         </Breadcrumb>
 
@@ -1351,11 +1353,6 @@ const proceedToAddToCart = () => {
                 className="mt-3 rounded-xl px-4 py-3 space-y-1"
                 style={{ backgroundColor: '#e5e7eb' }}
               >
-                {/* <div className="flex items-center gap-2">
-                  <span className="text-[16px] md:text-[18px] lg:text-md flex items-center gap-3">
-                    <BadgePoundSterling className="w-5 h-5" color="#F5B727" /> Finance from <span className="font-bold">£{(parseFloat(((currentDiscountedPrice * 0.90) / 36).toFixed(10))).toFixed(2)}/month</span> over 36 months
-                  </span>
-                </div> */}
                 <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
                   <BadgePoundSterling className="h-5 w-5 shrink-0 sm:h-5 sm:w-5" color="#F5B727" />
                   <span className="text-[13px] sm:text-[16px] md:text-[18px] lg:text-md">
@@ -1550,21 +1547,6 @@ const proceedToAddToCart = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* {[
-                  { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
-                  { value: "payment", label: "Payment", content: "We accept all major credit/debit cards including Visa, Master and American Express." },
-                  { value: "warranty", label: "Warranty", content: variantWithExtras?.warranty_info || product?.warranty_info || "Warranty not provided Please contact our support team." },
-                  { value: "availability", label: "Availability", content: "Most products are in stock for fast delivery. Stock status is shown above. Contact us for special orders." },
-                ].map(({ value, label, content }) => (
-                  <Accordion key={value} type="single" collapsible className="w-full">
-                    <AccordionItem value={value}>
-                      <AccordionTrigger className="font-normal">{label}</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="text-sm text-[#999]">{content}</div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                ))} */}
                 {[
                   { value: "delivery", label: "Delivery", content: getDeliveryDetails() },
                   { value: "payment", label: "Payment", content: "We accept all major credit/debit cards including Visa, Master and American Express." },
@@ -1729,16 +1711,23 @@ const proceedToAddToCart = () => {
                       }
 
                       if (dimensions.length === 0) {
-                        dimensions = [
-                          { label: "Width", cm: "215", inches: "84.65", letter: "A" },
-                          { label: "Depth", cm: "96", inches: "37.80", letter: "B" },
-                          { label: "Height", cm: "88", inches: "34.65", letter: "C" },
-                          { label: "Seat Width", cm: "180", inches: "70.87", letter: "D" },
-                          { label: "Seat Depth", cm: "56", inches: "22.05", letter: "E" },
-                          { label: "Seat Height", cm: "52", inches: "20.47", letter: "F" },
-                          { label: "Bed Width", cm: "180", inches: "70.87", letter: "G" },
-                          { label: "Bed Length", cm: "110", inches: "43.31", letter: "H" },
-                        ];
+                        const isBedProduct = (product as any)?.is_bed;
+                        dimensions = isBedProduct
+                          ? [
+                              { label: "Width", cm: "215", inches: "84.65", letter: "A" },
+                              { label: "Depth", cm: "96", inches: "37.80", letter: "B" },
+                              { label: "Height", cm: "88", inches: "34.65", letter: "C" },
+                              { label: "Bed Width", cm: "180", inches: "70.87", letter: "G" },
+                              { label: "Bed Length", cm: "110", inches: "43.31", letter: "H" },
+                            ]
+                          : [
+                              { label: "Width", cm: "215", inches: "84.65", letter: "A" },
+                              { label: "Depth", cm: "96", inches: "37.80", letter: "B" },
+                              { label: "Height", cm: "88", inches: "34.65", letter: "C" },
+                              { label: "Seat Width", cm: "180", inches: "70.87", letter: "D" },
+                              { label: "Seat Depth", cm: "56", inches: "22.05", letter: "E" },
+                              { label: "Seat Height", cm: "52", inches: "20.47", letter: "F" },
+                            ];
                       }
 
                       return dimensions.map((item, index) => {

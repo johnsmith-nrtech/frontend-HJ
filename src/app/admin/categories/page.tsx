@@ -172,11 +172,11 @@ export default function CategoriesPage() {
               </Button>
             </div>
           ) : categories.length > 0 ? (
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <CategoryItem key={category.id} category={category} />
-              ))}
-            </div>
+  <div className="space-y-2">
+    {categories.map((category: Category) => (
+      <CategoryItem key={category.id} category={category} />
+    ))}
+  </div>
           ) : (
             <div className="py-6 text-center">
               <p className="text-muted-foreground">No categories found</p>

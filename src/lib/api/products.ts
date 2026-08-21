@@ -65,6 +65,7 @@ export interface Product {
   base_price: number;
   discount_offer?: number;
   is_visible?: boolean;
+  is_bed?: boolean;
   delivery_info?: {
     min_days?: number;
     max_days?: number;
@@ -229,6 +230,7 @@ export interface ProductCreateInput {
   material?: string;
   brand?: string;
   featured?: boolean;
+  is_bed?: boolean;
   show_installments?: boolean;
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
@@ -262,6 +264,7 @@ export interface ProductUpdateInput {
   material?: string;
   brand?: string;
   featured?: boolean;
+  is_bed?: boolean;
   delivery_time_days?: string;
   category_ids?: string[];
 }
@@ -352,6 +355,8 @@ export async function getProducts(params?: {
   limit?: number;
   sortBy?: string;
   sortOrder?: string;
+  priceRange?: string;
+  isBed?: boolean;
   includeVariants?: boolean;
   includeImages?: boolean;
   includeCategory?: boolean;

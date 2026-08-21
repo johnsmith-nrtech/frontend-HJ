@@ -10,6 +10,7 @@ export interface Category {
   order: number;
   image_url?: string;
   featured?: boolean;
+  is_bed?: boolean;
   created_at: string;
   updated_at: string;
   subcategories?: Category[];
@@ -42,15 +43,14 @@ export interface CategoryImageInput {
 
 
 // Get all categories (with optional nesting)
-export async function getCategories(nested = false): Promise<Category[]> {
-  const response = await ApiService.fetchPublic(
-    `/categories${nested ? "?nested=true" : ""}`
-  );
+export async function getCategories(nested = false, isBed?: boolean) {
+  const params = new URLSearchParams();
+  params.set('nested', String(nested));
+  if (isBed !== undefined) params.set('isBed', String(isBed));
 
-  return ApiService.handleResponse<Category[]>(
-    response,
-    "Failed to fetch categories"
-  );
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories?${params.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch categories');
+  return res.json();
 }
 
 // Upload or set category image (multipart/form-data)
