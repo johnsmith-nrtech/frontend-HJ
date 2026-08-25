@@ -43,8 +43,10 @@ import {
 import {
   VariantManager,
   ProductVariant,
+  BedOptionListEditor,
+  BedOption,
 } from "@/components/admin/variant-manager";
-// import { de } from "zod/v4/locales";
+
 
 // Enhanced schema with all e-commerce fields
 const formSchema = z.object({
@@ -119,15 +121,7 @@ const formSchema = z.object({
   is_sofa: z.boolean().optional(),
   is_bed: z.boolean().optional(),
   default_headboard: z.string().optional(),
-  default_wings: z.string().optional(),
-  default_storage: z.string().optional(),
   default_base: z.string().optional(),
-  default_mattress: z.string().optional(),
-  default_mattress_firmness: z.string().optional(),
-  default_headboard_height: z.string().optional(),
-  default_headboard_height_charge: z.coerce.number().min(0, "Must be positive").optional(),
-  default_custom_requirements: z.string().optional(),
-  default_assembly_included: z.boolean().optional(),
 
   // Material Info for default variant
   default_care_instructions: z.string().optional(),
@@ -157,6 +151,10 @@ export default function AddProductPage() {
   const [relatedProductIds, setRelatedProductIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [categorySearch, setCategorySearch] = useState("");
+  const [headboardHeights, setHeadboardHeights] = useState<BedOption[]>([]);
+  const [storageOptions, setStorageOptions] = useState<BedOption[]>([]);
+  const [wingOptions, setWingOptions] = useState<BedOption[]>([]);
+  const [mattressOptions, setMattressOptions] = useState<BedOption[]>([]);
 
 
   const {
@@ -218,15 +216,7 @@ export default function AddProductPage() {
       is_sofa: true,
       is_bed: false,
       default_headboard: "",
-      default_wings: "",
-      default_storage: "",
       default_base: "",
-      default_mattress: "",
-      default_mattress_firmness: "",
-      default_headboard_height: "",
-      default_headboard_height_charge: 0,
-      default_custom_requirements: "",
-      default_assembly_included: false,
       default_care_instructions: "",
       default_scatter_cushion_cover: "",
       default_scatter_cushion_filling: "",
@@ -390,15 +380,11 @@ export default function AddProductPage() {
         bed_options: values.is_bed
           ? {
               headboard: values.default_headboard || undefined,
-              wings: values.default_wings || undefined,
-              storage: values.default_storage || undefined,
               base: values.default_base || undefined,
-              mattress: values.default_mattress || undefined,
-              mattress_firmness: values.default_mattress_firmness || undefined,
-              headboard_height: values.default_headboard_height || undefined,
-              headboard_height_charge: values.default_headboard_height_charge || undefined,
-              custom_requirements: values.default_custom_requirements || undefined,
-              assembly_included: values.default_assembly_included ?? false,
+              headboard_heights: headboardHeights,
+              storage_options: storageOptions,
+              wing_options: wingOptions,
+              mattress_options: mattressOptions,
             }
           : undefined,
         related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
@@ -1503,7 +1489,7 @@ export default function AddProductPage() {
                         )}
                       />
 
-                                            <FormField
+                      <FormField
                         control={form.control}
                         name="default_feet_info"
                         render={({ field }) => (
@@ -1521,45 +1507,17 @@ export default function AddProductPage() {
 
                   {/* Bed Configuration — bed only */}
                   {form.watch("is_bed") && (
-                    <div className="space-y-3 border-t pt-4">
+                    <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-medium">Bed Configuration</h4>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField
                           control={form.control}
                           name="default_headboard"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Headboard</FormLabel>
+                              <FormLabel>Headboard Style</FormLabel>
                               <FormControl>
                                 <Input placeholder="e.g., Wingback, Chesterfield, None" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_wings"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Wings</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Yes, No" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_storage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Storage</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Ottoman, Non-Ottoman, None" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1579,99 +1537,34 @@ export default function AddProductPage() {
                             </FormItem>
                           )}
                         />
-
-                        <FormField
-                          control={form.control}
-                          name="default_mattress"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Mattress</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Memory Foam, Pocket Sprung" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_mattress_firmness"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Mattress Firmness</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Soft, Medium, Firm" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_headboard_height"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Headboard Height</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Standard, Tall (+10cm)" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_headboard_height_charge"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Headboard Height Charge (£)</FormLabel>
-                              <FormControl>
-                                <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_assembly_included"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel>Professional Assembly Included</FormLabel>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="default_custom_requirements"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Custom Requirements</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Any custom requirements for this bed configuration..."
-                                className="min-h-24 resize-y"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      <p className="text-muted-foreground text-xs">
+                        The lists below are shown to the customer as selectable options with their charges on the product page.
+                      </p>
+
+                      <BedOptionListEditor
+                        label="Headboard Height Options (used only when customer chooses to increase height)"
+                        options={headboardHeights}
+                        onChange={setHeadboardHeights}
+                      />
+
+                      <BedOptionListEditor
+                        label="Storage Options"
+                        options={storageOptions}
+                        onChange={setStorageOptions}
+                      />
+
+                      <BedOptionListEditor
+                        label="Wing Options"
+                        options={wingOptions}
+                        onChange={setWingOptions}
+                      />
+
+                      <BedOptionListEditor
+                        label="Mattress Options"
+                        options={mattressOptions}
+                        onChange={setMattressOptions}
                       />
                     </div>
                   )}

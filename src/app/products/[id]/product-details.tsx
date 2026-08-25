@@ -333,6 +333,18 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
+  // ── bed configuration state ────────────────────────────────────
+  const [headboardChoice, setHeadboardChoice] = useState<"none" | "increase" | "decrease">("none");
+  const [selectedHeightOption, setSelectedHeightOption] = useState<{ label: string; charge: number } | null>(null);
+  const [decreaseHeightCm, setDecreaseHeightCm] = useState("");
+  const [wantsStorage, setWantsStorage] = useState<boolean | null>(null);
+  const [selectedStorage, setSelectedStorage] = useState<{ label: string; charge: number } | null>(null);
+  const [wantsWings, setWantsWings] = useState<boolean | null>(null);
+  const [selectedWing, setSelectedWing] = useState<{ label: string; charge: number } | null>(null);
+  const [wantsMattress, setWantsMattress] = useState<boolean | null>(null);
+  const [selectedMattress, setSelectedMattress] = useState<{ label: string; charge: number } | null>(null);
+  const [customRequirements, setCustomRequirements] = useState("");
+
   // ── ui state ───────────────────────────────────────────────────
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -524,9 +536,45 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     variantWithExtras,
     product?.discount_offer,
   );
-  const currentOriginalPrice = currentHasDiscount
+    const currentOriginalPrice = currentHasDiscount
     ? getOriginalPrice(variantWithExtras, currentPrice)
     : currentPrice;
+
+  // ── bed configuration derived values ───────────────────────────
+  const bedOptions = variantWithExtras?.bed_options as
+    | {
+        headboard?: string;
+        base?: string;
+        headboard_heights?: { label: string; charge: number }[];
+        storage_options?: { label: string; charge: number }[];
+        wing_options?: { label: string; charge: number }[];
+        mattress_options?: { label: string; charge: number }[];
+      }
+    | undefined;
+
+  const isBedProduct = (product as any)?.is_bed;
+
+  const bedOptionsCharge =
+    (headboardChoice === "increase" ? selectedHeightOption?.charge || 0 : 0) +
+    (selectedStorage?.charge || 0) +
+    (selectedWing?.charge || 0) +
+    (selectedMattress?.charge || 0);
+
+  const finalItemPrice = currentDiscountedPrice + bedOptionsCharge;
+
+  // Reset bed selections whenever the variant changes (each variant has its own option lists)
+  React.useEffect(() => {
+    setHeadboardChoice("none");
+    setSelectedHeightOption(null);
+    setDecreaseHeightCm("");
+    setWantsStorage(bedOptions?.storage_options?.length ? null : false);
+    setSelectedStorage(null);
+    setWantsWings(bedOptions?.wing_options?.length ? null : false);
+    setSelectedWing(null);
+    setWantsMattress(bedOptions?.mattress_options?.length ? null : false);
+    setSelectedMattress(null);
+    setCustomRequirements("");
+  }, [currentVariant?.id]);
 
   // ── images ─────────────────────────────────────────────────────
   const getAllImages = React.useMemo(() => {
@@ -600,10 +648,24 @@ const proceedToAddToCart = () => {
     if (selectedSize) variantParts.push(selectedSize);
     if (selectedMaterial) variantParts.push(selectedMaterial);
     const variantDescription = variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
+    const bedConfigParts: string[] = [];
+    if (isBedProduct) {
+      if (headboardChoice === "increase" && selectedHeightOption) {
+        bedConfigParts.push(`Headboard: ${selectedHeightOption.label}`);
+      } else if (headboardChoice === "decrease" && decreaseHeightCm) {
+        bedConfigParts.push(`Headboard: Decreased to ${decreaseHeightCm}cm`);
+      }
+      if (selectedStorage) bedConfigParts.push(`Storage: ${selectedStorage.label}`);
+      if (selectedWing) bedConfigParts.push(`Wings: ${selectedWing.label}`);
+      if (selectedMattress) bedConfigParts.push(`Mattress: ${selectedMattress.label}`);
+      if (customRequirements.trim()) bedConfigParts.push(`Custom: ${customRequirements.trim()}`);
+    }
+    const bedConfigSuffix = bedConfigParts.length > 0 ? ` (${bedConfigParts.join(", ")})` : "";
+
     addItem({
       id: currentVariant.id,
-      name: `${product.name}${variantDescription}`,
-      price: currentDiscountedPrice,
+      name: `${product.name}${variantDescription}${bedConfigSuffix}`,
+      price: finalItemPrice,
       image: productImage,
       variant_id: currentVariant.id,
       color: selectedColor || currentVariant.color,
@@ -1338,6 +1400,216 @@ const proceedToAddToCart = () => {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+                        {/* Bed Configuration — bed products only */}
+            {isBedProduct && (
+              <div className="space-y-5 rounded-xl border border-gray-200 p-4">
+                <h3 className="text-dark-gray text-lg font-semibold">Configure Your Bed</h3>
+
+                {/* Headboard height */}
+                <div className="space-y-2">
+                  <span className="text-gray text-base font-medium">Would you like to customise the headboard height?</span>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {(["none", "increase", "decrease"] as const).map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        onClick={() => {
+                          setHeadboardChoice(choice);
+                          setSelectedHeightOption(null);
+                          setDecreaseHeightCm("");
+                        }}
+                        className={cn(
+                          "rounded-lg border-2 px-3 py-2 text-sm font-medium transition-all",
+                          headboardChoice === choice
+                            ? "border-blue bg-blue text-white"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400",
+                        )}
+                      >
+                        {choice === "none" ? "No Thanks" : choice === "increase" ? "Increase Height" : "Decrease Height"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {headboardChoice === "increase" && (bedOptions?.headboard_heights?.length ?? 0) > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {bedOptions!.headboard_heights!.map((opt) => (
+                        <button
+                          key={opt.label}
+                          type="button"
+                          onClick={() => setSelectedHeightOption(opt)}
+                          className={cn(
+                            "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm transition-all",
+                            selectedHeightOption?.label === opt.label
+                              ? "border-blue bg-blue/5"
+                              : "border-gray-300 hover:border-gray-400",
+                          )}
+                        >
+                          <span>{opt.label}</span>
+                          <span className="font-semibold">+£{opt.charge.toFixed(2)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {headboardChoice === "decrease" && (
+                    <div className="mt-2">
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Enter height in cm"
+                        value={decreaseHeightCm}
+                        onChange={(e) => setDecreaseHeightCm(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Decreasing height does not change the price.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Storage */}
+                {(bedOptions?.storage_options?.length ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-gray text-base font-medium">Would you like storage?</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setWantsStorage(true); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsStorage ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setWantsStorage(false); setSelectedStorage(null); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsStorage === false ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        No Thanks
+                      </button>
+                    </div>
+                    {wantsStorage && (
+                      <div className="mt-2 space-y-2">
+                        {bedOptions!.storage_options!.map((opt) => (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setSelectedStorage(opt)}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                              selectedStorage?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
+                            )}
+                          >
+                            <span>{opt.label}</span>
+                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Wings */}
+                {(bedOptions?.wing_options?.length ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-gray text-base font-medium">Add wings?</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setWantsWings(true); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsWings ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setWantsWings(false); setSelectedWing(null); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsWings === false ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        No Thanks
+                      </button>
+                    </div>
+                    {wantsWings && (
+                      <div className="mt-2 space-y-2">
+                        {bedOptions!.wing_options!.map((opt) => (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setSelectedWing(opt)}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                              selectedWing?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
+                            )}
+                          >
+                            <span>{opt.label}</span>
+                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mattress */}
+                {(bedOptions?.mattress_options?.length ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-gray text-base font-medium">Add a mattress?</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setWantsMattress(true); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsMattress ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setWantsMattress(false); setSelectedMattress(null); }}
+                        className={cn("rounded-lg border-2 px-3 py-2 text-sm font-medium", wantsMattress === false ? "border-blue bg-blue text-white" : "border-gray-300 bg-white text-gray-700")}
+                      >
+                        No Thanks
+                      </button>
+                    </div>
+                    {wantsMattress && (
+                      <div className="mt-2 space-y-2">
+                        {bedOptions!.mattress_options!.map((opt) => (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setSelectedMattress(opt)}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                              selectedMattress?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
+                            )}
+                          >
+                            <span>{opt.label}</span>
+                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Custom requirements */}
+                <div className="space-y-2">
+                  <span className="text-gray text-base font-medium">Custom Requirements</span>
+                  <textarea
+                    placeholder="Any custom requirements for your bed..."
+                    value={customRequirements}
+                    onChange={(e) => setCustomRequirements(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                {bedOptionsCharge > 0 && (
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm font-semibold">
+                    <span>Configuration extra:</span>
+                    <span>+£{bedOptionsCharge.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
             )}
 
