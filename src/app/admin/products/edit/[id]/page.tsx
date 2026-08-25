@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Eye, Disc } from "lucide-react";
 import Link from "next/link";
 import { useCategories } from "@/hooks/use-categories";
+import { Category } from "@/lib/api/categories";
 import { useProduct, useUpdateProduct } from "@/hooks/use-products";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
 import {
@@ -583,10 +584,10 @@ export default function EditProductPage() {
                       <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
                         {!isCategoriesLoading &&
                           categories
-                            .filter((category) =>
+                            .filter((category: Category) =>
                               category.name.toLowerCase().includes(categorySearch.toLowerCase())
                             )
-                            .map((category) => {
+                            .map((category: Category) => {
                               const isSelected = selectedCategoryIds.includes(category.id);
                               return (
                                 <button
@@ -602,7 +603,7 @@ export default function EditProductPage() {
                                   className="hover:bg-muted flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm"
                                 >
                                   <span
-                                    className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
                                     isSelected ? "border-primary" : "border-muted-foreground"
                                     }`}
                                   >
@@ -615,7 +616,7 @@ export default function EditProductPage() {
                               );
                             })}
                             {!isCategoriesLoading &&
-                            categories.filter((category) =>
+                            categories.filter((category: Category) =>
                               category.name.toLowerCase().includes(categorySearch.toLowerCase())
                             ).length === 0 && (
                               <p className="text-muted-foreground p-2 text-sm">No categories found</p>
@@ -624,8 +625,8 @@ export default function EditProductPage() {
                           {selectedCategoryIds.length > 0 && (
                             <p className="text-muted-foreground text-xs">
                               Selected: {categories
-                              .filter((c) => selectedCategoryIds.includes(c.id))
-                              .map((c) => c.name)
+                              .filter((c: Category) => selectedCategoryIds.includes(c.id))
+                              .map((c: Category) => c.name)
                               .join(", ")}
                             </p>
                           )}

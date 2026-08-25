@@ -59,6 +59,18 @@ export interface ProductVariant {
     back_cushion_info?: string;
     feet_info?: string;
   };
+  bed_options?: {
+    headboard?: string;
+    wings?: string;
+    storage?: string;
+    base?: string;
+    mattress?: string;
+    mattress_firmness?: string;
+    headboard_height?: string;
+    headboard_height_charge?: number;
+    custom_requirements?: string;
+    assembly_included?: boolean;
+  };
 }
 
 interface VariantManagerProps {
@@ -91,6 +103,19 @@ const emptyDimensions = {
   bed_width: { cm: 0, inches: 0 },
   bed_length: { cm: 0, inches: 0 },
   armrest_height: { cm: 0, inches: 0 },
+};
+
+const emptyBedOptions = {
+  headboard: "",
+  wings: "",
+  storage: "",
+  base: "",
+  mattress: "",
+  mattress_firmness: "",
+  headboard_height: "",
+  headboard_height_charge: 0,
+  custom_requirements: "",
+  assembly_included: false,
 };
 
 const emptyVariant: ProductVariant = {
@@ -230,6 +255,9 @@ export function VariantManager({
         updateData.material_info = newVariant.material_info || emptyMaterialInfo;
         // Always include warranty_info
         updateData.warranty_info = newVariant.warranty_info || undefined;
+        // Bed options only apply to bed variants; never persist them on a sofa
+        updateData.bed_options = isBed ? (newVariant.bed_options || emptyBedOptions) : undefined;
+
 
         await updateVariantMutation.mutateAsync({
           variantId: existingVariant.id,
@@ -361,6 +389,9 @@ export function VariantManager({
           hasUpdates = true;
           // Always include warranty_info
           updateData.warranty_info = newVariant.warranty_info || undefined;
+          // Bed options only apply to bed variants; never persist them on a sofa
+          updateData.bed_options = isBed ? (newVariant.bed_options || emptyBedOptions) : undefined;
+
 
           if (hasUpdates) {
             await updateVariantMutation.mutateAsync({
@@ -421,6 +452,7 @@ export function VariantManager({
     images: variant.images || [],
     dimensions: variant.dimensions || emptyDimensions,
     material_info: variant.material_info || emptyMaterialInfo,
+    bed_options: variant.bed_options || emptyBedOptions,
   });
   setEditingIndex(index);
 };
@@ -855,7 +887,8 @@ export function VariantManager({
                 </div>
               </div>
 
-              {/* Material Composition & Construction Section */}
+                            {/* Material Composition & Construction Section — sofa only */}
+              {!isBed && (
               <div className="space-y-3 border-t pt-4">
                 <h4 className="text-sm font-medium">Material Composition & Construction</h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1005,7 +1038,7 @@ export function VariantManager({
 
                   <div>
                     <label className="text-sm font-medium">Feet</label>
-                    <Input
+                                        <Input
                       placeholder="e.g., Black Glides"
                       value={newVariant.material_info?.feet_info || ""}
                       onChange={(e) =>
@@ -1022,6 +1055,172 @@ export function VariantManager({
                   </div>
                 </div>
               </div>
+              )}
+
+              {/* Bed Configuration Section — bed only */}
+              {isBed && (
+                <div className="space-y-3 border-t pt-4">
+                  <h4 className="text-sm font-medium">Bed Configuration</h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="text-sm font-medium">Headboard</label>
+                      <Input
+                        placeholder="e.g., Wingback, Chesterfield, None"
+                        value={newVariant.bed_options?.headboard || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, headboard: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Wings</label>
+                      <Input
+                        placeholder="e.g., Yes, No"
+                        value={newVariant.bed_options?.wings || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, wings: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Storage</label>
+                      <Input
+                        placeholder="e.g., Ottoman, Non-Ottoman, None"
+                        value={newVariant.bed_options?.storage || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, storage: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Base</label>
+                      <Input
+                        placeholder="e.g., Slatted, Solid, Divan"
+                        value={newVariant.bed_options?.base || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, base: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Mattress</label>
+                      <Input
+                        placeholder="e.g., Memory Foam, Pocket Sprung"
+                        value={newVariant.bed_options?.mattress || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, mattress: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Mattress Firmness</label>
+                      <Input
+                        placeholder="e.g., Soft, Medium, Firm"
+                        value={newVariant.bed_options?.mattress_firmness || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, mattress_firmness: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Headboard Height</label>
+                      <Input
+                        placeholder="e.g., Standard, Tall (+10cm)"
+                        value={newVariant.bed_options?.headboard_height || ""}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, headboard_height: e.target.value },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Headboard Height Charge (£)</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={newVariant.bed_options?.headboard_height_charge || 0}
+                        onChange={(e) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: {
+                              ...newVariant.bed_options,
+                              headboard_height_charge: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-6">
+                      <Checkbox
+                        checked={newVariant.bed_options?.assembly_included || false}
+                        onCheckedChange={(checked) =>
+                          setNewVariant({
+                            ...newVariant,
+                            bed_options: { ...newVariant.bed_options, assembly_included: !!checked },
+                          })
+                        }
+                        disabled={disabled}
+                      />
+                      <label className="text-sm font-medium">Professional Assembly Included</label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Custom Requirements</label>
+                    <textarea
+                      placeholder="Any custom requirements for this bed configuration..."
+                      value={newVariant.bed_options?.custom_requirements || ""}
+                      onChange={(e) =>
+                        setNewVariant({
+                          ...newVariant,
+                          bed_options: { ...newVariant.bed_options, custom_requirements: e.target.value },
+                        })
+                      }
+                      disabled={disabled}
+                      rows={3}
+                      className="border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-sm font-medium">Tags</label>
