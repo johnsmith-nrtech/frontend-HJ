@@ -121,7 +121,7 @@ const formSchema = z.object({
   is_sofa: z.boolean().optional(),
   is_bed: z.boolean().optional(),
   default_headboard: z.string().optional(),
-  default_base: z.string().optional(),
+  default_custom_requirements_enabled: z.boolean().optional(),
 
   // Material Info for default variant
   default_care_instructions: z.string().optional(),
@@ -155,6 +155,7 @@ export default function AddProductPage() {
   const [storageOptions, setStorageOptions] = useState<BedOption[]>([]);
   const [wingOptions, setWingOptions] = useState<BedOption[]>([]);
   const [mattressOptions, setMattressOptions] = useState<BedOption[]>([]);
+  const [baseOptions, setBaseOptions] = useState<BedOption[]>([]);
 
 
   const {
@@ -216,7 +217,7 @@ export default function AddProductPage() {
       is_sofa: true,
       is_bed: false,
       default_headboard: "",
-      default_base: "",
+      default_custom_requirements_enabled: true,
       default_care_instructions: "",
       default_scatter_cushion_cover: "",
       default_scatter_cushion_filling: "",
@@ -380,11 +381,12 @@ export default function AddProductPage() {
         bed_options: values.is_bed
           ? {
               headboard: values.default_headboard || undefined,
-              base: values.default_base || undefined,
               headboard_heights: headboardHeights,
               storage_options: storageOptions,
               wing_options: wingOptions,
               mattress_options: mattressOptions,
+              base_options: baseOptions,
+              custom_requirements_enabled: values.default_custom_requirements_enabled ?? true,
             }
           : undefined,
         related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
@@ -1509,38 +1511,22 @@ export default function AddProductPage() {
                   {form.watch("is_bed") && (
                     <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-medium">Bed Configuration</h4>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="default_headboard"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Headboard Style</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Wingback, Chesterfield, None" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="default_base"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Base</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Slatted, Solid, Divan" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="default_headboard"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Headboard Style</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Wingback, Chesterfield, None" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       <p className="text-muted-foreground text-xs">
-                        The lists below are shown to the customer as selectable options with their charges on the product page.
+                        The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
                       </p>
 
                       <BedOptionListEditor
@@ -1565,6 +1551,28 @@ export default function AddProductPage() {
                         label="Mattress Options"
                         options={mattressOptions}
                         onChange={setMattressOptions}
+                      />
+
+                      <BedOptionListEditor
+                        label="Base Options"
+                        options={baseOptions}
+                        onChange={setBaseOptions}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="default_custom_requirements_enabled"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border-t pt-4">
+                            <FormControl>
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Show &quot;Custom Requirements&quot; field to customer on the product page</FormLabel>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
                   )}

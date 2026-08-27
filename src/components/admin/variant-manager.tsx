@@ -59,13 +59,14 @@ export interface ProductVariant {
     back_cushion_info?: string;
     feet_info?: string;
   };
-    bed_options?: {
+  bed_options?: {
     headboard?: string;
-    base?: string;
     headboard_heights?: BedOption[];
     storage_options?: BedOption[];
     wing_options?: BedOption[];
     mattress_options?: BedOption[];
+    base_options?: BedOption[];
+    custom_requirements_enabled?: boolean;
   };
 }
 
@@ -183,11 +184,12 @@ const emptyDimensions = {
 
 const emptyBedOptions = {
   headboard: "",
-  base: "",
   headboard_heights: [] as BedOption[],
   storage_options: [] as BedOption[],
   wing_options: [] as BedOption[],
   mattress_options: [] as BedOption[],
+  base_options: [] as BedOption[],
+  custom_requirements_enabled: true,
 };
 
 const emptyVariant: ProductVariant = {
@@ -1133,40 +1135,23 @@ export function VariantManager({
               {isBed && (
                 <div className="space-y-4 border-t pt-4">
                   <h4 className="text-sm font-medium">Bed Configuration</h4>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="text-sm font-medium">Headboard Style</label>
-                      <Input
-                        placeholder="e.g., Wingback, Chesterfield, None"
-                        value={newVariant.bed_options?.headboard || ""}
-                        onChange={(e) =>
-                          setNewVariant({
-                            ...newVariant,
-                            bed_options: { ...newVariant.bed_options, headboard: e.target.value },
-                          })
-                        }
-                        disabled={disabled}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium">Base</label>
-                      <Input
-                        placeholder="e.g., Slatted, Solid, Divan"
-                        value={newVariant.bed_options?.base || ""}
-                        onChange={(e) =>
-                          setNewVariant({
-                            ...newVariant,
-                            bed_options: { ...newVariant.bed_options, base: e.target.value },
-                          })
-                        }
-                        disabled={disabled}
-                      />
-                    </div>
+                  <div>
+                    <label className="text-sm font-medium">Headboard Style</label>
+                    <Input
+                      placeholder="e.g., Wingback, Chesterfield, None"
+                      value={newVariant.bed_options?.headboard || ""}
+                      onChange={(e) =>
+                        setNewVariant({
+                          ...newVariant,
+                          bed_options: { ...newVariant.bed_options, headboard: e.target.value },
+                        })
+                      }
+                      disabled={disabled}
+                    />
                   </div>
 
                   <p className="text-muted-foreground text-xs">
-                    The lists below are shown to the customer as selectable options with their charges on the product page.
+                    The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
                   </p>
 
                   <BedOptionListEditor
@@ -1216,6 +1201,34 @@ export function VariantManager({
                     }
                     disabled={disabled}
                   />
+
+                  <BedOptionListEditor
+                    label="Base Options"
+                    options={newVariant.bed_options?.base_options || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, base_options: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <div className="flex items-center space-x-2 border-t pt-4">
+                    <Checkbox
+                      checked={newVariant.bed_options?.custom_requirements_enabled ?? true}
+                      onCheckedChange={(checked) =>
+                        setNewVariant({
+                          ...newVariant,
+                          bed_options: { ...newVariant.bed_options, custom_requirements_enabled: !!checked },
+                        })
+                      }
+                      disabled={disabled}
+                    />
+                    <label className="text-sm font-medium">
+                      Show &quot;Custom Requirements&quot; field to customer on the product page
+                    </label>
+                  </div>
                 </div>
               )}
 
