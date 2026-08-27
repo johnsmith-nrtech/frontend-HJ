@@ -336,7 +336,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   // ── bed configuration state ────────────────────────────────────
   const [headboardChoice, setHeadboardChoice] = useState<"none" | "increase" | "decrease">("none");
-  const [selectedHeightOption, setSelectedHeightOption] = useState<{ label: string; charge: number } | null>(null);
+  const [selectedHeightOption, setSelectedHeightOption] = useState<{ label: string; charge: number; height_cm?: number } | null>(null);
   const [decreaseHeightCm, setDecreaseHeightCm] = useState("");
   const [wantsStorage, setWantsStorage] = useState(false);
   const [selectedStorage, setSelectedStorage] = useState<{ label: string; charge: number } | null>(null);
@@ -545,21 +545,21 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     : currentPrice;
 
   // ── bed configuration derived values ───────────────────────────
-    const bedOptions = variantWithExtras?.bed_options as
-    | {
-        headboard?: string;
-        headboard_heights?: { label: string; charge: number }[];
-        storage_options?: { label: string; charge: number }[];
-        wing_options?: { label: string; charge: number }[];
-        mattress_options?: { label: string; charge: number }[];
-        base_options?: { label: string; charge: number }[];
-        custom_requirements_enabled?: boolean;
-      }
-    | undefined;
+  const bedOptions = variantWithExtras?.bed_options as
+  | {
+      headboard?: string;
+      headboard_heights?: { label: string; charge: number; height_cm?: number }[];
+      storage_options?: { label: string; charge: number }[];
+      wing_options?: { label: string; charge: number }[];
+      mattress_options?: { label: string; charge: number }[];
+      base_options?: { label: string; charge: number }[];
+      custom_requirements_enabled?: boolean;
+    }
+  | undefined;
 
   const isBedProduct = (product as any)?.is_bed;
 
-    const bedOptionsCharge =
+  const bedOptionsCharge =
     (headboardChoice === "increase" ? selectedHeightOption?.charge || 0 : 0) +
     (selectedStorage?.charge || 0) +
     (selectedWing?.charge || 0) +
@@ -694,23 +694,54 @@ const proceedToAddToCart = () => {
     }
     const bedConfigSuffix = bedConfigParts.length > 0 ? ` (${bedConfigParts.join(", ")})` : "";
 
-    addItem({
-      id: currentVariant.id,
-      name: `${product.name}${variantDescription}${bedConfigSuffix}`,
-      price: finalItemPrice,
-      image: productImage,
-      variant_id: currentVariant.id,
-      color: selectedColor || currentVariant.color,
-      assembly_required: false,
-      assemble_charges: currentVariant.assemble_charges || 0,
-      show_installments: product.show_installments ?? true,
-      variant: {
+  
+    // A bed with configuration extras must carry a custom total price (base + surcharges),
+    // which the server-synced cart cannot store (it always recomputes price from the variant
+    // alone on every sync). So a configured bed is added as ONE local-only cart item — same
+    // pattern already used for Loxa insurance — instead of splitting it into two items.
+    if (isBedProduct && bedOptionsCharge > 0) {
+      addItemLocally({
+        id: currentVariant.id,
+        variant_id: currentVariant.id,
+        name: `${product.name}${variantDescription}${bedConfigSuffix}`,
+        price: finalItemPrice,
+        quantity: 1,
+        assembly_required: false,
+        image: productImage,
         color: selectedColor || currentVariant.color,
         size: selectedSize || currentVariant.size,
-        material: selectedMaterial || currentVariant.material,
-        sku: currentVariant.sku,
-      },
-    });
+        assemble_charges: currentVariant.assemble_charges || 0,
+        show_installments: product.show_installments ?? true,
+        is_configured_bed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        variant: {
+          color: selectedColor || currentVariant.color,
+          size: selectedSize || currentVariant.size,
+          material: selectedMaterial || currentVariant.material,
+          sku: currentVariant.sku,
+        },
+      });
+      calculateTotals();
+    } else {
+      addItem({
+        id: currentVariant.id,
+        name: `${product.name}${variantDescription}`,
+        price: currentDiscountedPrice,
+        image: productImage,
+        variant_id: currentVariant.id,
+        color: selectedColor || currentVariant.color,
+        assembly_required: false,
+        assemble_charges: currentVariant.assemble_charges || 0,
+        show_installments: product.show_installments ?? true,
+        variant: {
+          color: selectedColor || currentVariant.color,
+          size: selectedSize || currentVariant.size,
+          material: selectedMaterial || currentVariant.material,
+          sku: currentVariant.sku,
+        },
+      });
+    }
 
     if (selectedInsurance && selectedInsurance.price > 0) {
       const complimentaryYears = product.loxa_complimentary_years ?? 0;
@@ -1474,7 +1505,7 @@ const proceedToAddToCart = () => {
 
                     {headboardChoice === "increase" && (
                       <div className="mt-2 space-y-2">
-                        {bedOptions!.headboard_heights!.map((opt) => (
+                        {bedOptions!.headboard_heights!.map((opt: { label: string; charge: number; height_cm?: number }) => (
                           <button
                             key={opt.label}
                             type="button"
@@ -1486,7 +1517,7 @@ const proceedToAddToCart = () => {
                                 : "border-gray-300 hover:border-gray-400",
                             )}
                           >
-                            <span>{opt.label}</span>
+                            <span>{opt.label}{opt.height_cm ? ` (${opt.height_cm}cm)` : ""}</span>
                             <span className="font-semibold">+£{opt.charge.toFixed(2)}</span>
                           </button>
                         ))}
@@ -1660,9 +1691,41 @@ const proceedToAddToCart = () => {
                 )}
 
                 {bedOptionsCharge > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm font-semibold">
-                    <span>Configuration extra:</span>
-                    <span>+£{bedOptionsCharge.toFixed(2)}</span>
+                  <div className="space-y-1 rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                    {headboardChoice === "increase" && selectedHeightOption && selectedHeightOption.charge > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span>{selectedHeightOption.label}:</span>
+                        <span className="font-semibold">+£{selectedHeightOption.charge.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {selectedStorage && selectedStorage.charge > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span>{selectedStorage.label}:</span>
+                        <span className="font-semibold">+£{selectedStorage.charge.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {selectedWing && selectedWing.charge > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span>{selectedWing.label}:</span>
+                        <span className="font-semibold">+£{selectedWing.charge.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {selectedMattress && selectedMattress.charge > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span>{selectedMattress.label}:</span>
+                        <span className="font-semibold">+£{selectedMattress.charge.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {selectedBase && selectedBase.charge > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span>{selectedBase.label}:</span>
+                        <span className="font-semibold">+£{selectedBase.charge.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between border-t border-gray-200 pt-1 font-semibold">
+                      <span>Total extra:</span>
+                      <span>+£{bedOptionsCharge.toFixed(2)}</span>
+                    </div>
                   </div>
                 )}
               </div>

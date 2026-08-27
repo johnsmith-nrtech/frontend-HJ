@@ -100,6 +100,11 @@ export interface Product {
   };
 }
 
+export interface BedOption {
+  label: string;
+  charge: number;
+}
+
 export interface ProductVariant {
   id: string;
   product_id: string;
@@ -148,6 +153,15 @@ export interface ProductVariant {
     feet_info?: string;
   };
   warranty_info?: string;
+  bed_options?: {
+    headboard?: string;
+    headboard_heights?: BedOption[];
+    storage_options?: BedOption[];
+    wing_options?: BedOption[];
+    mattress_options?: BedOption[];
+    base_options?: BedOption[];
+    custom_requirements_enabled?: boolean;
+  };
 }
 
 export interface ProductImage {
@@ -724,6 +738,15 @@ export async function updateProductVariant(
     brand?: string;
     featured?: boolean;
     warranty_info?: string;
+    bed_options?: {
+      headboard?: string;
+      headboard_heights?: BedOption[];
+      storage_options?: BedOption[];
+      wing_options?: BedOption[];
+      mattress_options?: BedOption[];
+      base_options?: BedOption[];
+      custom_requirements_enabled?: boolean;
+    };
   }
 ): Promise<ProductVariant> {
   const response = await ApiService.fetchWithAuth(

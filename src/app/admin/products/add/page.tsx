@@ -1533,6 +1533,7 @@ export default function AddProductPage() {
                         label="Headboard Height Options (used only when customer chooses to increase height)"
                         options={headboardHeights}
                         onChange={setHeadboardHeights}
+                        showHeight
                       />
 
                       <BedOptionListEditor

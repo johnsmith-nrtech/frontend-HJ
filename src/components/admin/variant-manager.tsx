@@ -73,6 +73,7 @@ export interface ProductVariant {
 export interface BedOption {
   label: string;
   charge: number;
+  height_cm?: number;
 }
 
 interface VariantManagerProps {
@@ -88,20 +89,32 @@ export function BedOptionListEditor({
   options,
   onChange,
   disabled,
+  showHeight = false,
 }: {
   label: string;
   options: BedOption[];
   onChange: (options: BedOption[]) => void;
   disabled?: boolean;
+  showHeight?: boolean;
 }) {
   const [newLabel, setNewLabel] = useState("");
   const [newCharge, setNewCharge] = useState("0");
+  const [newHeight, setNewHeight] = useState("");
 
   const addOption = () => {
     if (!newLabel.trim()) return;
-    onChange([...options, { label: newLabel.trim(), charge: parseFloat(newCharge) || 0 }]);
+    if (showHeight && !newHeight.trim()) return;
+    onChange([
+      ...options,
+      {
+        label: newLabel.trim(),
+        charge: parseFloat(newCharge) || 0,
+        ...(showHeight ? { height_cm: parseFloat(newHeight) || 0 } : {}),
+      },
+    ]);
     setNewLabel("");
     setNewCharge("0");
+    setNewHeight("");
   };
 
   const removeOption = (index: number) => {
@@ -115,7 +128,10 @@ export function BedOptionListEditor({
         <div className="space-y-2">
           {options.map((opt, index) => (
             <div key={index} className="flex items-center gap-2 rounded-md border p-2">
-              <span className="flex-1 text-sm">{opt.label}</span>
+              <span className="flex-1 text-sm">
+                {opt.label}
+                {showHeight && opt.height_cm ? ` (${opt.height_cm}cm)` : ""}
+              </span>
               <span className="text-muted-foreground text-sm">
                 {opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}
               </span>
@@ -139,6 +155,17 @@ export function BedOptionListEditor({
           onChange={(e) => setNewLabel(e.target.value)}
           disabled={disabled}
         />
+        {showHeight && (
+          <Input
+            type="number"
+            min="0"
+            placeholder="Height (cm)"
+            className="w-32"
+            value={newHeight}
+            onChange={(e) => setNewHeight(e.target.value)}
+            disabled={disabled}
+          />
+        )}
         <Input
           type="number"
           step="0.01"
@@ -1164,6 +1191,7 @@ export function VariantManager({
                       })
                     }
                     disabled={disabled}
+                    showHeight
                   />
 
                   <BedOptionListEditor

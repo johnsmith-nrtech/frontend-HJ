@@ -121,6 +121,7 @@ const convertApiVariantToManagerVariant = (
     images: convertedImages,
     material_info: apiVariant.material_info ?? undefined,
     warranty_info: apiVariant.warranty_info ?? undefined,
+    bed_options: apiVariant.bed_options ?? undefined,
   };
 };
 
