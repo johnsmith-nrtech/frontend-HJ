@@ -43,9 +43,9 @@ import {
 import {
   VariantManager,
   ProductVariant,
-  BedOptionListEditor,
   BedOption,
 } from "@/components/admin/variant-manager";
+import { BedOptionCatalogPicker } from "@/components/admin/bed-option-picker";
 
 
 // Enhanced schema with all e-commerce fields
@@ -1529,34 +1529,38 @@ export default function AddProductPage() {
                         The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
                       </p>
 
-                      <BedOptionListEditor
+                      <BedOptionCatalogPicker
+                        type="headboard_height"
                         label="Headboard Height Options (used only when customer chooses to increase height)"
-                        options={headboardHeights}
+                        selected={headboardHeights}
                         onChange={setHeadboardHeights}
-                        showHeight
                       />
 
-                      <BedOptionListEditor
+                      <BedOptionCatalogPicker
+                        type="storage"
                         label="Storage Options"
-                        options={storageOptions}
+                        selected={storageOptions}
                         onChange={setStorageOptions}
                       />
 
-                      <BedOptionListEditor
+                      <BedOptionCatalogPicker
+                        type="wings"
                         label="Wing Options"
-                        options={wingOptions}
+                        selected={wingOptions}
                         onChange={setWingOptions}
                       />
 
-                      <BedOptionListEditor
+                      <BedOptionCatalogPicker
+                        type="mattress"
                         label="Mattress Options"
-                        options={mattressOptions}
+                        selected={mattressOptions}
                         onChange={setMattressOptions}
                       />
 
-                      <BedOptionListEditor
+                      <BedOptionCatalogPicker
+                        type="base"
                         label="Base Options"
-                        options={baseOptions}
+                        selected={baseOptions}
                         onChange={setBaseOptions}
                       />
 
