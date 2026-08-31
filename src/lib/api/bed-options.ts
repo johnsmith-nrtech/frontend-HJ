@@ -1,6 +1,6 @@
 import { ApiService } from "@/lib/api-service";
 
-export type BedOptionType = "headboard_height" | "storage" | "wings" | "mattress" | "base";
+export type BedOptionType = "headboard_height" | "storage" | "wings" | "mattress" | "base" | "mattress_section";
 
 export interface BedOptionCatalogItem {
   id: string;
@@ -91,6 +91,7 @@ export interface Mattress {
   height_cm?: number | null;
   size?: string | null;
   price: number;
+  stock: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -120,6 +121,7 @@ export interface MattressInput {
   height_cm?: number;
   size?: string;
   price: number;
+  stock: number;
   is_active?: boolean;
 }
 

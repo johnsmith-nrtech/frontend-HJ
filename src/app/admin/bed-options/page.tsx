@@ -144,7 +144,7 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
               />
             </div>
           )}
-                    <div className="w-full space-y-1 sm:w-32">
+          <div className="w-full space-y-1 sm:w-32">
             <label className="text-xs font-medium text-muted-foreground">Charge (£)</label>
             <Input
               type="number"
@@ -155,7 +155,7 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
               onChange={(e) => setFormCharge(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Image</label>
             <div className="flex items-center gap-2">
               {pendingImagePreview ? (
@@ -174,7 +174,7 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
               ) : null}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="text-xs" />
             </div>
-          </div>
+          </div> */}
           <div className="flex items-center gap-2 pb-2 sm:pb-0">
             <Checkbox checked={formActive} onCheckedChange={(c) => setFormActive(!!c)} />
             <span className="text-sm">Active</span>
@@ -240,6 +240,59 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
   );
 }
 
+// After
+function MattressSectionImageManager() {
+  const { data: options = [] } = useBedOptions({ type: "mattress_section" });
+  const existing = options[0];
+  const createMutation = useCreateBedOption();
+  const uploadMutation = useUploadBedOptionImage();
+  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
+
+  const handleSave = async () => {
+    if (!file) return;
+    let id = existing?.id;
+    if (!id) {
+      const created = await createMutation.mutateAsync({
+        type: "mattress_section",
+        label: "Mattress Section Image",
+        charge: 0,
+        is_active: true,
+      });
+      id = created.id;
+    }
+    await uploadMutation.mutateAsync({ id, file });
+    setFile(null);
+    setPreview(null);
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-md border p-6">
+      <div className="relative h-50 w-50 shrink-0 overflow-hidden rounded-md border bg-white sm:h-48 sm:w-48">
+        {(preview || existing?.image_url) && (
+          <Image src={preview || existing!.image_url!} alt="Mattress section" fill className="object-cover" />
+        )}
+      </div>
+      <div className="w-full max-w-sm space-y-2 text-center">
+        <label className="text-xs font-medium text-muted-foreground">
+          Mattress Section Image (shown once above the mattress options on the product page)
+        </label>
+        <input type="file" accept="image/*" onChange={handleSelect} className="mx-auto block text-xs" />
+      </div>
+      <Button type="button" onClick={handleSave} disabled={!file || uploadMutation.isPending}>
+        <Save className="mr-2 h-4 w-4" /> Save
+      </Button>
+    </div>
+  );
+}
+
 function MattressTypeManager() {
   const { data: types = [], isLoading } = useMattressTypes();
   const createTypeMutation = useCreateMattressType();
@@ -262,6 +315,7 @@ function MattressTypeManager() {
   const [mattressSize, setMattressSize] = useState("");
   const [mattressHeight, setMattressHeight] = useState("");
   const [mattressPrice, setMattressPrice] = useState("0");
+  const [mattressStock, setMattressStock] = useState("0");
   const [editingMattressId, setEditingMattressId] = useState<string | null>(null);
 
   const editMattressMutation = useUpdateMattress(editingMattressId || "");
@@ -325,6 +379,7 @@ function MattressTypeManager() {
     setMattressSize("");
     setMattressHeight("");
     setMattressPrice("0");
+    setMattressStock("0");
     setEditingMattressId(null);
   };
 
@@ -334,6 +389,7 @@ function MattressTypeManager() {
     setMattressSize(m.size || "");
     setMattressHeight(m.height_cm != null ? String(m.height_cm) : "");
     setMattressPrice(String(m.price));
+    setMattressStock(String(m.stock ?? 0));
   };
 
   const handleSaveMattress = async (typeId: string) => {
@@ -345,6 +401,7 @@ function MattressTypeManager() {
       size: mattressSize.trim() || undefined,
       height_cm: mattressHeight ? parseFloat(mattressHeight) : undefined,
       price: parseFloat(mattressPrice) || 0,
+      stock: parseInt(mattressStock) || 0,
       is_active: true,
     };
 
@@ -370,6 +427,8 @@ function MattressTypeManager() {
         <CardTitle>Mattresses</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <MattressSectionImageManager />
+
         {/* Add / Edit mattress type form */}
         <div className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-1">
@@ -380,7 +439,7 @@ function MattressTypeManager() {
               onChange={(e) => setTypeName(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Image</label>
             <div className="flex items-center gap-2">
               {pendingImagePreview ? (
@@ -399,7 +458,7 @@ function MattressTypeManager() {
               ) : null}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="text-xs" />
             </div>
-          </div>
+          </div> */}
           <div className="flex items-center gap-2 pb-2 sm:pb-0">
             <Checkbox checked={typeActive} onCheckedChange={(c) => setTypeActive(!!c)} />
             <span className="text-sm">Active</span>
@@ -503,6 +562,16 @@ function MattressTypeManager() {
                           onChange={(e) => setMattressPrice(e.target.value)}
                         />
                       </div>
+                      <div className="w-full space-y-1 sm:w-24">
+                        <label className="text-xs font-medium text-muted-foreground">Stock</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={mattressStock}
+                          onChange={(e) => setMattressStock(e.target.value)}
+                        />
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           type="button"
@@ -536,6 +605,8 @@ function MattressTypeManager() {
                               {m.height_cm != null && (
                                 <span className="text-xs text-muted-foreground">{m.height_cm}cm</span>
                               )}
+                              <span className="text-xs text-muted-foreground">Stock: {m.stock ?? 0}</span>
+                              {(m.stock ?? 0) === 0 && <Badge variant="destructive">Out of Stock</Badge>}
                               {!m.is_active && <Badge variant="outline">Inactive</Badge>}
                             </div>
                             <span className="text-sm font-semibold">£{m.price.toFixed(2)}</span>

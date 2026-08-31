@@ -127,6 +127,13 @@ export function convertCartItemsToPaymentFormat(
           unit_price_override: pricePerVariant,
         });
       });
+    } else if (item.is_configured_bed) {
+      result.push({
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        assembly_required: item.assembly_required ?? false,
+        unit_price_override: item.price,
+      });
     } else {
       // Normal product
       result.push({
