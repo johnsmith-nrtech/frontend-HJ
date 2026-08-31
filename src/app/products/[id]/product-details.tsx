@@ -21,7 +21,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ChevronRight, Package, Truck, ChevronLeft, BadgePoundSterling, Calculator, WalletCards } from "lucide-react";
+import { ChevronRight, Package, Truck, ChevronLeft, BadgePoundSterling, Calculator, WalletCards, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
@@ -52,6 +52,12 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInView } from "@/hooks/use-in-view";
 import { useSearchStore } from "@/lib/store/search-store";
+import { useMattresses } from "@/hooks/use-bed-options";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 
 // ─────────────────────────────────────────────────────────────────
@@ -308,6 +314,83 @@ function getRelatedProductPricing(relatedProduct: any) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+//  MATTRESS TYPE DROPDOWN
+//  Renders one mattress type as a collapsible dropdown. Opening it
+//  fetches the actual mattresses under that type (with real prices)
+//  and lets the customer pick one, which is reported to the parent.
+// ─────────────────────────────────────────────────────────────────
+
+function MattressTypeDropdown({
+  type,
+  isSelected,
+  onSelectMattress,
+}: {
+  type: { label: string; image_url?: string; type_id?: string };
+  isSelected: (label: string) => boolean;
+  onSelectMattress: (opt: { label: string; charge: number; image_url?: string }) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: mattresses = [], isLoading } = useMattresses({
+    typeId: type.type_id,
+    onlyActive: true,
+  });
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger
+        type="button"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm transition-all hover:border-gray-400"
+      >
+        <div className="flex items-center gap-2">
+          {type.image_url && (
+            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+              <Image src={type.image_url} alt={type.label} fill className="object-cover" />
+            </div>
+          )}
+          <span>{type.label}</span>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2 space-y-2 pl-2">
+        {isLoading ? (
+          <p className="text-xs text-gray-500">Loading...</p>
+        ) : mattresses.length === 0 ? (
+          <p className="text-xs text-gray-500">No mattresses available for this type.</p>
+        ) : (
+          mattresses.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() =>
+                onSelectMattress({
+                  label: `${type.label} - ${m.name}`,
+                  charge: m.price,
+                  image_url: type.image_url,
+                })
+              }
+              className={cn(
+                "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                isSelected(`${type.label} - ${m.name}`)
+                  ? "border-blue bg-blue/5"
+                  : "border-gray-200 hover:border-gray-400",
+              )}
+            >
+              <span>
+                {m.name}
+                {m.size ? ` (${m.size})` : ""}
+              </span>
+              <span className="font-semibold">
+                {m.price > 0 ? `+£${m.price.toFixed(2)}` : "Free"}
+              </span>
+            </button>
+          ))
+        )}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 //  COMPONENT
 // ─────────────────────────────────────────────────────────────────
 
@@ -343,8 +426,8 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
   const [wantsWings, setWantsWings] = useState(false);
   const [selectedWing, setSelectedWing] = useState<{ label: string; charge: number } | null>(null);
   const [wantsMattress, setWantsMattress] = useState(false);
-  const [selectedMattress, setSelectedMattress] = useState<{ label: string; charge: number } | null>(null);
-  const [wantsBase, setWantsBase] = useState(false);
+  const [selectedMattress, setSelectedMattress] = useState<{ label: string; charge: number; image_url?: string } | null>(null);
+  const [wantsBase, setWantsBase] = useState(true);
   const [selectedBase, setSelectedBase] = useState<{ label: string; charge: number } | null>(null);
   const [customRequirements, setCustomRequirements] = useState("");
   const [showBedConfigError, setShowBedConfigError] = useState(false);
@@ -546,16 +629,16 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
 
   // ── bed configuration derived values ───────────────────────────
   const bedOptions = variantWithExtras?.bed_options as
-  | {
-      headboard?: string;
-      headboard_heights?: { label: string; charge: number; height_cm?: number }[];
-      storage_options?: { label: string; charge: number }[];
-      wing_options?: { label: string; charge: number }[];
-      mattress_options?: { label: string; charge: number }[];
-      base_options?: { label: string; charge: number }[];
-      custom_requirements_enabled?: boolean;
-    }
-  | undefined;
+    | {
+        headboard?: string;
+        headboard_heights?: { label: string; charge: number; height_cm?: number; image_url?: string }[];
+        storage_options?: { label: string; charge: number; image_url?: string }[];
+        wing_options?: { label: string; charge: number; image_url?: string }[];
+        mattress_options?: { label: string; charge: number; image_url?: string; type_id?: string }[];
+        base_options?: { label: string; charge: number; image_url?: string }[];
+        custom_requirements_enabled?: boolean;
+      }
+    | undefined;
 
   const isBedProduct = (product as any)?.is_bed;
 
@@ -596,7 +679,7 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     setSelectedWing(null);
     setWantsMattress(false);
     setSelectedMattress(null);
-    setWantsBase(false);
+    setWantsBase(true);
     setSelectedBase(null);
     setCustomRequirements("");
     setShowBedConfigError(false);
@@ -1480,7 +1563,7 @@ const proceedToAddToCart = () => {
                 {/* Headboard height — only shown if admin added at least one height option */}
                 {hasHeightOptions && (
                   <div className="space-y-2">
-                    <span className="text-gray text-base font-medium">Would you like to customise the headboard height?</span>
+                    <span className="text-gray text-base font-medium">Would you like to customise the headboard height ?</span>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                       {(["none", "increase", "decrease"] as const).map((choice) => (
                         <button
@@ -1505,19 +1588,26 @@ const proceedToAddToCart = () => {
 
                     {headboardChoice === "increase" && (
                       <div className="mt-2 space-y-2">
-                        {bedOptions!.headboard_heights!.map((opt: { label: string; charge: number; height_cm?: number }) => (
+                        {bedOptions!.headboard_heights!.map((opt: { label: string; charge: number; height_cm?: number; image_url?: string }) => (
                           <button
                             key={opt.label}
                             type="button"
                             onClick={() => setSelectedHeightOption(opt)}
                             className={cn(
-                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm transition-all",
+                              "flex w-full items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-sm transition-all",
                               selectedHeightOption?.label === opt.label
                                 ? "border-blue bg-blue/5"
                                 : "border-gray-300 hover:border-gray-400",
                             )}
                           >
-                            <span>{opt.label}{opt.height_cm ? ` (${opt.height_cm}cm)` : ""}</span>
+                            <div className="flex items-center gap-2">
+                              {opt.image_url && (
+                                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+                                  <Image src={opt.image_url} alt={opt.label} fill className="object-cover" />
+                                </div>
+                              )}
+                              <span>{opt.label}{opt.height_cm ? ` (${opt.height_cm}cm)` : ""}</span>
+                            </div>
                             <span className="font-semibold">+£{opt.charge.toFixed(2)}</span>
                           </button>
                         ))}
@@ -1548,24 +1638,82 @@ const proceedToAddToCart = () => {
                         checked={wantsStorage}
                         onCheckedChange={(checked) => {
                           setWantsStorage(!!checked);
-                          if (!checked) setSelectedStorage(null);
+                          if (!checked) {
+                            setSelectedStorage(null);
+                          } else {
+                            setWantsBase(false);
+                            setSelectedBase(null);
+                          }
                         }}
                       />
-                      <span className="text-gray text-base font-medium">Would you like storage?</span>
+                      <span className="text-gray text-base font-medium">Would you like storage ?</span>
                     </div>
                     {wantsStorage && (
                       <div className="space-y-2">
-                        {bedOptions!.storage_options!.map((opt) => (
+                        {bedOptions!.storage_options!.map((opt: { label: string; charge: number; image_url?: string }) => (
                           <button
                             key={opt.label}
                             type="button"
                             onClick={() => setSelectedStorage(opt)}
                             className={cn(
-                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                              "flex w-full items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-sm",
                               selectedStorage?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
                             )}
                           >
-                            <span>{opt.label}</span>
+                            <div className="flex items-center gap-2">
+                              {opt.image_url && (
+                                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+                                  <Image src={opt.image_url} alt={opt.label} fill className="object-cover" />
+                                </div>
+                              )}
+                              <span>{opt.label}</span>
+                            </div>
+                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Base */}
+                {hasBaseOptions && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={wantsBase}
+                        onCheckedChange={(checked) => {
+                          setWantsBase(!!checked);
+                          if (!checked) {
+                            setSelectedBase(null);
+                          } else {
+                            setWantsStorage(false);
+                            setSelectedStorage(null);
+                          }
+                        }}
+                      />
+                      <span className="text-gray text-base font-medium">Choose a base type ?</span>
+                    </div>
+                    {wantsBase && (
+                      <div className="space-y-2">
+                        {bedOptions!.base_options!.map((opt: { label: string; charge: number; image_url?: string }) => (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => setSelectedBase(opt)}
+                            className={cn(
+                              "flex w-full items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-sm",
+                              selectedBase?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              {opt.image_url && (
+                                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+                                  <Image src={opt.image_url} alt={opt.label} fill className="object-cover" />
+                                </div>
+                              )}
+                              <span>{opt.label}</span>
+                            </div>
                             <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
                           </button>
                         ))}
@@ -1585,21 +1733,28 @@ const proceedToAddToCart = () => {
                           if (!checked) setSelectedWing(null);
                         }}
                       />
-                      <span className="text-gray text-base font-medium">Add wings?</span>
+                      <span className="text-gray text-base font-medium">Add wings ?</span>
                     </div>
                     {wantsWings && (
                       <div className="space-y-2">
-                        {bedOptions!.wing_options!.map((opt) => (
+                        {bedOptions!.wing_options!.map((opt: { label: string; charge: number; image_url?: string }) => (
                           <button
                             key={opt.label}
                             type="button"
                             onClick={() => setSelectedWing(opt)}
                             className={cn(
-                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                              "flex w-full items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-sm",
                               selectedWing?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
                             )}
                           >
-                            <span>{opt.label}</span>
+                            <div className="flex items-center gap-2">
+                              {opt.image_url && (
+                                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+                                  <Image src={opt.image_url} alt={opt.label} fill className="object-cover" />
+                                </div>
+                              )}
+                              <span>{opt.label}</span>
+                            </div>
                             <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
                           </button>
                         ))}
@@ -1623,53 +1778,13 @@ const proceedToAddToCart = () => {
                     </div>
                     {wantsMattress && (
                       <div className="space-y-2">
-                        {bedOptions!.mattress_options!.map((opt) => (
-                          <button
-                            key={opt.label}
-                            type="button"
-                            onClick={() => setSelectedMattress(opt)}
-                            className={cn(
-                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
-                              selectedMattress?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
-                            )}
-                          >
-                            <span>{opt.label}</span>
-                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Base */}
-                {hasBaseOptions && (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={wantsBase}
-                        onCheckedChange={(checked) => {
-                          setWantsBase(!!checked);
-                          if (!checked) setSelectedBase(null);
-                        }}
-                      />
-                      <span className="text-gray text-base font-medium">Choose a base type?</span>
-                    </div>
-                    {wantsBase && (
-                      <div className="space-y-2">
-                        {bedOptions!.base_options!.map((opt) => (
-                          <button
-                            key={opt.label}
-                            type="button"
-                            onClick={() => setSelectedBase(opt)}
-                            className={cn(
-                              "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
-                              selectedBase?.label === opt.label ? "border-blue bg-blue/5" : "border-gray-300 hover:border-gray-400",
-                            )}
-                          >
-                            <span>{opt.label}</span>
-                            <span className="font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
-                          </button>
+                        {bedOptions!.mattress_options!.map((type) => (
+                          <MattressTypeDropdown
+                            key={type.label}
+                            type={type}
+                            isSelected={(label) => selectedMattress?.label === label}
+                            onSelectMattress={setSelectedMattress}
+                          />
                         ))}
                       </div>
                     )}

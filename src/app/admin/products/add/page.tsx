@@ -45,8 +45,7 @@ import {
   ProductVariant,
   BedOption,
 } from "@/components/admin/variant-manager";
-import { BedOptionCatalogPicker } from "@/components/admin/bed-option-picker";
-
+import { BedOptionCatalogPicker, MattressTypeCatalogPicker } from "@/components/admin/bed-option-picker";
 
 // Enhanced schema with all e-commerce fields
 const formSchema = z.object({
@@ -1511,7 +1510,7 @@ export default function AddProductPage() {
                   {form.watch("is_bed") && (
                     <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-medium">Bed Configuration</h4>
-                      <FormField
+                      {/* <FormField
                         control={form.control}
                         name="default_headboard"
                         render={({ field }) => (
@@ -1527,7 +1526,7 @@ export default function AddProductPage() {
 
                       <p className="text-muted-foreground text-xs">
                         The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
-                      </p>
+                      </p> */}
 
                       <BedOptionCatalogPicker
                         type="headboard_height"
@@ -1550,9 +1549,7 @@ export default function AddProductPage() {
                         onChange={setWingOptions}
                       />
 
-                      <BedOptionCatalogPicker
-                        type="mattress"
-                        label="Mattress Options"
+                      <MattressTypeCatalogPicker
                         selected={mattressOptions}
                         onChange={setMattressOptions}
                       />

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Edit, Image as ImageIcon, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { VariantImageManager, VariantImage } from "./variant-image-manager";
-import { BedOptionCatalogPicker } from "./bed-option-picker";
+import { BedOptionCatalogPicker, MattressTypeCatalogPicker } from "./bed-option-picker";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateProductVariant,
@@ -1163,7 +1163,7 @@ export function VariantManager({
               {isBed && (
                 <div className="space-y-4 border-t pt-4">
                   <h4 className="text-sm font-medium">Bed Configuration</h4>
-                  <div>
+                  {/* <div>
                     <label className="text-sm font-medium">Headboard Style</label>
                     <Input
                       placeholder="e.g., Wingback, Chesterfield, None"
@@ -1180,7 +1180,7 @@ export function VariantManager({
 
                   <p className="text-muted-foreground text-xs">
                     The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
-                  </p>
+                  </p> */}
 
                   <BedOptionCatalogPicker
                     type="headboard_height"
@@ -1221,9 +1221,7 @@ export function VariantManager({
                     disabled={disabled}
                   />
 
-                  <BedOptionCatalogPicker
-                    type="mattress"
-                    label="Mattress Options"
+                  <MattressTypeCatalogPicker
                     selected={newVariant.bed_options?.mattress_options || []}
                     onChange={(options) =>
                       setNewVariant({
