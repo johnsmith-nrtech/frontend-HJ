@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/providers/auth-provider";
-// import "@/components/ui/modern-image-gallery.css";
 import { useProduct, useRelatedProducts } from "@/hooks/use-products";
 import { useCartAnimationStore, useCartStore } from "@/lib/store/cart-store";
 import { useWishlistStore } from "@/lib/store/wishlist-store";
@@ -1084,7 +1083,7 @@ const proceedToAddToCart = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mt-10 px-4 pt-8 pb-48 md:px-[32px] md:py-8 lg:mt-0">
+      <div className="mt-10 px-4 pt-8 pb-5 md:px-[32px] md:py-8 lg:mt-0">
         {/* Breadcrumbs */}
         <Breadcrumb className="mb-4">
           <BreadcrumbList>
@@ -1359,10 +1358,6 @@ const proceedToAddToCart = () => {
                       </span>
                     )}
                   </div>
-
-                  {/* <span className="w-fit rounded-full bg-[#FFA8CD] px-4 py-1 text-sm font-bold text-[#000] md:px-6 md:py-2">
-                    Klarna
-                  </span> */}
                 </div>
               </div>
             </div>
@@ -1389,7 +1384,7 @@ const proceedToAddToCart = () => {
                     <span>⚠</span> Please select a color to continue
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex flex-wrap gap-2 pt-1 sm:gap-3 md:pt-0">
                   {uniqueColors.map((color) => {
                     const isSelected = selectedColor === color;
                     const colorCode = getColorHex(color);
@@ -1458,7 +1453,7 @@ const proceedToAddToCart = () => {
                     <span>⚠</span> Please select a size to continue
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex flex-wrap gap-2 pt-1 sm:gap-3 md:pt-0">
                   {uniqueSizes.map((size) => {
                     const isSelected = selectedSize === size;
                     const sizeVariants = (allVariants || []).filter(
@@ -1513,7 +1508,7 @@ const proceedToAddToCart = () => {
                 <span className="text-gray text-base font-medium">
                   Material - {selectedMaterial || "Select Material"}
                 </span>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="flex flex-wrap gap-2 pt-1 sm:gap-3 md:pt-0">
                   {uniqueMaterials.map((material: string) => {
                     const isSelected =
                       selectedMaterial === material ||
@@ -1570,7 +1565,7 @@ const proceedToAddToCart = () => {
             {/* Bed Configuration — bed products only */}
             {isBedProduct && (
               <div id="bed-configuration" className="space-y-5 rounded-xl border border-gray-200 p-4">
-                <h3 className="text-dark-gray text-lg font-semibold">Configure Your Bed</h3>
+                <h3 className="text-dark-gray text-xl font-semibold tracking-wide md:text-lg md:tracking-normal">Configure Your Bed</h3>
 
                 {showBedConfigError && bedConfigIncomplete && (
                   <p className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -1582,7 +1577,7 @@ const proceedToAddToCart = () => {
                 {hasHeightOptions && (
                   <div className="space-y-2">
                     <span className="text-gray text-base font-medium">Would you like to customise the headboard height ?</span>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 pt-3 sm:grid-cols-3 md:pt-0">
                       {(["none", "increase", "decrease"] as const).map((choice) => (
                         <button
                           key={choice}
@@ -1704,7 +1699,7 @@ const proceedToAddToCart = () => {
                 )}
 
                 {/* Base */}
-                {hasBaseOptions && (
+                {hasBaseOptions && !wantsStorage && (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -2138,12 +2133,12 @@ const proceedToAddToCart = () => {
         </div>
 
         <div ref={featuresRef}>
-          {featuresInView && <div className="h-16 md:h-20" />}
+          {featuresInView && <div className="h-0 md:h-20" />}
           <div
             className={cn(
               "shadow-md sm:mt-0 overflow-x-hidden",
               { "fixed right-0 bottom-0 left-0 z-40 bg-white px-4 pt-3 pb-20 sm:right-4 sm:bottom-6 sm:left-4 sm:rounded-full sm:px-0 sm:pt-0 sm:pb-0": featuresInView },
-              { "mt-5 mb-8 w-full rounded-full md:mt-12 md:mb-8": !featuresInView },
+              { "mt-5 mb-2 w-full rounded-full md:mt-12 md:mb-8": !featuresInView },
             )}
           >
             <div className="flex items-center justify-center">
@@ -2186,16 +2181,15 @@ const proceedToAddToCart = () => {
           </div>
 
           {/* Delivery section */}
-          <section className="py-6 md:py-8">
+          <section className="py-2 md:py-8">
             <div className="space-y-3 md:space-y-4">
               <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">Product Features and Quality Highlights</h1>
-              {/* <p className="text-sm leading-relaxed text-[#999] md:text-base">{getDeliveryDetails()}</p> */}
             </div>
           </section>
 
           {/* Dimensions section */}
           <section id="dimensions" className="bg-light-blue/50 md:py-12 lg:py-16">
-            <div className="px-2 sm:px-[32px]">
+            <div className="px-0 md:px-[32px]">
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
                 <div className="space-y-3 md:space-y-4">
                   <h1 className="text-[36px] leading-tight md:text-[56px] lg:text-[72px]">
@@ -2304,49 +2298,52 @@ const proceedToAddToCart = () => {
             </div>
           </section>
 
-          {/* Materials section */}
+          {/* Materials section — sofas only; hidden for beds for now */}
+          {isBedProduct && <div className="py-2 md:py-16" />}
+          {!isBedProduct && (
           <div className="px-2 sm:px-[32px]">
             <section id="material" className="py-8 md:py-16">
               <h1 className="mb-3 text-[36px] leading-tight md:mb-4 md:text-[56px] lg:text-[72px]">
                 MATERIALS & CARE
               </h1>
-              <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
-                {materialInfo?.care_instructions || product?.care_instructions || ""}
-              </p>
-              <div className="space-y-6 md:space-y-8">
-                {compositionItems.length > 0 && (
-                  <div>
-                    <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
-                      MATERIAL COMPOSITION:
-                    </h1>
-                    <div className="space-y-1 text-sm text-[#999] md:space-y-2 md:text-base">
-                      {compositionItems.map((item) => (
-                        <p key={item.label}>
-                          <span className="text-dark-gray font-semibold">{item.label}: </span>
-                          {item.value}
-                        </p>
-                      ))}
+                <p className="mb-6 text-sm leading-relaxed text-[#999] md:mb-8 md:text-base">
+                  {materialInfo?.care_instructions || product?.care_instructions || ""}
+                </p>
+                <div className="space-y-6 md:space-y-8">
+                  {compositionItems.length > 0 && (
+                    <div>
+                      <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
+                        MATERIAL COMPOSITION:
+                      </h1>
+                      <div className="space-y-1 text-sm text-[#999] md:space-y-2 md:text-base">
+                        {compositionItems.map((item) => (
+                          <p key={item.label}>
+                            <span className="text-dark-gray font-semibold">{item.label}: </span>
+                            {item.value}
+                          </p>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {constructionItems.length > 0 && (
-                  <div>
-                    <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
-                      MATERIAL CONSTRUCTION:
-                    </h1>
-                    <div className="space-y-2 text-sm text-[#999] md:space-y-3 md:text-base">
-                      {constructionItems.map((item) => (
-                        <p key={item.label}>
-                          <span className="text-dark-gray font-semibold">{item.label}: </span>
-                          {item.value}
-                        </p>
-                      ))}
+                  )}
+                  {constructionItems.length > 0 && (
+                    <div>
+                      <h1 className="mb-3 text-[28px] leading-tight md:mb-4 md:text-[42px] lg:text-[56px]">
+                        MATERIAL CONSTRUCTION:
+                      </h1>
+                      <div className="space-y-2 text-sm text-[#999] md:space-y-3 md:text-base">
+                        {constructionItems.map((item) => (
+                          <p key={item.label}>
+                            <span className="text-dark-gray font-semibold">{item.label}: </span>
+                            {item.value}
+                          </p>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          )}
 
           {/* Related Products */}
           <section id="recommended" className="bg-light-blue py-8 md:py-12">
@@ -2398,15 +2395,6 @@ const proceedToAddToCart = () => {
                             discount={discountLabel}
                             imageSrc={productImage}
                             rating={4.9}
-                            // paymentOption={
-                            //   hasPaymentOptions(selectedVariantData)
-                            //     ? {
-                            //         service: selectedVariantData.payment_options[0].provider || "Klarna",
-                            //         installments: selectedVariantData.payment_options[0].installments || 3,
-                            //         amount: selectedVariantData.payment_options[0].amount || Math.round((finalPrice / 3) * 100) / 100,
-                            //       }
-                            //     : { service: "Klarna", installments: 3, amount: Math.round((finalPrice / 3) * 100) / 100 }
-                            // }
                             paymentOption={undefined}
                             isSale={hasDiscount}
                             deliveryInfo={deliverInfo}
@@ -2440,15 +2428,6 @@ const proceedToAddToCart = () => {
                             discount={discountLabel}
                             imageSrc={productImage}
                             rating={4.9}
-                            // paymentOption={
-                            //   hasPaymentOptions(selectedVariantData)
-                            //     ? {
-                            //         service: selectedVariantData.payment_options[0].provider || "Klarna",
-                            //         installments: selectedVariantData.payment_options[0].installments || 3,
-                            //         amount: selectedVariantData.payment_options[0].amount || Math.round((finalPrice / 3) * 100) / 100,
-                            //       }
-                            //     : { service: "Klarna", installments: 3, amount: Math.round((finalPrice / 3) * 100) / 100 }
-                            // }
                             paymentOption={undefined}
                             isSale={hasDiscount}
                             deliveryInfo={deliverInfo}
