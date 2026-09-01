@@ -799,10 +799,6 @@ const proceedToAddToCart = () => {
     const bedConfigSuffix = bedConfigParts.length > 0 ? ` (${bedConfigParts.join(", ")})` : "";
 
   
-    // A bed with configuration extras must carry a custom total price (base + surcharges),
-    // which the server-synced cart cannot store (it always recomputes price from the variant
-    // alone on every sync). So a configured bed is added as ONE local-only cart item — same
-    // pattern already used for Loxa insurance — instead of splitting it into two items.
     if (isBedProduct && bedOptionsCharge > 0) {
       addItemLocally({
         id: currentVariant.id,
@@ -817,6 +813,7 @@ const proceedToAddToCart = () => {
         assemble_charges: currentVariant.assemble_charges || 0,
         show_installments: product.show_installments ?? true,
         is_configured_bed: true,
+        mattress_id: selectedMattress?.mattress_id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         variant: {

@@ -1,6 +1,3 @@
-// Orders API Types
-// Based on the API specification in orders.md
-
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -127,6 +124,7 @@ export interface OrderCancelInput {
 export interface CheckoutItem {
   variant_id: string;
   quantity: number;
+  mattress_id?: string;
 }
 
 export interface CheckoutInput {
@@ -185,9 +183,10 @@ export interface PaymentFormData {
     country_name: string;
   };
   use_different_billing_address: boolean;
-  cart_items: Array<{
+    cart_items: Array<{
     variant_id: string;
     quantity: number;
+    mattress_id?: string;
   }>;
   order_notes?: string;
 }

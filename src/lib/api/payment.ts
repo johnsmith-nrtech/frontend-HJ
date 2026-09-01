@@ -13,10 +13,11 @@ export interface AddressDto {
 }
 
 export interface CartItemRequest {
-  variant_id: string; // UUID of the product variant
-  quantity: number; // Must be > 0
-  assembly_required: boolean; // Whether assembly is required
+  variant_id: string;
+  quantity: number;
+  assembly_required: boolean;
   unit_price_override?: number;
+  mattress_id?: string;
 }
 
 export interface CreatePaymentRequest {

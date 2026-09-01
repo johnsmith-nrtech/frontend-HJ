@@ -36,6 +36,7 @@ export interface LocalCartItem {
   is_sofadeal_coverage?: boolean;
   is_bed_configuration?: boolean;
   is_configured_bed?: boolean;
+  mattress_id?: string;
   variant?: {
     color?: string;
     size?: string;
