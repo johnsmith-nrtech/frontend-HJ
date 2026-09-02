@@ -346,7 +346,7 @@ function MattressTypeDropdown({
               <Image src={type.image_url} alt={type.label} fill className="object-cover" />
             </div>
           )}
-          <span>{type.label}</span>
+          <span className="text-base font-bold md:text-sm md:font-normal">{type.label}</span>
         </div>
         <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
       </CollapsibleTrigger>
@@ -380,11 +380,11 @@ function MattressTypeDropdown({
                       : "border-gray-200 hover:border-gray-400",
                 )}
               >
-                <span>
+                <span className="text-base font-bold md:text-sm md:font-normal">
                   {m.name}
                   {m.size ? ` (${m.size})` : ""}
                 </span>
-                <span className="font-semibold">
+                <span className="font-bold text-base md:text-sm md:font-semibold">
                   {outOfStock
                     ? "Out of Stock"
                     : m.price > 0
@@ -417,7 +417,12 @@ export default function ProductDetails({ productId }: ProductDetailsProps) {
     [allMattressTypes],
   );
   const { targetRef: featuresRef, isIntersecting: featuresInView } = useInView({
-    threshold: 0.1,
+    threshold: 0,
+    rootMargin: "0px 0px -200px 0px",
+  });
+  const { targetRef: footerSentinelRef, isIntersecting: footerInView } = useInView({
+    threshold: 0,
+    rootMargin: "300px 0px 0px 0px",
   });
 
   const { data: product, isLoading, error } = useProduct(productId, {
@@ -1623,8 +1628,8 @@ const proceedToAddToCart = () => {
                               </div>
                             )}
                             <div className="flex items-center justify-between gap-2 px-3 py-2">
-                              <span>{opt.label}{opt.height_cm ? ` (${opt.height_cm}cm)` : ""}</span>
-                              <span className="font-semibold whitespace-nowrap">+£{opt.charge.toFixed(2)}</span>
+                              <span className="text-sm font-bold md:text-xs md:font-normal">{opt.label}{opt.height_cm ? ` (${opt.height_cm}cm)` : ""}</span>
+                              <span className="font-bold whitespace-nowrap text-sm md:text-xs md:font-semibold">+£{opt.charge.toFixed(2)}</span>
                             </div>
                           </button>
                         ))}
@@ -1688,8 +1693,8 @@ const proceedToAddToCart = () => {
                               </div>
                             )}
                             <div className="flex items-center justify-between gap-2 px-3 py-2">
-                              <span>{opt.label}</span>
-                              <span className="font-semibold whitespace-nowrap">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                              <span className="text-sm font-bold md:text-xs md:font-normal">{opt.label}</span>
+                              <span className="font-bold whitespace-nowrap text-sm md:text-xs md:font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
                             </div>
                           </button>
                         ))}
@@ -1739,8 +1744,8 @@ const proceedToAddToCart = () => {
                               </div>
                             )}
                             <div className="flex items-center justify-between gap-2 px-3 py-2">
-                              <span>{opt.label}</span>
-                              <span className="font-semibold whitespace-nowrap">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                              <span className="text-sm font-bold md:text-xs md:font-normal">{opt.label}</span>
+                              <span className="font-bold whitespace-nowrap text-sm md:text-xs md:font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
                             </div>
                           </button>
                         ))}
@@ -1784,8 +1789,8 @@ const proceedToAddToCart = () => {
                               </div>
                             )}
                             <div className="flex items-center justify-between gap-2 px-3 py-2">
-                              <span>{opt.label}</span>
-                              <span className="font-semibold whitespace-nowrap">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
+                              <span className="text-sm font-bold md:text-xs md:font-normal">{opt.label}</span>
+                              <span className="font-bold whitespace-nowrap text-sm md:text-xs md:font-semibold">{opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}</span>
                             </div>
                           </button>
                         ))}
@@ -2137,8 +2142,9 @@ const proceedToAddToCart = () => {
           <div
             className={cn(
               "shadow-md sm:mt-0 overflow-x-hidden",
-              { "fixed right-0 bottom-0 left-0 z-40 bg-white px-4 pt-3 pb-20 sm:right-4 sm:bottom-6 sm:left-4 sm:rounded-full sm:px-0 sm:pt-0 sm:pb-0": featuresInView },
+              { "fixed right-0 bottom-0 left-0 z-40 bg-white px-4 pt-3 pb-20 sm:right-4 sm:bottom-6 sm:left-4 sm:rounded-full sm:px-0 sm:pt-0 sm:pb-0": featuresInView && !footerInView },
               { "mt-5 mb-2 w-full rounded-full md:mt-12 md:mb-8": !featuresInView },
+              { "hidden": footerInView },
             )}
           >
             <div className="flex items-center justify-center">
@@ -2346,7 +2352,7 @@ const proceedToAddToCart = () => {
           )}
 
           {/* Related Products */}
-          <section id="recommended" className="bg-light-blue py-8 md:py-12">
+          <section id="recommended" className="bg-light-blue mt-8 md:mt-0 py-8 md:py-12">
             <div className="px-2 py-3 sm:px-[32px]">
               <div className="mb-6 flex items-center justify-between md:mb-8">
                 <h1 className="text-3xl md:text-[85px]">Related Products</h1>
@@ -2451,6 +2457,7 @@ const proceedToAddToCart = () => {
           <section id="reviews">
             <Testimonials showBackground={false} />
           </section>
+          <div ref={footerSentinelRef} />
         </div>
       </div>
 

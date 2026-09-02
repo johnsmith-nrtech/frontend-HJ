@@ -337,12 +337,12 @@ function MattressTypeManager() {
     setPendingImagePreview(null);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPendingImageFile(file);
-    setPendingImagePreview(URL.createObjectURL(file));
-  };
+  // const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setPendingImageFile(file);
+  //   setPendingImagePreview(URL.createObjectURL(file));
+  // };
 
   const handleSaveType = async () => {
     if (!typeName.trim()) return;
