@@ -155,7 +155,7 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
               onChange={(e) => setFormCharge(e.target.value)}
             />
           </div>
-          {/* <div className="space-y-1">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Image</label>
             <div className="flex items-center gap-2">
               {pendingImagePreview ? (
@@ -174,7 +174,7 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
               ) : null}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="text-xs" />
             </div>
-          </div> */}
+          </div>
           <div className="flex items-center gap-2 pb-2 sm:pb-0">
             <Checkbox checked={formActive} onCheckedChange={(c) => setFormActive(!!c)} />
             <span className="text-sm">Active</span>
@@ -337,12 +337,12 @@ function MattressTypeManager() {
     setPendingImagePreview(null);
   };
 
-  // const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   setPendingImageFile(file);
-  //   setPendingImagePreview(URL.createObjectURL(file));
-  // };
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingImageFile(file);
+    setPendingImagePreview(URL.createObjectURL(file));
+  };
 
   const handleSaveType = async () => {
     if (!typeName.trim()) return;
