@@ -787,18 +787,35 @@ const proceedToAddToCart = () => {
     if (selectedSize) variantParts.push(selectedSize);
     if (selectedMaterial) variantParts.push(selectedMaterial);
     const variantDescription = variantParts.length > 0 ? ` - ${variantParts.join(", ")}` : "";
-    const bedConfigParts: string[] = [];
+        const bedConfigParts: string[] = [];
+    const bedConfigurationObject: NonNullable<Parameters<typeof addItemLocally>[0]["bed_configuration"]> = {};
     if (isBedProduct) {
       if (headboardChoice === "increase" && selectedHeightOption) {
         bedConfigParts.push(`Headboard: ${selectedHeightOption.label}`);
+        bedConfigurationObject.headboard_height = selectedHeightOption;
       } else if (headboardChoice === "decrease" && decreaseHeightCm) {
         bedConfigParts.push(`Headboard: Decreased to ${decreaseHeightCm}cm`);
       }
-      if (selectedStorage) bedConfigParts.push(`Storage: ${selectedStorage.label}`);
-      if (selectedWing) bedConfigParts.push(`Wings: ${selectedWing.label}`);
-      if (selectedMattress) bedConfigParts.push(`Mattress: ${selectedMattress.label}`);
-      if (selectedBase) bedConfigParts.push(`Base: ${selectedBase.label}`);
-      if (customRequirementsEnabled && customRequirements.trim()) bedConfigParts.push(`Custom: ${customRequirements.trim()}`);
+      if (selectedStorage) {
+        bedConfigParts.push(`Storage: ${selectedStorage.label}`);
+        bedConfigurationObject.storage = selectedStorage;
+      }
+      if (selectedWing) {
+        bedConfigParts.push(`Wings: ${selectedWing.label}`);
+        bedConfigurationObject.wings = selectedWing;
+      }
+      if (selectedMattress) {
+        bedConfigParts.push(`Mattress: ${selectedMattress.label}`);
+        bedConfigurationObject.mattress = selectedMattress;
+      }
+      if (selectedBase) {
+        bedConfigParts.push(`Base: ${selectedBase.label}`);
+        bedConfigurationObject.base = selectedBase;
+      }
+      if (customRequirementsEnabled && customRequirements.trim()) {
+        bedConfigParts.push(`Custom: ${customRequirements.trim()}`);
+        bedConfigurationObject.custom_requirements = customRequirements.trim();
+      }
     }
     const bedConfigSuffix = bedConfigParts.length > 0 ? ` (${bedConfigParts.join(", ")})` : "";
 
@@ -817,7 +834,7 @@ const proceedToAddToCart = () => {
         assemble_charges: currentVariant.assemble_charges || 0,
         show_installments: product.show_installments ?? true,
         is_configured_bed: true,
-        mattress_id: selectedMattress?.mattress_id,
+        bed_configuration: bedConfigurationObject,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         variant: {

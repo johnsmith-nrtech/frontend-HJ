@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const { syncCartWithServerAfterLogin, syncWithServer, clearCart } = useCart();
 
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -57,15 +58,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedSession = SessionManager.getSession();
 
         if (storedSession) {
-          // Verify the session is still valid by fetching current user
           try {
             const currentUser = await AuthApiService.getCurrentUser();
             setSession(storedSession);
             setUser(currentUser);
 
-            // ✅ On page load: just sync FROM server, don't push local items
-        // Local items from localStorage may already be server items
-        // (populated by a previous syncWithServer call)
         await syncWithServer();
 
             // Refresh queries when auth state changes
@@ -92,6 +89,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth();
   }, [queryClient, syncCartWithServerAfterLogin]);
+
+ 
+  useEffect(() => {
+    const refreshIfNeeded = async () => {
+      const current = SessionManager.getSession();
+      if (!current) return;
+
+      const timeLeft = SessionManager.getTimeUntilExpiry();
+      // Refresh once we're within 5 minutes of expiry
+      if (timeLeft > 5 * 60 * 1000) return;
+
+      const refreshToken = SessionManager.getRefreshToken();
+      if (!refreshToken) return;
+
+      try {
+        const { data, error } = await supabase.auth.refreshSession({
+          refresh_token: refreshToken,
+        });
+        if (error || !data.session) {
+          console.log("Silent token refresh failed:", error);
+          return;
+        }
+
+        SessionManager.updateTokens(
+          data.session.access_token,
+          data.session.refresh_token,
+          data.session.expires_in ?? 3600,
+        );
+        setSession(SessionManager.getSession());
+      } catch (err) {
+        console.error("Silent token refresh error:", err);
+      }
+    };
+
+    // Check immediately on mount, then every minute
+    refreshIfNeeded();
+    const interval = setInterval(refreshIfNeeded, 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {

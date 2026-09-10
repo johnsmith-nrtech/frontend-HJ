@@ -265,6 +265,8 @@ React.useEffect(() => {
     } catch {}
   }, [couponCode, appliedCoupon, useWallet]);
 
+
+  // After
   // Pre-fill email
   React.useEffect(() => {
     if (user?.data?.user?.email && formData.email === "") {
@@ -272,15 +274,19 @@ React.useEffect(() => {
     }
   }, [user, formData.email]);
 
-  // Prefill previously saved shipping address for this email (guest or registered).
-  // Only fills currently-empty fields so it never clobbers what the user already typed,
-  // and everything stays editable afterwards.
+
+  React.useEffect(() => {
+    if (user && formData.isGuest) {
+      setFormData((prev) => ({ ...prev, isGuest: false }));
+    }
+  }, [user, formData.isGuest]);
+
   const prefilledEmailRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     const email = formData.email?.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) return;
-    if (prefilledEmailRef.current === email) return; // only attempt once per email per session
+    if (prefilledEmailRef.current === email) return;
     prefilledEmailRef.current = email;
 
     try {

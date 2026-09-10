@@ -447,9 +447,46 @@ const OrderDetailsModal: React.FC<{ order: Order }> = ({ order }) => {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-muted-foreground mt-1 text-sm">
+                                                <p className="text-muted-foreground mt-1 text-sm">
                           SKU: {item.variant.sku}
                         </p>
+                        {item.bed_configuration && (
+                          <div className="mt-1 space-y-0.5">
+                            {item.bed_configuration.headboard_height && (
+                              <p className="text-muted-foreground text-xs">
+                                Headboard: {item.bed_configuration.headboard_height.label}
+                                {item.bed_configuration.headboard_height.height_cm
+                                  ? ` (${item.bed_configuration.headboard_height.height_cm}cm)`
+                                  : ""}
+                              </p>
+                            )}
+                            {item.bed_configuration.storage && (
+                              <p className="text-muted-foreground text-xs">
+                                Storage: {item.bed_configuration.storage.label}
+                              </p>
+                            )}
+                            {item.bed_configuration.wings && (
+                              <p className="text-muted-foreground text-xs">
+                                Wings: {item.bed_configuration.wings.label}
+                              </p>
+                            )}
+                            {item.bed_configuration.base && (
+                              <p className="text-muted-foreground text-xs">
+                                Base: {item.bed_configuration.base.label}
+                              </p>
+                            )}
+                            {item.bed_configuration.mattress && (
+                              <p className="text-muted-foreground text-xs">
+                                Mattress: {item.bed_configuration.mattress.label}
+                              </p>
+                            )}
+                            {item.bed_configuration.custom_requirements && (
+                              <p className="text-muted-foreground text-xs">
+                                Custom: {item.bed_configuration.custom_requirements}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <p className="text-muted-foreground text-xs">
                           Assembly Required:{" "}
                           {item.assembly_required

@@ -133,6 +133,7 @@ export function convertCartItemsToPaymentFormat(
         assembly_required: item.assembly_required ?? false,
         unit_price_override: item.price,
         mattress_id: item.mattress_id,
+        bed_configuration: item.bed_configuration,
       });
     } else {
       // Normal product
