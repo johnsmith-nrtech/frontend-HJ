@@ -310,7 +310,7 @@ const OrderDetailsModal: React.FC<{ order: Order }> = ({ order }) => {
                 </div>
 
                 {/* Items Total — shows original vs discounted */}
-                {/* <div className="text-muted-foreground mb-2 text-sm">
+                <div className="text-muted-foreground mb-2 text-sm">
                   <span>Items Total:</span>
                   {hasProductDiscount ? (
                     <>
@@ -323,28 +323,10 @@ const OrderDetailsModal: React.FC<{ order: Order }> = ({ order }) => {
                     </>
                   ) : (
                     <p className="font-medium">
-                      {formatCurrency(order.total_amount, order.currency)}
+                      {formatCurrency(discountedItemsTotal, order.currency)}
                     </p>
                   )}
-                </div> */}
-
-                <div className="text-muted-foreground mb-2 text-sm">
-  <span>Items Total:</span>
-  {hasProductDiscount ? (
-    <>
-      <p className="text-sm text-gray-400 line-through">
-        {formatCurrency(originalItemsTotal, order.currency)}
-      </p>
-      <p className="font-medium text-green-600">
-        {formatCurrency(discountedItemsTotal, order.currency)}
-      </p>
-    </>
-  ) : (
-    <p className="font-medium">
-      {formatCurrency(discountedItemsTotal, order.currency)}
-    </p>
-  )}
-</div>
+                </div>
 
                 <div className="text-muted-foreground mb-2 text-sm">
                   <span className="text-muted-foreground">Zone Charges:</span>
@@ -447,7 +429,7 @@ const OrderDetailsModal: React.FC<{ order: Order }> = ({ order }) => {
                             </Badge>
                           )}
                         </div>
-                                                <p className="text-muted-foreground mt-1 text-sm">
+                        <p className="text-muted-foreground mt-1 text-sm">
                           SKU: {item.variant.sku}
                         </p>
                         {item.bed_configuration && (
