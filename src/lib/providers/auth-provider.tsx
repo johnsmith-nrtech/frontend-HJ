@@ -194,20 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // const signOut = async () => {
-  //   try {
-  //     await AuthApiService.signOut();
-  //     // Clear cart on sign out
-  //     await clearCart();
-  //   } catch (error) {
-  //     console.error("Error during sign out:", error);
-  //   } finally {
-  //     // Always clear local state regardless of API response
-  //     setSession(null);
-  //     setUser(null);
-  //     queryClient.clear();
-  //   }
-  // };
 
   const signOut = async () => {
   try {
@@ -216,13 +202,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } catch (error) {
     console.error("Error during sign out:", error);
   } finally {
+    // After
     setSession(null);
     setUser(null);
     queryClient.clear();
 
     localStorage.removeItem("incoming_ref_code");
     document.cookie = "ref_code=; Max-Age=0; path=/;";
+    sessionStorage.removeItem("ref_auto_apply_done");
     sessionStorage.setItem("just_logged_out", "1"); // one-time flag
+
+    localStorage.removeItem("checkoutFormData");
+    localStorage.removeItem("checkoutCouponCode");
+    localStorage.removeItem("checkoutAppliedCoupon");
+    localStorage.removeItem("checkoutUseWallet");
   }
 };
 

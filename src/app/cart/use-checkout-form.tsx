@@ -336,7 +336,22 @@ React.useEffect(() => {
   };
 
   const handleContinueAsGuest = () => {
-    setFormData((prev) => ({ ...prev, isGuest: true }));
+    setFormData((prev) => ({
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: prev.email,
+      address: "",
+      country: "",
+      city: "",
+      state: "",
+      charges: "",
+      zipCode: "",
+      floorId: "",
+      differentBilling: false,
+      paymentMethod: prev.paymentMethod,
+      isGuest: true,
+    }));
     setShowGuestOptions(false);
     setCurrentStep(2);
   };
@@ -478,6 +493,12 @@ React.useEffect(() => {
       localStorage.setItem("lastOrderData", JSON.stringify(orderDataForSuccess));
     } catch {}
     setOrderData(orderDataForSuccess);
+    try {
+      localStorage.removeItem("checkoutCouponCode");
+      localStorage.removeItem("checkoutAppliedCoupon");
+      localStorage.removeItem("checkoutUseWallet");
+      localStorage.removeItem("checkoutFormData");
+    } catch {}
     toast.dismiss("payment-processing");
     toast.success("Payment initiated! Redirecting to secure payment page...");
     redirectToPayment(paymentResponse);
