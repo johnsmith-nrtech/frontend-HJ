@@ -375,7 +375,7 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
-                      <FormField
+                    <FormField
                       control={form.control}
                       name="discount_offer"
                       render={({ field }) => (
@@ -417,6 +417,58 @@ export default function EditProductPage() {
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="is_sofa"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_bed", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Sofa</FormLabel>
+                            <FormDescription>
+                              This product is a sofa. Standard dimension fields apply in Variants.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="is_bed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_sofa", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Bed</FormLabel>
+                            <FormDescription>
+                              This product is a bed. Dimension fields in Variants change accordingly.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -519,58 +571,7 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="is_sofa"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (checked) form.setValue("is_bed", false);
-                              }}
-                              className="cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Sofa</FormLabel>
-                            <FormDescription>
-                              This product is a sofa. Standard dimension fields apply in Variants.
-                            </FormDescription>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="is_bed"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (checked) form.setValue("is_sofa", false);
-                              }}
-                              className="cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Bed</FormLabel>
-                            <FormDescription>
-                              This product is a bed. Dimension fields in Variants change accordingly.
-                            </FormDescription>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    
 
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-sm font-medium">Categories *</label>

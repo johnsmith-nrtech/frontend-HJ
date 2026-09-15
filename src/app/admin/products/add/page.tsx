@@ -630,6 +630,60 @@ export default function AddProductPage() {
                       )}
                     />
 
+                    <div className="grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="is_sofa"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) form.setValue("is_bed", false);
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Sofa</FormLabel>
+                              <FormDescription>
+                                This product is a sofa. Standard dimension fields apply.
+                              </FormDescription>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="is_bed"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) form.setValue("is_sofa", false);
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Bed</FormLabel>
+                              <FormDescription>
+                                This product is a bed. Dimension fields on the Dimensions tab change accordingly.
+                              </FormDescription>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-sm font-medium">Categories *</label>
                       <p className="text-muted-foreground text-xs">
@@ -814,61 +868,6 @@ export default function AddProductPage() {
                     />
                   </div>
 
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="is_sofa"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (checked) form.setValue("is_bed", false);
-                              }}
-                              className="cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Sofa</FormLabel>
-                            <FormDescription>
-                              This product is a sofa. Standard dimension fields apply.
-                            </FormDescription>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="is_bed"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (checked) form.setValue("is_sofa", false);
-                              }}
-                              className="cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Bed</FormLabel>
-                            <FormDescription>
-                              This product is a bed. Dimension fields on the Dimensions tab change accordingly.
-                            </FormDescription>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    </div>
-
                   <FormField
                     control={form.control}
                     name="description"
@@ -889,6 +888,7 @@ export default function AddProductPage() {
                       </FormItem>
                     )}
                   />
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Related Products</label>
                     <p className="text-muted-foreground text-xs">
