@@ -40,6 +40,7 @@ export interface ProductVariant {
   assemble_charges?: number | null;
 }
 
+// After
 export interface OrderItemVariant {
   id: string;
   sku: string;
@@ -48,14 +49,12 @@ export interface OrderItemVariant {
   size?: string;
   material?: string;
   brand?: string;
+  assemble_charges?: number | null;
   images?: { image_url: string }[];
-
-  product?: {
-    id: string;
-    name: string;
-  };
+  product: Product;
 }
 
+// After
 export interface OrderItem {
   id: string;
   order_id: string;
@@ -75,7 +74,7 @@ export interface OrderItem {
   } | null;
   created_at: string;
   image_url?: string;
-  variant?: OrderItemVariant;
+  variant: OrderItemVariant;
 }
 
 export interface Order {

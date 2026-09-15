@@ -674,7 +674,7 @@ export default function BulkActionsPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="">No change</SelectItem>
-                        {categoriesData?.map((category) => (
+                        {categoriesData?.map((category: { id: string; name: string }) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
