@@ -21,6 +21,7 @@ import { ProductsLoading } from "./components/products-loading";
 
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
+import { Category } from "@/lib/api/categories";
 import { useProductsPageFilters } from "./_hooks/use-products-page-filter";
 import { useSearchStore } from "@/lib/store/search-store";
 import { cn } from "@/lib/utils";
@@ -297,7 +298,7 @@ function ProductsContent() {
   const availableSubcategories = React.useMemo(() => {
     if (!filters.categoryId || filters.categoryId === "all") return [];
     const parent = nestedCategoriesQuery.data?.find(
-    (cat) => cat.id === filters.categoryId,
+    (cat: Category) => cat.id === filters.categoryId,
     );
     return parent?.subcategories || [];
   }, [nestedCategoriesQuery.data, filters.categoryId]);
@@ -320,12 +321,9 @@ function ProductsContent() {
         return buildPageProduct(result, selectedVariant, imageUrl);
       });
 
-      // apply category filter
-      // after
-// prioritize selected category instead of filtering it out
 if (filters.categoryId && filters.categoryId !== "all") {
   const selectedCategoryName = categoriesQuery.data
-    ?.find((c) => c.id === filters.categoryId)
+    ?.find((c: Category) => c.id === filters.categoryId)
     ?.name?.toLowerCase();
   if (selectedCategoryName) {
     transformed = [...transformed].sort((a, b) => {
@@ -539,7 +537,7 @@ const displayProducts = selectedColor === "all"
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categoriesQuery.data?.map((cat) => (
+                      {categoriesQuery.data?.map((cat: Category) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
                         </SelectItem>
@@ -672,7 +670,7 @@ const displayProducts = selectedColor === "all"
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Subcategories</SelectItem>
-                    {availableSubcategories.map((sub) => (
+                    {availableSubcategories.map((sub: Category) => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.name}
                       </SelectItem>
