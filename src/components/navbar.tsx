@@ -359,6 +359,15 @@ export function Navbar() {
                       All Bundles
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/beds"
+                      className="font-open-sans flex cursor-pointer items-center gap-2"
+                    >
+                      Beds & more
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 

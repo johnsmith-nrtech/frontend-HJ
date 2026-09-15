@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useCategories } from "@/hooks/use-categories";
+import { Category } from "@/lib/api/categories";
 import { useCreateProduct, useUploadProductImages } from "@/hooks/use-products";
 import { createProductVariant } from "@/lib/api/products";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,8 +43,9 @@ import {
 import {
   VariantManager,
   ProductVariant,
+  BedOption,
 } from "@/components/admin/variant-manager";
-// import { de } from "zod/v4/locales";
+import { BedOptionCatalogPicker, MattressTypeCatalogPicker } from "@/components/admin/bed-option-picker";
 
 // Enhanced schema with all e-commerce fields
 const formSchema = z.object({
@@ -115,6 +117,10 @@ const formSchema = z.object({
   material: z.string().optional(),
   brand: z.string().optional(),
   featured: z.boolean().optional(),
+  is_sofa: z.boolean().optional(),
+  is_bed: z.boolean().optional(),
+  default_headboard: z.string().optional(),
+  default_custom_requirements_enabled: z.boolean().optional(),
 
   // Material Info for default variant
   default_care_instructions: z.string().optional(),
@@ -144,6 +150,11 @@ export default function AddProductPage() {
   const [relatedProductIds, setRelatedProductIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [categorySearch, setCategorySearch] = useState("");
+  const [headboardHeights, setHeadboardHeights] = useState<BedOption[]>([]);
+  const [storageOptions, setStorageOptions] = useState<BedOption[]>([]);
+  const [wingOptions, setWingOptions] = useState<BedOption[]>([]);
+  const [mattressOptions, setMattressOptions] = useState<BedOption[]>([]);
+  const [baseOptions, setBaseOptions] = useState<BedOption[]>([]);
 
 
   const {
@@ -202,6 +213,10 @@ export default function AddProductPage() {
       material: "",
       brand: "",
       featured: false,
+      is_sofa: true,
+      is_bed: false,
+      default_headboard: "",
+      default_custom_requirements_enabled: true,
       default_care_instructions: "",
       default_scatter_cushion_cover: "",
       default_scatter_cushion_filling: "",
@@ -360,6 +375,19 @@ export default function AddProductPage() {
         material: values.material || undefined,
         brand: values.brand || undefined,
         featured: Boolean(values.featured),
+        is_sofa: values.is_sofa ?? true,
+        is_bed: values.is_bed ?? false,
+        bed_options: values.is_bed
+          ? {
+              headboard: values.default_headboard || undefined,
+              headboard_heights: headboardHeights,
+              storage_options: storageOptions,
+              wing_options: wingOptions,
+              mattress_options: mattressOptions,
+              base_options: baseOptions,
+              custom_requirements_enabled: values.default_custom_requirements_enabled ?? true,
+            }
+          : undefined,
         related_product_ids: relatedProductIds.length > 0 ? relatedProductIds : undefined,
         warranty_info: values.warranty_info || undefined,
         show_installments: values.show_installments ?? true,
@@ -602,6 +630,60 @@ export default function AddProductPage() {
                       )}
                     />
 
+                    <div className="grid grid-cols-1 gap-6 md:col-span-2 md:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="is_sofa"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) form.setValue("is_bed", false);
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Sofa</FormLabel>
+                              <FormDescription>
+                                This product is a sofa. Standard dimension fields apply.
+                              </FormDescription>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="is_bed"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) form.setValue("is_sofa", false);
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Bed</FormLabel>
+                              <FormDescription>
+                                This product is a bed. Dimension fields on the Dimensions tab change accordingly.
+                              </FormDescription>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-sm font-medium">Categories *</label>
                       <p className="text-muted-foreground text-xs">
@@ -615,10 +697,10 @@ export default function AddProductPage() {
                       <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
                         {!isLoadingCategories &&
                           categories
-                          .filter((category) =>
+                          .filter((category: Category) =>
                             category.name.toLowerCase().includes(categorySearch.toLowerCase())
                           )
-                          .map((category) => {
+                          .map((category: Category) => {
                             const isSelected = selectedCategoryIds.includes(category.id);
                             return (
                               <button
@@ -634,7 +716,7 @@ export default function AddProductPage() {
                                 className="hover:bg-muted flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm"
                               >
                                 <span
-                                  className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
                                   isSelected ? "border-primary" : "border-muted-foreground"
                                   }`}
                                 >
@@ -647,7 +729,7 @@ export default function AddProductPage() {
                             );
                           })}
                           {!isLoadingCategories &&
-                            categories.filter((category) =>
+                            categories.filter((category: Category) =>
                               category.name.toLowerCase().includes(categorySearch.toLowerCase())
                               ).length === 0 && (
                                 <p className="text-muted-foreground p-2 text-sm">No categories found</p>
@@ -656,8 +738,8 @@ export default function AddProductPage() {
                         {selectedCategoryIds.length > 0 && (
                           <p className="text-muted-foreground text-xs">
                             Selected: {categories
-                              .filter((c) => selectedCategoryIds.includes(c.id))
-                              .map((c) => c.name)
+                              .filter((c: Category) => selectedCategoryIds.includes(c.id))
+                              .map((c: Category) => c.name)
                               .join(", ")}
                           </p>
                         )}
@@ -806,6 +888,7 @@ export default function AddProductPage() {
                       </FormItem>
                     )}
                   />
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Related Products</label>
                     <p className="text-muted-foreground text-xs">
@@ -1270,26 +1353,26 @@ export default function AddProductPage() {
                   />
 
                   {/* Warranty Info for default variant */}
-<FormField
-  control={form.control}
-  name="warranty_info"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Warranty Information</FormLabel>
-      <FormControl>
-        <Textarea
-          placeholder="e.g., 2 year manufacturer warranty included"
-          className="min-h-24 resize-y"
-          {...field}
-        />
-      </FormControl>
-      <FormDescription>
-        Warranty details for this variant (optional).
-      </FormDescription>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                  <FormField
+                    control={form.control}
+                    name="warranty_info"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Warranty Information</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="e.g., 2 year manufacturer warranty included"
+                            className="min-h-24 resize-y"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Warranty details for this variant (optional).
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {/* Material Composition & Construction */}
                   <div className="space-y-3 border-t pt-4">
@@ -1309,119 +1392,192 @@ export default function AddProductPage() {
                         )}
                       />
 
-    <FormField
-      control={form.control}
-      name="default_scatter_cushion_cover"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Scatter Cushion Cover</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., 100% Polyester" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_scatter_cushion_cover"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Scatter Cushion Cover</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., 100% Polyester" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_scatter_cushion_filling"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Scatter Cushion Filling</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Fibre-Filled Cushions" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_scatter_cushion_filling"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Scatter Cushion Filling</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Fibre-Filled Cushions" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_frame_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Frame</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Solid Hardwood" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_frame_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Frame</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Solid Hardwood" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_seat_base_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Seat Base</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Serpentine Springs" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_seat_base_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seat Base</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Serpentine Springs" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_seat_cushion_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Seat Cushion</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Foam-Filled, Fibre-Topped" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_seat_cushion_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seat Cushion</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Foam-Filled, Fibre-Topped" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_back_support_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Back Support</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Tensioned Webbing" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_back_support_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Back Support</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Tensioned Webbing" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_back_cushion_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Back Cushion</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Fibre-Filled" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+                      <FormField
+                        control={form.control}
+                        name="default_back_cushion_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Back Cushion</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Fibre-Filled" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-    <FormField
-      control={form.control}
-      name="default_feet_info"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Feet</FormLabel>
-          <FormControl>
-            <Input placeholder="e.g., Black Glides" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  </div>
-</div>
+                      <FormField
+                        control={form.control}
+                        name="default_feet_info"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Feet</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Black Glides" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bed Configuration — bed only */}
+                  {form.watch("is_bed") && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-medium">Bed Configuration</h4>
+                      {/* <FormField
+                        control={form.control}
+                        name="default_headboard"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Headboard Style</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Wingback, Chesterfield, None" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <p className="text-muted-foreground text-xs">
+                        The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
+                      </p> */}
+
+                      <BedOptionCatalogPicker
+                        type="headboard_height"
+                        label="Headboard Height Options (used only when customer chooses to increase height)"
+                        selected={headboardHeights}
+                        onChange={setHeadboardHeights}
+                      />
+
+                      <BedOptionCatalogPicker
+                        type="storage"
+                        label="Storage Options"
+                        selected={storageOptions}
+                        onChange={setStorageOptions}
+                      />
+
+                      <BedOptionCatalogPicker
+                        type="wings"
+                        label="Wing Options"
+                        selected={wingOptions}
+                        onChange={setWingOptions}
+                      />
+
+                      <MattressTypeCatalogPicker
+                        selected={mattressOptions}
+                        onChange={setMattressOptions}
+                      />
+
+                      <BedOptionCatalogPicker
+                        type="base"
+                        label="Base Options"
+                        selected={baseOptions}
+                        onChange={setBaseOptions}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="default_custom_requirements_enabled"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-y-0 space-x-3 border-t pt-4">
+                            <FormControl>
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Show &quot;Custom Requirements&quot; field to customer on the product page</FormLabel>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1437,182 +1593,217 @@ export default function AddProductPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <FormField
-                      control={form.control}
-                      name="width_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Width (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {!form.watch("is_bed") && (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                      <FormField
+                        control={form.control}
+                        name="width_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Width (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="depth_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Depth (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="depth_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Depth (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="height_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Height (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="height_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Height (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="seat_width_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seat Width (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="seat_width_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seat Width (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="seat_depth_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seat Depth (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="seat_depth_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seat Depth (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="seat_height_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seat Height (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="seat_height_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seat Height (cm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                step="0.1"
+                                min="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="bed_width_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bed Width (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="armrest_height_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Armrest Height (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
-                    <FormField
-                      control={form.control}
-                      name="bed_length_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bed Length (cm)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              step="0.1"
-                              min="0"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {form.watch("is_bed") && (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                      <FormField
+                        control={form.control}
+                        name="width_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Width (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="armrest_height_cm"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Armrest Height (cm)</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="depth_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Depth (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="height_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Height (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="bed_width_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bed Width (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="bed_length_cm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bed Length (cm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" step="0.1" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1686,6 +1877,7 @@ export default function AddProductPage() {
                     variants={additionalVariants}
                     onVariantsChange={() => {
                     }}
+                    isBed={form.watch("is_bed")}
                   />
                 </CardContent>
               </Card>

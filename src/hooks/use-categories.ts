@@ -17,10 +17,10 @@ import {
 import { toast } from "sonner";
 
 // Hook for fetching all categories (with optional nesting)
-export function useCategories(nested = false) {
+export function useCategories(nested = false, isBed?: boolean) {
   return useQuery({
-    queryKey: ["categories", { nested }],
-    queryFn: () => getCategories(nested),
+    queryKey: ['categories', nested, isBed],
+    queryFn: () => getCategories(nested, isBed),
   });
 }
 

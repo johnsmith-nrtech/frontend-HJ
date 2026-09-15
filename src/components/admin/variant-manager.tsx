@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Edit, Image as ImageIcon, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { VariantImageManager, VariantImage } from "./variant-image-manager";
+import { BedOptionCatalogPicker, MattressTypeCatalogPicker } from "./bed-option-picker";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateProductVariant,
@@ -59,6 +60,21 @@ export interface ProductVariant {
     back_cushion_info?: string;
     feet_info?: string;
   };
+  bed_options?: {
+    headboard?: string;
+    headboard_heights?: BedOption[];
+    storage_options?: BedOption[];
+    wing_options?: BedOption[];
+    mattress_options?: BedOption[];
+    base_options?: BedOption[];
+    custom_requirements_enabled?: boolean;
+  };
+}
+
+export interface BedOption {
+  label: string;
+  charge: number;
+  height_cm?: number;
 }
 
 interface VariantManagerProps {
@@ -66,7 +82,109 @@ interface VariantManagerProps {
   variants: ProductVariant[];
   onVariantsChange: () => void;
   disabled?: boolean;
+  isBed?: boolean;
 }
+
+// export function BedOptionListEditor({
+//   label,
+//   options,
+//   onChange,
+//   disabled,
+//   showHeight = false,
+// }: {
+//   label: string;
+//   options: BedOption[];
+//   onChange: (options: BedOption[]) => void;
+//   disabled?: boolean;
+//   showHeight?: boolean;
+// }) {
+//   const [newLabel, setNewLabel] = useState("");
+//   const [newCharge, setNewCharge] = useState("0");
+//   const [newHeight, setNewHeight] = useState("");
+
+//   const addOption = () => {
+//     if (!newLabel.trim()) return;
+//     if (showHeight && !newHeight.trim()) return;
+//     onChange([
+//       ...options,
+//       {
+//         label: newLabel.trim(),
+//         charge: parseFloat(newCharge) || 0,
+//         ...(showHeight ? { height_cm: parseFloat(newHeight) || 0 } : {}),
+//       },
+//     ]);
+//     setNewLabel("");
+//     setNewCharge("0");
+//     setNewHeight("");
+//   };
+
+//   const removeOption = (index: number) => {
+//     onChange(options.filter((_, i) => i !== index));
+//   };
+
+//   return (
+//     <div className="space-y-2">
+//       <label className="text-sm font-medium">{label}</label>
+//       {options.length > 0 && (
+//         <div className="space-y-2">
+//           {options.map((opt, index) => (
+//             <div key={index} className="flex items-center gap-2 rounded-md border p-2">
+//               <span className="flex-1 text-sm">
+//                 {opt.label}
+//                 {showHeight && opt.height_cm ? ` (${opt.height_cm}cm)` : ""}
+//               </span>
+//               <span className="text-muted-foreground text-sm">
+//                 {opt.charge > 0 ? `+£${opt.charge.toFixed(2)}` : "Free"}
+//               </span>
+//               <Button
+//                 type="button"
+//                 variant="outline"
+//                 size="sm"
+//                 onClick={() => removeOption(index)}
+//                 disabled={disabled}
+//               >
+//                 <Trash2 className="h-3 w-3 text-red-500" />
+//               </Button>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//       <div className="flex gap-2">
+//         <Input
+//           placeholder="Option name, e.g. Ottoman Storage"
+//           value={newLabel}
+//           onChange={(e) => setNewLabel(e.target.value)}
+//           disabled={disabled}
+//         />
+//         {showHeight && (
+//           <Input
+//             type="number"
+//             min="0"
+//             placeholder="Height (cm)"
+//             className="w-32"
+//             value={newHeight}
+//             onChange={(e) => setNewHeight(e.target.value)}
+//             disabled={disabled}
+//           />
+//         )}
+//         <Input
+//           type="number"
+//           step="0.01"
+//           min="0"
+//           placeholder="Charge (£)"
+//           className="w-32"
+//           value={newCharge}
+//           onChange={(e) => setNewCharge(e.target.value)}
+//           disabled={disabled}
+//         />
+//         <Button type="button" variant="outline" onClick={addOption} disabled={disabled}>
+//           Add
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// }
+
 
 const emptyMaterialInfo = {
   care_instructions: "",
@@ -90,6 +208,16 @@ const emptyDimensions = {
   bed_width: { cm: 0, inches: 0 },
   bed_length: { cm: 0, inches: 0 },
   armrest_height: { cm: 0, inches: 0 },
+};
+
+const emptyBedOptions = {
+  headboard: "",
+  headboard_heights: [] as BedOption[],
+  storage_options: [] as BedOption[],
+  wing_options: [] as BedOption[],
+  mattress_options: [] as BedOption[],
+  base_options: [] as BedOption[],
+  custom_requirements_enabled: true,
 };
 
 const emptyVariant: ProductVariant = {
@@ -117,6 +245,7 @@ export function VariantManager({
   variants,
   onVariantsChange,
   disabled = false,
+  isBed = false,
 }: VariantManagerProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -204,7 +333,22 @@ export function VariantManager({
           updateData.featured = newVariant.featured;
         }
         if (hasCustomDimensions && newVariant.dimensions) {
-          updateData.dimensions = newVariant.dimensions;
+          const d = newVariant.dimensions;
+          const cleaned: typeof d = {
+            width: d.width,
+            depth: d.depth,
+            height: d.height,
+          };
+          if (isBed) {
+            if (d.bed_width) cleaned.bed_width = d.bed_width;
+            if (d.bed_length) cleaned.bed_length = d.bed_length;
+          } else {
+            if (d.seat_width) cleaned.seat_width = d.seat_width;
+            if (d.seat_depth) cleaned.seat_depth = d.seat_depth;
+            if (d.seat_height) cleaned.seat_height = d.seat_height;
+            if (d.armrest_height) cleaned.armrest_height = d.armrest_height;
+          }
+          updateData.dimensions = cleaned;
         } else if (!hasCustomDimensions) {
           updateData.dimensions = undefined;
         }
@@ -213,6 +357,9 @@ export function VariantManager({
         updateData.material_info = newVariant.material_info || emptyMaterialInfo;
         // Always include warranty_info
         updateData.warranty_info = newVariant.warranty_info || undefined;
+        // Bed options only apply to bed variants; never persist them on a sofa
+        updateData.bed_options = isBed ? (newVariant.bed_options || emptyBedOptions) : undefined;
+
 
         await updateVariantMutation.mutateAsync({
           variantId: existingVariant.id,
@@ -320,7 +467,22 @@ export function VariantManager({
             hasUpdates = true;
           }
           if (hasCustomDimensions && newVariant.dimensions) {
-            updateData.dimensions = newVariant.dimensions;
+            const d = newVariant.dimensions;
+            const cleaned: typeof d = {
+              width: d.width,
+              depth: d.depth,
+              height: d.height,
+            };
+            if (isBed) {
+              if (d.bed_width) cleaned.bed_width = d.bed_width;
+              if (d.bed_length) cleaned.bed_length = d.bed_length;
+            } else {
+              if (d.seat_width) cleaned.seat_width = d.seat_width;
+              if (d.seat_depth) cleaned.seat_depth = d.seat_depth;
+              if (d.seat_height) cleaned.seat_height = d.seat_height;
+              if (d.armrest_height) cleaned.armrest_height = d.armrest_height;
+            }
+            updateData.dimensions = cleaned;
             hasUpdates = true;
           }
 
@@ -329,6 +491,9 @@ export function VariantManager({
           hasUpdates = true;
           // Always include warranty_info
           updateData.warranty_info = newVariant.warranty_info || undefined;
+          // Bed options only apply to bed variants; never persist them on a sofa
+          updateData.bed_options = isBed ? (newVariant.bed_options || emptyBedOptions) : undefined;
+
 
           if (hasUpdates) {
             await updateVariantMutation.mutateAsync({
@@ -389,6 +554,7 @@ export function VariantManager({
     images: variant.images || [],
     dimensions: variant.dimensions || emptyDimensions,
     material_info: variant.material_info || emptyMaterialInfo,
+    bed_options: variant.bed_options || emptyBedOptions,
   });
   setEditingIndex(index);
 };
@@ -619,174 +785,183 @@ export function VariantManager({
                           onChange={(e) => {
                             const cm = parseFloat(e.target.value) || 0;
                             const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, width: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                    {newVariant.dimensions?.width?.inches ? (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        ≈ {newVariant.dimensions.width.inches}&quot;
-                      </p>
-                    ) : null}
-                  </div>
+                            setNewVariant({
+                              ...newVariant,
+                              dimensions: { ...newVariant.dimensions, width: { cm, inches } },
+                            });
+                          }}
+                          disabled={disabled}
+                        />
+                        {newVariant.dimensions?.width?.inches ? (
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            ≈ {newVariant.dimensions.width.inches}&quot;
+                          </p>
+                        ) : null}
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Depth (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.depth?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, depth: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                      <div>
+                        <label className="text-sm font-medium">Depth (cm)</label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          value={newVariant.dimensions?.depth?.cm || 0}
+                          onChange={(e) => {
+                            const cm = parseFloat(e.target.value) || 0;
+                            const inches = Math.round((cm / 2.54) * 10) / 10;
+                            setNewVariant({
+                              ...newVariant,
+                              dimensions: { ...newVariant.dimensions, depth: { cm, inches } },
+                            });
+                          }}
+                          disabled={disabled}
+                        />
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Height (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.height?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, height: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                      <div>
+                        <label className="text-sm font-medium">Height (cm)</label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          value={newVariant.dimensions?.height?.cm || 0}
+                          onChange={(e) => {
+                            const cm = parseFloat(e.target.value) || 0;
+                            const inches = Math.round((cm / 2.54) * 10) / 10;
+                            setNewVariant({
+                              ...newVariant,
+                              dimensions: { ...newVariant.dimensions, height: { cm, inches } },
+                            });
+                          }}
+                          disabled={disabled}
+                        />
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Seat Width (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.seat_width?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, seat_width: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                      {!isBed && (
+                        <>
+                          <div>
+                            <label className="text-sm font-medium">Seat Width (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.seat_width?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, seat_width: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Seat Depth (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.seat_depth?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, seat_depth: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                          <div>
+                            <label className="text-sm font-medium">Seat Depth (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.seat_depth?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, seat_depth: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Seat Height (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.seat_height?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, seat_height: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                          <div>
+                            <label className="text-sm font-medium">Seat Height (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.seat_height?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, seat_height: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Armrest Height (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.armrest_height?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, armrest_height: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Bed Width (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.bed_width?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, bed_width: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
+                          <div>
+                            <label className="text-sm font-medium">Armrest Height (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.armrest_height?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, armrest_height: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </>
+                      )}
 
-                  <div>
-                    <label className="text-sm font-medium">Bed Length (cm)</label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      value={newVariant.dimensions?.bed_length?.cm || 0}
-                      onChange={(e) => {
-                        const cm = parseFloat(e.target.value) || 0;
-                        const inches = Math.round((cm / 2.54) * 10) / 10;
-                        setNewVariant({
-                          ...newVariant,
-                          dimensions: { ...newVariant.dimensions, bed_length: { cm, inches } },
-                        });
-                      }}
-                      disabled={disabled}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-            </div>
+                      {isBed && (
+                        <>
+                          <div>
+                            <label className="text-sm font-medium">Bed Width (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.bed_width?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, bed_width: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium">Bed Length (cm)</label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={newVariant.dimensions?.bed_length?.cm || 0}
+                              onChange={(e) => {
+                                const cm = parseFloat(e.target.value) || 0;
+                                const inches = Math.round((cm / 2.54) * 10) / 10;
+                                setNewVariant({
+                                  ...newVariant,
+                                  dimensions: { ...newVariant.dimensions, bed_length: { cm, inches } },
+                                });
+                              }}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
@@ -814,7 +989,8 @@ export function VariantManager({
                 </div>
               </div>
 
-              {/* Material Composition & Construction Section */}
+                            {/* Material Composition & Construction Section — sofa only */}
+              {!isBed && (
               <div className="space-y-3 border-t pt-4">
                 <h4 className="text-sm font-medium">Material Composition & Construction</h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -981,6 +1157,111 @@ export function VariantManager({
                   </div>
                 </div>
               </div>
+              )}
+
+              {/* Bed Configuration Section — bed only */}
+              {isBed && (
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="text-sm font-medium">Bed Configuration</h4>
+                  {/* <div>
+                    <label className="text-sm font-medium">Headboard Style</label>
+                    <Input
+                      placeholder="e.g., Wingback, Chesterfield, None"
+                      value={newVariant.bed_options?.headboard || ""}
+                      onChange={(e) =>
+                        setNewVariant({
+                          ...newVariant,
+                          bed_options: { ...newVariant.bed_options, headboard: e.target.value },
+                        })
+                      }
+                      disabled={disabled}
+                    />
+                  </div>
+
+                  <p className="text-muted-foreground text-xs">
+                    The lists below are shown to the customer as selectable options with their charges on the product page. Leave a list empty to hide that section for the customer entirely.
+                  </p> */}
+
+                  <BedOptionCatalogPicker
+                    type="headboard_height"
+                    label="Headboard Height Options (used only when customer chooses to increase height)"
+                    selected={newVariant.bed_options?.headboard_heights || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, headboard_heights: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <BedOptionCatalogPicker
+                    type="storage"
+                    label="Storage Options"
+                    selected={newVariant.bed_options?.storage_options || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, storage_options: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <BedOptionCatalogPicker
+                    type="wings"
+                    label="Wing Options"
+                    selected={newVariant.bed_options?.wing_options || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, wing_options: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <MattressTypeCatalogPicker
+                    selected={newVariant.bed_options?.mattress_options || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, mattress_options: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <BedOptionCatalogPicker
+                    type="base"
+                    label="Base Options"
+                    selected={newVariant.bed_options?.base_options || []}
+                    onChange={(options) =>
+                      setNewVariant({
+                        ...newVariant,
+                        bed_options: { ...newVariant.bed_options, base_options: options },
+                      })
+                    }
+                    disabled={disabled}
+                  />
+
+                  <div className="flex items-center space-x-2 border-t pt-4">
+                    <Checkbox
+                      checked={newVariant.bed_options?.custom_requirements_enabled ?? true}
+                      onCheckedChange={(checked) =>
+                        setNewVariant({
+                          ...newVariant,
+                          bed_options: { ...newVariant.bed_options, custom_requirements_enabled: !!checked },
+                        })
+                      }
+                      disabled={disabled}
+                    />
+                    <label className="text-sm font-medium">
+                      Show &quot;Custom Requirements&quot; field to customer on the product page
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-sm font-medium">Tags</label>

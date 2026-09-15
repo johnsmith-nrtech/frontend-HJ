@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Eye, Disc } from "lucide-react";
 import Link from "next/link";
 import { useCategories } from "@/hooks/use-categories";
+import { Category } from "@/lib/api/categories";
 import { useProduct, useUpdateProduct } from "@/hooks/use-products";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
 import {
@@ -66,6 +67,8 @@ const basicInfoSchema = z.object({
   show_loxa: z.boolean().optional(),
   loxa_complimentary_years: z.coerce.number().int().min(1).max(10).optional().nullable(),
   show_sofadeal_coverage: z.boolean().optional(),
+  is_sofa: z.boolean().optional(),
+  is_bed: z.boolean().optional(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -118,6 +121,7 @@ const convertApiVariantToManagerVariant = (
     images: convertedImages,
     material_info: apiVariant.material_info ?? undefined,
     warranty_info: apiVariant.warranty_info ?? undefined,
+    bed_options: apiVariant.bed_options ?? undefined,
   };
 };
 
@@ -173,6 +177,8 @@ export default function EditProductPage() {
       show_loxa: true,
       loxa_complimentary_years: undefined,
       show_sofadeal_coverage: false,
+      is_sofa: true,
+      is_bed: false,
     },
   });
 
@@ -208,6 +214,8 @@ export default function EditProductPage() {
         show_loxa: product.show_loxa ?? true,
         loxa_complimentary_years: product.loxa_complimentary_years ?? undefined,
         show_sofadeal_coverage: product.show_sofadeal_coverage ?? false,
+        is_sofa: (product as any).is_sofa ?? true,
+        is_bed: (product as any).is_bed ?? false,
       });
     }
   }, [product, form]);
@@ -233,6 +241,8 @@ export default function EditProductPage() {
         show_loxa: values.show_loxa ?? true,
         loxa_complimentary_years: values.loxa_complimentary_years ?? null,
         show_sofadeal_coverage: values.show_sofadeal_coverage ?? false,
+        is_sofa: values.is_sofa,
+        is_bed: values.is_bed,
       };
 
       // Use the mutation
@@ -365,7 +375,7 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
-                      <FormField
+                    <FormField
                       control={form.control}
                       name="discount_offer"
                       render={({ field }) => (
@@ -407,6 +417,58 @@ export default function EditProductPage() {
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="is_sofa"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_bed", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Sofa</FormLabel>
+                            <FormDescription>
+                              This product is a sofa. Standard dimension fields apply in Variants.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="is_bed"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) form.setValue("is_sofa", false);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Bed</FormLabel>
+                            <FormDescription>
+                              This product is a bed. Dimension fields in Variants change accordingly.
+                            </FormDescription>
+                          </div>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -509,41 +571,8 @@ export default function EditProductPage() {
                         </FormItem>
                       )}
                     />
+                    
 
-                    {/* <FormField
-                      control={form.control}
-                      name="category_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {!isCategoriesLoading &&
-                                categories.map((category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select the product category.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    /> */}
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-sm font-medium">Categories *</label>
                       <p className="text-muted-foreground text-xs">
@@ -557,10 +586,10 @@ export default function EditProductPage() {
                       <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border p-2">
                         {!isCategoriesLoading &&
                           categories
-                            .filter((category) =>
+                            .filter((category: Category) =>
                               category.name.toLowerCase().includes(categorySearch.toLowerCase())
                             )
-                            .map((category) => {
+                            .map((category: Category) => {
                               const isSelected = selectedCategoryIds.includes(category.id);
                               return (
                                 <button
@@ -576,7 +605,7 @@ export default function EditProductPage() {
                                   className="hover:bg-muted flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm"
                                 >
                                   <span
-                                    className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
                                     isSelected ? "border-primary" : "border-muted-foreground"
                                     }`}
                                   >
@@ -589,7 +618,7 @@ export default function EditProductPage() {
                               );
                             })}
                             {!isCategoriesLoading &&
-                            categories.filter((category) =>
+                            categories.filter((category: Category) =>
                               category.name.toLowerCase().includes(categorySearch.toLowerCase())
                             ).length === 0 && (
                               <p className="text-muted-foreground p-2 text-sm">No categories found</p>
@@ -598,8 +627,8 @@ export default function EditProductPage() {
                           {selectedCategoryIds.length > 0 && (
                             <p className="text-muted-foreground text-xs">
                               Selected: {categories
-                              .filter((c) => selectedCategoryIds.includes(c.id))
-                              .map((c) => c.name)
+                              .filter((c: Category) => selectedCategoryIds.includes(c.id))
+                              .map((c: Category) => c.name)
                               .join(", ")}
                             </p>
                           )}
@@ -823,14 +852,13 @@ export default function EditProductPage() {
                   variants={(product.variants || []).map((variant) =>
                     convertApiVariantToManagerVariant(
                       variant,
-                      // product.images || []
                       (variant.images || []).map(img => ({...img, variant_id: variant.id}))
                     )
                   )}
                   onVariantsChange={() => {
-                    // Refetch product data when variants change
                     refetchProduct();
                   }}
+                  isBed={form.watch("is_bed")}
                 />
               )}
             </CardContent>

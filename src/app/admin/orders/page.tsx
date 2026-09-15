@@ -455,41 +455,38 @@ const handleSendLoanApproval = async () => {
                 </TableHeader>
                 <TableBody>
                   {data.items.map((order) => {
+                    const grandTotal = calculateOrderGrandTotal(order);
+                    const itemsOriginalTotal = (order.items || []).reduce((sum, item) => {
+                      const original = item.original_price ?? item.unit_price;
+                      return sum + Math.max(original, item.unit_price) * item.quantity;
+                    }, 0);
 
-// In the admin orders page, find this section where you calculate totals
-const grandTotal = calculateOrderGrandTotal(order);
+                    const originalTotal =
+                      itemsOriginalTotal +
+                      (order.zone?.delivery_charges || 0) +
+                      (order.floor?.charges || 0) +
+                      (order.shipping_cost || 0) +
+                      (order.tax_amount || 0);
 
-// Use ONLY items array for original total - don't use order.total_amount
-const itemsOriginalTotal = (order.items || []).reduce((sum, item) => {
-  return sum + (item.original_price ?? item.unit_price) * item.quantity;
-}, 0);
+                    // Grand total using discounted unit_price
+                    const discountedItemsTotal = (order.items || []).reduce((sum, item) => {
+                      return sum + item.unit_price * item.quantity;
+                    }, 0);
 
-const originalTotal =
-  itemsOriginalTotal +
-  (order.zone?.delivery_charges || 0) +
-  (order.floor?.charges || 0) +
-  (order.shipping_cost || 0) +
-  (order.tax_amount || 0);
+                    const correctGrandTotal =
+                      discountedItemsTotal +
+                      (order.zone?.delivery_charges || 0) +
+                      (order.floor?.charges || 0) +
+                      (order.shipping_cost || 0) +
+                      (order.tax_amount || 0) -
+                      (order.discount_amount || 0);
 
-// Grand total using discounted unit_price
-const discountedItemsTotal = (order.items || []).reduce((sum, item) => {
-  return sum + item.unit_price * item.quantity;
-}, 0);
-
-const correctGrandTotal =
-  discountedItemsTotal +
-  (order.zone?.delivery_charges || 0) +
-  (order.floor?.charges || 0) +
-  (order.shipping_cost || 0) +
-  (order.tax_amount || 0) -
-  (order.discount_amount || 0);
-
-// ✅ FIX: Check for product-level discounts (original_price > unit_price)
-const hasProductDiscount = (order.items || []).some(
-  (item) => item.original_price != null && item.original_price > item.unit_price
-);
-const hasCouponDiscount = order.discount_amount && order.discount_amount > 0;
-const hasDiscount = hasProductDiscount || hasCouponDiscount;
+                    // Check for product-level discounts (original_price > unit_price)
+                    const hasProductDiscount = (order.items || []).some(
+                      (item) => item.original_price != null && item.original_price > item.unit_price
+                    );
+                    const hasCouponDiscount = order.discount_amount && order.discount_amount > 0;
+                    const hasDiscount = hasProductDiscount || hasCouponDiscount;
 
                     return (
                       <TableRow key={order.id}>
@@ -1361,9 +1358,10 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
                             <div className="block sm:hidden">
                               <div className="divide-y divide-gray-200">
                                 {selectedOrder.items.map((item) => {
-                                  const originalPrice = item.original_price ?? item.unit_price;
+                                  const rawOriginalPrice = item.original_price ?? item.unit_price;
+                                  const originalPrice = Math.max(rawOriginalPrice, item.unit_price);
                                   const discountedPrice = item.unit_price;
-                                  const hasItemDiscount = originalPrice > discountedPrice;
+                                  const hasItemDiscount = rawOriginalPrice > discountedPrice;
                                   return (
                                     <div key={item.id} className="p-4">
                                       <div className="flex items-start space-x-3">
@@ -1448,9 +1446,10 @@ const hasDiscount = hasProductDiscount || hasCouponDiscount;
                                 </TableHeader>
                                 <TableBody>
                                   {selectedOrder.items.map((item) => {
-                                    const originalPrice = item.original_price ?? item.unit_price;
+                                    const rawOriginalPrice = item.original_price ?? item.unit_price;
+                                    const originalPrice = Math.max(rawOriginalPrice, item.unit_price);
                                     const discountedPrice = item.unit_price;
-                                    const hasItemDiscount = originalPrice > discountedPrice;
+                                    const hasItemDiscount = rawOriginalPrice > discountedPrice;
                                     return (
                                       <TableRow key={item.id}>
                                         <TableCell>

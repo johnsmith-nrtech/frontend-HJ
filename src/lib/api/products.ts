@@ -65,6 +65,7 @@ export interface Product {
   base_price: number;
   discount_offer?: number;
   is_visible?: boolean;
+  is_bed?: boolean;
   delivery_info?: {
     min_days?: number;
     max_days?: number;
@@ -97,6 +98,11 @@ export interface Product {
     bed_length?: { cm: number; inches: number };
     armrest_height?: { cm: number; inches: number };
   };
+}
+
+export interface BedOption {
+  label: string;
+  charge: number;
 }
 
 export interface ProductVariant {
@@ -147,6 +153,15 @@ export interface ProductVariant {
     feet_info?: string;
   };
   warranty_info?: string;
+  bed_options?: {
+    headboard?: string;
+    headboard_heights?: BedOption[];
+    storage_options?: BedOption[];
+    wing_options?: BedOption[];
+    mattress_options?: BedOption[];
+    base_options?: BedOption[];
+    custom_requirements_enabled?: boolean;
+  };
 }
 
 export interface ProductImage {
@@ -229,6 +244,7 @@ export interface ProductCreateInput {
   material?: string;
   brand?: string;
   featured?: boolean;
+  is_bed?: boolean;
   show_installments?: boolean;
   show_loxa?: boolean;
   loxa_complimentary_years?: number | null;
@@ -262,6 +278,7 @@ export interface ProductUpdateInput {
   material?: string;
   brand?: string;
   featured?: boolean;
+  is_bed?: boolean;
   delivery_time_days?: string;
   category_ids?: string[];
 }
@@ -352,6 +369,8 @@ export async function getProducts(params?: {
   limit?: number;
   sortBy?: string;
   sortOrder?: string;
+  priceRange?: string;
+  isBed?: boolean;
   includeVariants?: boolean;
   includeImages?: boolean;
   includeCategory?: boolean;
@@ -719,6 +738,15 @@ export async function updateProductVariant(
     brand?: string;
     featured?: boolean;
     warranty_info?: string;
+    bed_options?: {
+      headboard?: string;
+      headboard_heights?: BedOption[];
+      storage_options?: BedOption[];
+      wing_options?: BedOption[];
+      mattress_options?: BedOption[];
+      base_options?: BedOption[];
+      custom_requirements_enabled?: boolean;
+    };
   }
 ): Promise<ProductVariant> {
   const response = await ApiService.fetchWithAuth(

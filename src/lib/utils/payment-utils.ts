@@ -118,14 +118,22 @@ export function convertCartItemsToPaymentFormat(
   cartItems.forEach((item) => {
     if (item.delivery_time_days === "Bundle" && item.bundleVariants?.length > 0) {
       const pricePerVariant = item.price / item.bundleVariants.length;
-      // ✅ Expand bundle into individual variant items for backend
       item.bundleVariants.forEach((variantId: string) => {
         result.push({
-          variant_id: variantId,       // ✅ real variant ID
+          variant_id: variantId,
           quantity: item.quantity,
           assembly_required: false,
           unit_price_override: pricePerVariant,
         });
+      });
+    } else if (item.is_configured_bed) {
+      result.push({
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        assembly_required: item.assembly_required ?? false,
+        unit_price_override: item.price,
+        mattress_id: item.mattress_id,
+        bed_configuration: item.bed_configuration,
       });
     } else {
       // Normal product

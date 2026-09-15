@@ -1,6 +1,3 @@
-// Orders API Types
-// Based on the API specification in orders.md
-
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -43,18 +40,34 @@ export interface ProductVariant {
   assemble_charges?: number | null;
 }
 
+export interface OrderItemVariant {
+  id: string;
+  sku: string;
+  price: number;
+  color?: string;
+  size?: string;
+  images?: { image_url: string }[];
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;
   variant_id: string;
   quantity: number;
   unit_price: number;
-  original_price: number | null;
+  original_price: number;
   discount_applied: number;
   assembly_required: boolean;
+  bed_configuration?: {
+    headboard_height?: { label: string; charge: number; height_cm?: number };
+    storage?: { label: string; charge: number };
+    wings?: { label: string; charge: number };
+    base?: { label: string; charge: number };
+    mattress?: { label: string; charge: number };
+    custom_requirements?: string;
+  } | null;
   created_at: string;
-  image_url: string;
-  variant: ProductVariant;
+  variant?: OrderItemVariant;
 }
 
 export interface Order {
@@ -127,6 +140,7 @@ export interface OrderCancelInput {
 export interface CheckoutItem {
   variant_id: string;
   quantity: number;
+  mattress_id?: string;
 }
 
 export interface CheckoutInput {
@@ -185,9 +199,10 @@ export interface PaymentFormData {
     country_name: string;
   };
   use_different_billing_address: boolean;
-  cart_items: Array<{
+    cart_items: Array<{
     variant_id: string;
     quantity: number;
+    mattress_id?: string;
   }>;
   order_notes?: string;
 }
