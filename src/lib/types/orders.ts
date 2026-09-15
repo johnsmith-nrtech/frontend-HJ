@@ -46,7 +46,14 @@ export interface OrderItemVariant {
   price: number;
   color?: string;
   size?: string;
+  material?: string;
+  brand?: string;
   images?: { image_url: string }[];
+
+  product?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface OrderItem {
@@ -67,6 +74,7 @@ export interface OrderItem {
     custom_requirements?: string;
   } | null;
   created_at: string;
+  image_url?: string;
   variant?: OrderItemVariant;
 }
 
