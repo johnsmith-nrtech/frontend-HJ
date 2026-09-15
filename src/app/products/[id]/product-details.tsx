@@ -335,68 +335,69 @@ function MattressTypeDropdown({
   });
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger
-        type="button"
-        className="flex w-full items-center justify-between gap-2 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm transition-all hover:border-gray-400"
-      >
-        <div className="flex items-center gap-2">
-          {type.image_url && (
-            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
-              <Image src={type.image_url} alt={type.label} fill className="object-cover" />
-            </div>
-          )}
-          <span className="text-base font-bold md:text-sm md:font-normal">{type.label}</span>
+    <div className="space-y-2">
+      {type.image_url && (
+        <div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border">
+          <Image src={type.image_url} alt={type.label} fill className="object-cover" />
         </div>
-        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-2 space-y-2 pl-2">
-        {isLoading ? (
-          <p className="text-xs text-gray-500">Loading...</p>
-        ) : mattresses.length === 0 ? (
-          <p className="text-xs text-gray-500">No mattresses available for this type.</p>
-        ) : (
-          mattresses.map((m) => {
-            const outOfStock = (m.stock ?? 0) === 0;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                disabled={outOfStock}
-                onClick={() =>
-                  onSelectMattress({
-                    label: `${type.label} - ${m.name}`,
-                    charge: m.price,
-                    image_url: type.image_url,
-                    mattress_id: m.id,
-                  })
-                }
-                className={cn(
-                  "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
-                  outOfStock
-                    ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                    : isSelected(`${type.label} - ${m.name}`)
-                      ? "border-blue bg-blue/5"
-                      : "border-gray-200 hover:border-gray-400",
-                )}
-              >
-                <span className="text-base font-bold md:text-sm md:font-normal">
-                  {m.name}
-                  {m.size ? ` (${m.size})` : ""}
-                </span>
-                <span className="font-bold text-base md:text-sm md:font-semibold">
-                  {outOfStock
-                    ? "Out of Stock"
-                    : m.price > 0
-                      ? `+£${m.price.toFixed(2)}`
-                      : "Free"}
-                </span>
-              </button>
-            );
-          })
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger
+          type="button"
+          className="flex w-full items-center justify-between gap-2 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm transition-all hover:border-gray-400"
+        >
+          <span className="text-base font-bold md:text-sm md:font-normal">{type.label}</span>
+          <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 space-y-2 pl-2">
+          {isLoading ? (
+            <p className="text-xs text-gray-500">Loading...</p>
+          ) : mattresses.length === 0 ? (
+            <p className="text-xs text-gray-500">No mattresses available for this type.</p>
+          ) : (
+            mattresses.map((m) => {
+              const outOfStock = (m.stock ?? 0) === 0;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={outOfStock}
+                  onClick={() =>
+                    onSelectMattress({
+                      label: `${type.label} - ${m.name}`,
+                      charge: m.price,
+                      image_url: type.image_url,
+                      mattress_id: m.id,
+                    })
+                  }
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm",
+                    outOfStock
+                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                      : isSelected(`${type.label} - ${m.name}`)
+                        ? "border-blue bg-blue/5"
+                        : "border-gray-200 hover:border-gray-400",
+                  )}
+                >
+                  <span className="text-base font-bold md:text-sm md:font-normal">
+                    {m.name}
+                    {m.size ? ` (${m.size})` : ""}
+                    {m.height_cm != null ? ` — ${m.height_cm}cm` : ""}
+                  </span>
+                  <span className="font-bold text-base md:text-sm md:font-semibold">
+                    {outOfStock
+                      ? "Out of Stock"
+                      : m.price > 0
+                        ? `+£${m.price.toFixed(2)}`
+                        : "Free"}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }
 
@@ -406,8 +407,8 @@ function MattressTypeDropdown({
 
 export default function ProductDetails({ productId }: ProductDetailsProps) {
   const isMobile = useIsMobile();
-  const { data: mattressSectionOptions = [] } = useBedOptions({ type: "mattress_section", onlyActive: true });
-  const mattressSectionImage = mattressSectionOptions[0]?.image_url;
+  // const { data: mattressSectionOptions = [] } = useBedOptions({ type: "mattress_section", onlyActive: true });
+  // const mattressSectionImage = mattressSectionOptions[0]?.image_url;
   const { data: allMattressTypes = [] } = useMattressTypes(true);
   const resolveMattressTypeId = React.useCallback(
     (opt: { type_id?: string; label: string }) => {
@@ -1831,11 +1832,6 @@ const proceedToAddToCart = () => {
                     </div>
                     {wantsMattress && (
                       <div className="space-y-2">
-                        {mattressSectionImage && (
-                          <div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border">
-                            <Image src={mattressSectionImage} alt="Mattress options" fill className="object-cover" />
-                          </div>
-                        )}
                         {bedOptions!.mattress_options!.map((type) => (
                           <MattressTypeDropdown
                             key={type.label}

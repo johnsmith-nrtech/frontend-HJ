@@ -241,57 +241,57 @@ function BedOptionTypeManager({ type, label, hasHeight }: { type: BedOptionType;
 }
 
 // After
-function MattressSectionImageManager() {
-  const { data: options = [] } = useBedOptions({ type: "mattress_section" });
-  const existing = options[0];
-  const createMutation = useCreateBedOption();
-  const uploadMutation = useUploadBedOptionImage();
-  const [preview, setPreview] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+// function MattressSectionImageManager() {
+//   const { data: options = [] } = useBedOptions({ type: "mattress_section" });
+//   const existing = options[0];
+//   const createMutation = useCreateBedOption();
+//   const uploadMutation = useUploadBedOptionImage();
+//   const [preview, setPreview] = useState<string | null>(null);
+//   const [file, setFile] = useState<File | null>(null);
 
-  const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-  };
+//   const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const f = e.target.files?.[0];
+//     if (!f) return;
+//     setFile(f);
+//     setPreview(URL.createObjectURL(f));
+//   };
 
-  const handleSave = async () => {
-    if (!file) return;
-    let id = existing?.id;
-    if (!id) {
-      const created = await createMutation.mutateAsync({
-        type: "mattress_section",
-        label: "Mattress Section Image",
-        charge: 0,
-        is_active: true,
-      });
-      id = created.id;
-    }
-    await uploadMutation.mutateAsync({ id, file });
-    setFile(null);
-    setPreview(null);
-  };
+//   const handleSave = async () => {
+//     if (!file) return;
+//     let id = existing?.id;
+//     if (!id) {
+//       const created = await createMutation.mutateAsync({
+//         type: "mattress_section",
+//         label: "Mattress Section Image",
+//         charge: 0,
+//         is_active: true,
+//       });
+//       id = created.id;
+//     }
+//     await uploadMutation.mutateAsync({ id, file });
+//     setFile(null);
+//     setPreview(null);
+//   };
 
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-md border p-6">
-      <div className="relative h-50 w-50 shrink-0 overflow-hidden rounded-md border bg-white sm:h-48 sm:w-48">
-        {(preview || existing?.image_url) && (
-          <Image src={preview || existing!.image_url!} alt="Mattress section" fill className="object-cover" />
-        )}
-      </div>
-      <div className="w-full max-w-sm space-y-2 text-center">
-        <label className="text-xs font-medium text-muted-foreground">
-          Mattress Section Image (shown once above the mattress options on the product page)
-        </label>
-        <input type="file" accept="image/*" onChange={handleSelect} className="mx-auto block text-xs" />
-      </div>
-      <Button type="button" onClick={handleSave} disabled={!file || uploadMutation.isPending}>
-        <Save className="mr-2 h-4 w-4" /> Save
-      </Button>
-    </div>
-  );
-}
+//   return (
+//     <div className="flex flex-col items-center gap-3 rounded-md border p-6">
+//       <div className="relative h-50 w-50 shrink-0 overflow-hidden rounded-md border bg-white sm:h-48 sm:w-48">
+//         {(preview || existing?.image_url) && (
+//           <Image src={preview || existing!.image_url!} alt="Mattress section" fill className="object-cover" />
+//         )}
+//       </div>
+//       <div className="w-full max-w-sm space-y-2 text-center">
+//         <label className="text-xs font-medium text-muted-foreground">
+//           Mattress Section Image (shown once above the mattress options on the product page)
+//         </label>
+//         <input type="file" accept="image/*" onChange={handleSelect} className="mx-auto block text-xs" />
+//       </div>
+//       <Button type="button" onClick={handleSave} disabled={!file || uploadMutation.isPending}>
+//         <Save className="mr-2 h-4 w-4" /> Save
+//       </Button>
+//     </div>
+//   );
+// }
 
 function MattressTypeManager() {
   const { data: types = [], isLoading } = useMattressTypes();
@@ -427,7 +427,7 @@ function MattressTypeManager() {
         <CardTitle>Mattresses</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <MattressSectionImageManager />
+        
 
         {/* Add / Edit mattress type form */}
         <div className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-end">
@@ -439,7 +439,7 @@ function MattressTypeManager() {
               onChange={(e) => setTypeName(e.target.value)}
             />
           </div>
-          {/* <div className="space-y-1">
+          <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Image</label>
             <div className="flex items-center gap-2">
               {pendingImagePreview ? (
@@ -458,7 +458,7 @@ function MattressTypeManager() {
               ) : null}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="text-xs" />
             </div>
-          </div> */}
+          </div>
           <div className="flex items-center gap-2 pb-2 sm:pb-0">
             <Checkbox checked={typeActive} onCheckedChange={(c) => setTypeActive(!!c)} />
             <span className="text-sm">Active</span>
