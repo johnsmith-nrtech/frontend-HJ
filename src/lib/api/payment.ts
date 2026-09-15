@@ -15,9 +15,34 @@ export interface AddressDto {
 export interface CartItemRequest {
   variant_id: string;
   quantity: number;
-  assembly_required: boolean;
+  assembly_required?: boolean;
   unit_price_override?: number;
   mattress_id?: string;
+
+  bed_configuration?: {
+    headboard_height?: {
+      label: string;
+      charge: number;
+      height_cm?: number;
+    };
+    storage?: {
+      label: string;
+      charge: number;
+    };
+    wings?: {
+      label: string;
+      charge: number;
+    };
+    base?: {
+      label: string;
+      charge: number;
+    };
+    mattress?: {
+      label: string;
+      charge: number;
+    };
+    custom_requirements?: string;
+  } | null;
 }
 
 export interface CreatePaymentRequest {

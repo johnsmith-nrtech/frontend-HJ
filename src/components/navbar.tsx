@@ -40,6 +40,7 @@ import { toast } from "sonner";
 import { LanguageSelector } from "./languague-selector";
 import { useCartAnimationStore } from "@/lib/store/cart-store";
 import { useCategories } from "@/hooks/use-categories";
+import { Category } from "@/lib/api/categories";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
@@ -263,7 +264,7 @@ export function Navbar() {
                       </span>
                     </DropdownMenuItem>
                   ) : (
-                    categoriesQuery.data?.map((cat) => (
+                    categoriesQuery.data?.map((cat: Category) => (
                       <DropdownMenuItem key={cat.name} asChild>
                         <Link
                           href={`/products?categoryId=${cat.id}`}
@@ -806,7 +807,7 @@ export function Navbar() {
                                 </span>
                               </div>
                             ) : (
-                              categoriesQuery.data?.map((cat) => (
+                              categoriesQuery.data?.map((cat: Category) => (
                                 <Link
                                   key={cat.id}
                                   href={`/products?categoryId=${cat.id}`}
