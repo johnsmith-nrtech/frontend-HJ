@@ -7,6 +7,7 @@ import { Loader2Icon } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
 import { MarqueeStrip } from "@/components/marquee-strip";
+import { BedsHeroSection } from "@/components/beds-hero-section";
 import { Button } from "@/components/button-custom";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
@@ -301,7 +302,7 @@ function BedsAndMoreContent() {
       // icon: "/sofa-icon.png" 
     },
     { text: "Finance availability", 
-      // icon: "/sofa-icon.png" 
+      icon: "/sofa-icon.png" 
     },
     { text: "Referral rewards", 
       // icon: "/sofa-icon.png" 
@@ -316,15 +317,8 @@ function BedsAndMoreContent() {
 
   return (
     <div className="w-full">
-      {/* HERO */}
-      <div className="bg-blue-400 relative h-[350px] overflow-hidden md:h-[450px] 2xl:h-[550px] py-10 text-white sm:py-14">
-        <div className="px-4 sm:px-[32px]">
-          <h1 className="text-3xl font-bold sm:text-4xl">Beds & More</h1>
-          <p className="mt-2 max-w-xl text-white/80">
-            Beds, mattresses, wardrobes and everything else for the bedroom — all in one place.
-          </p>
-        </div>
-      </div>
+   
+      <BedsHeroSection />
 
 
       <MarqueeStrip

@@ -24,7 +24,8 @@ import {
   FileText,
   ImageIcon,
   HelpCircle,
-  BedDouble
+  BedDouble,
+  GalleryHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/providers/auth-provider";
@@ -92,6 +93,11 @@ export const adminNavItems = [
     title: "Bed Options",
     href: "/admin/bed-options",
     icon: <BedDouble className="mr-3 h-5 w-5" />,
+  },
+  {
+    title: "Beds Hero",
+    href: "/admin/beds-hero",
+    icon: <GalleryHorizontal className="mr-3 h-5 w-5" />,
   },
   {
     title: "Products Hero",

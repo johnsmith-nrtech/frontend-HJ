@@ -870,6 +870,13 @@ export function Navbar() {
                         All Products
                       </Link>
                       <Link
+                        href="/beds"
+                        className="font-open-sans flex items-center gap-2 text-base font-medium"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        Beds & more
+                      </Link>
+                      <Link
                         href="/bundles"
                         className="font-open-sans flex items-center gap-2 text-base font-medium"
                         onClick={() => setIsSheetOpen(false)}
